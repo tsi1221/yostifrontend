@@ -1,4 +1,4 @@
-import  { useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   GlobalOutlined,
@@ -7,9 +7,9 @@ import {
   ShopOutlined,
 } from "@ant-design/icons";
 
-import heroImg from "../../assets/image6.png";
-import tradeImg1 from "../../assets/image7.png";
-import founderImg from "../../assets/founder.png";
+import heroImg from "../../assets/downloaded-image (3).png";
+import tradeImg1 from "../../assets/cf520a97bd96593db79388b276303191.jpeg";
+import founderImg from "../../assets/mulu.png";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 50 },
@@ -83,7 +83,7 @@ const AboutPage: React.FC = () => {
             viewport={{ once: true }}
             variants={fadeUp}
             transition={{ duration: 0.8, delay: 0.3 }}
-            className="mt-4 text-lg md:text-xl text-yellow-400 max-w-2xl mx-auto"
+            className="mt-4 text-lg md:text-xl text-yellow-400 max-w-3xl mx-auto"
           >
             Yosti Import & Export provides secure, transparent, and efficient sourcing solutions between Africa and China — empowering businesses to scale across borders.
           </motion.p>
@@ -104,7 +104,6 @@ const AboutPage: React.FC = () => {
             Yosti Import & Export Trading Co., Ltd. is a licensed global trading company based in China, dedicated to bridging business between Africa and China. With offices in Shanghai and Yiwu, we provide comprehensive trade services—from sourcing, supplier verification, and factory tours to logistics, visa support, and after-sales service.
           </p>
 
-          {/* Read More Section */}
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={readMore ? { opacity: 1, height: "auto" } : { opacity: 0, height: 0 }}
@@ -135,7 +134,7 @@ const AboutPage: React.FC = () => {
         />
       </section>
 
-      {/* MISSION & VISION CARDS */}
+      {/* MISSION & VISION */}
       <section className="bg-gray-50 py-20">
         <div className="container mx-auto px-6 grid md:grid-cols-2 gap-10">
           {[
@@ -150,7 +149,7 @@ const AboutPage: React.FC = () => {
           ].map((item, i) => (
             <motion.div
               key={i}
-              className="p-8 bg-white rounded-3xl shadow-lg border-2 border-yellow-400 hover:shadow-2xl hover:scale-105 transition-transform duration-500"
+              className="p-10 bg-white rounded-3xl shadow-lg border-2 border-yellow-400 hover:shadow-2xl hover:scale-105 transition-transform duration-500"
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -171,7 +170,7 @@ const AboutPage: React.FC = () => {
             {coreValues.map((val, i) => (
               <motion.div
                 key={i}
-                className="p-6 bg-white rounded-3xl shadow-lg border-2 border-yellow-400 hover:shadow-2xl hover:scale-105 transition-transform duration-500 text-center"
+                className="p-8 bg-white rounded-3xl shadow-lg border-2 border-yellow-400 hover:shadow-2xl hover:scale-105 transition-transform duration-500 text-center"
                 initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -189,7 +188,7 @@ const AboutPage: React.FC = () => {
       {/* WORKFLOW */}
       <section className="bg-gray-50 py-24 px-6">
         <h2 className="text-3xl md:text-4xl font-bold text-[#0F3952] mb-16 text-center">How We Work</h2>
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
           {workflowSteps.map((step, index) => (
             <motion.div
               key={index}
@@ -197,7 +196,7 @@ const AboutPage: React.FC = () => {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className="w-full border-l-4 border-yellow-400 pl-6 py-6 cursor-pointer hover:bg-gray-100 rounded-xl shadow-md transition-all transform hover:scale-[1.01]"
+              className="w-full border-l-4 border-yellow-400 pl-10 md:pl-14 py-10 cursor-pointer hover:bg-gray-100 rounded-xl shadow-lg transition-all transform hover:scale-[1.03]"
               onClick={() => setAccordionOpen(accordionOpen === index ? null : index)}
             >
               <div className="flex justify-between items-center font-semibold text-gray-800 text-lg md:text-xl">
@@ -209,17 +208,17 @@ const AboutPage: React.FC = () => {
                   initial="hidden"
                   animate="visible"
                   variants={{ visible: { transition: { staggerChildren: 0.15 } } }}
-                  className="mt-4 flex flex-col gap-3 text-gray-700"
+                  className="mt-6 flex flex-col gap-4 text-gray-700"
                 >
                   <motion.span
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                    className="text-yellow-400 font-bold text-2xl"
+                    className="text-yellow-400 font-bold text-3xl"
                   >
                     ✔
                   </motion.span>
-                  <span>{step}</span>
+                  <span className="text-lg md:text-xl">{step}</span>
                 </motion.div>
               )}
             </motion.div>
@@ -228,12 +227,16 @@ const AboutPage: React.FC = () => {
       </section>
 
       {/* FOUNDER */}
-      <section className="bg-white py-16 px-6 mt-12 border-t-2 border-gray-200">
-        <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-8">
+      <section className="bg-white py-20 px-6 mt-12 border-t-2 border-gray-200">
+        <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-10">
           <motion.img
             src={founderImg}
             alt="Mulubrhan Ayalew"
-            className="w-32 h-32 rounded-full border-2 border-yellow-400 object-cover"
+            className="w-44 h-44 md:w-56 md:h-56 rounded-full border-4 border-yellow-400 object-cover shadow-2xl hover:scale-105 transition-transform duration-500"
+            style={{
+              boxShadow: "0 0 25px rgba(255, 223, 77, 0.7)",
+              filter: "brightness(1.1) contrast(1.05)",
+            }}
             initial={{ opacity: 0, scale: 0.8 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
@@ -248,19 +251,19 @@ const AboutPage: React.FC = () => {
           >
             <motion.h3
               variants={fadeUp}
-              className="text-2xl font-bold text-[#0F3952] mb-2"
+              className="text-2xl md:text-3xl font-bold text-[#0F3952] mb-2"
             >
               Mulubrhan Ayalew, Founder & CEO
             </motion.h3>
             <motion.p
               variants={fadeUp}
-              className="text-gray-700 leading-relaxed mb-4"
+              className="text-gray-700 leading-relaxed mb-4 md:text-lg"
             >
               “As an African entrepreneur living in China, I saw firsthand how hard it was for fellow African businesses to find reliable sourcing partners. Yosti was born to close that gap—with a promise of honesty, transparency, and total customer focus.”
             </motion.p>
             <motion.p
               variants={fadeUp}
-              className="text-gray-600 font-semibold"
+              className="text-gray-600 font-semibold md:text-lg"
             >
               License Number: 91310000MADP0E2M4D
             </motion.p>

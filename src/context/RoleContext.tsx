@@ -1,8 +1,8 @@
-import React, {
+import  {
   createContext,
   useContext,
   useState,
-  ReactNode,
+ type ReactNode,
 } from "react";
 
 // --------------------------------------

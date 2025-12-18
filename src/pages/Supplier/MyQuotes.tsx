@@ -1,8 +1,14 @@
 // src/pages/supplier/MyQuotes.tsx
-import React, { useState } from "react";
+import { useState } from "react";
 import { Table, Button, Modal, Input, Space, message } from "antd";
 import { EyeOutlined, MessageOutlined, SendOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
+
+interface QuoteReply {
+  sender: "supplier" | "buyer";
+  message: string;
+  created_at: string;
+}
 
 interface SupplierQuote {
   quote_id: string;
@@ -13,7 +19,7 @@ interface SupplierQuote {
   lead_time: string;
   notes: string;
   created_at: string;
-  replies?: { sender: "supplier" | "buyer"; message: string; created_at: string }[];
+  replies?: QuoteReply[];
 }
 
 const initialQuotes: SupplierQuote[] = [
@@ -26,7 +32,9 @@ const initialQuotes: SupplierQuote[] = [
     lead_time: "15 days",
     notes: "Includes shipping to Ethiopia",
     created_at: "2025-10-02T12:00:00Z",
-    replies: [{ sender: "supplier", message: "Includes shipping to Ethiopia", created_at: "2025-10-02T12:00:00Z" }],
+    replies: [
+      { sender: "supplier", message: "Includes shipping to Ethiopia", created_at: "2025-10-02T12:00:00Z" },
+    ],
   },
   {
     quote_id: "Q-002",
@@ -55,22 +63,18 @@ export default function MyQuotes() {
       message.error("Reply cannot be empty.");
       return;
     }
-    if (selectedQuote) {
-      const updatedQuotes = quotes.map((q) =>
-        q.quote_id === selectedQuote.quote_id
-          ? {
-              ...q,
-              replies: [
-                ...(q.replies || []),
-                { sender: "supplier", message: replyText, created_at: new Date().toISOString() },
-              ],
-            }
-          : q
-      );
-      setQuotes(updatedQuotes);
-      setReplyText("");
-      message.success("Reply sent successfully!");
-    }
+    if (!selectedQuote) return;
+
+    const newReply: QuoteReply = { sender: "supplier", message: replyText, created_at: new Date().toISOString() };
+    const updatedQuotes = quotes.map((q) =>
+      q.quote_id === selectedQuote.quote_id
+        ? { ...q, replies: [...(q.replies || []), newReply] }
+        : q
+    );
+
+    setQuotes(updatedQuotes);
+    setReplyText("");
+    message.success("Reply sent successfully!");
   };
 
   const columns = [
@@ -129,7 +133,7 @@ export default function MyQuotes() {
       {/* View Modal */}
       <Modal
         title="Quote Details"
-        visible={viewModalVisible}
+        open={viewModalVisible}
         onCancel={() => setViewModalVisible(false)}
         footer={<Button style={buttonStyle} onClick={() => setViewModalVisible(false)}>Close</Button>}
       >
@@ -149,8 +153,8 @@ export default function MyQuotes() {
 
       {/* Chat Modal */}
       <Modal
-        title={`Chat with ${selectedQuote?.buyer_name}`}
-        visible={chatModalVisible}
+        title={`Chat with ${selectedQuote?.buyer_name || ""}`}
+        open={chatModalVisible}
         onCancel={() => setChatModalVisible(false)}
         footer={null}
         width={500}

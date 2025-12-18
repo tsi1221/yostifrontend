@@ -15,6 +15,7 @@ import {
   MenuUnfoldOutlined,
 } from "@ant-design/icons";
 import yostiLogo from "../assets/yostilogo.png";
+import type { JSX } from "react/jsx-runtime";
 
 export type Role =
   | "admin"
@@ -36,7 +37,6 @@ interface MenuItem {
   children?: MenuItem[];
 }
 
-// Menu items per role with unique dashboard paths
 const menuItemsByRole: Record<Role, MenuItem[]> = {
   buyer: [
     { key: "dashboard", label: "Dashboard", icon: <DashboardOutlined />, path: "/buyer/dashboard" },
@@ -48,17 +48,16 @@ const menuItemsByRole: Record<Role, MenuItem[]> = {
     { key: "my-payments", label: "My Payments", icon: <DollarCircleOutlined />, path: "/payments" },
     { key: "support", label: "Support", icon: <CustomerServiceOutlined />, path: "/support" },
     { key: "blog", label: "Blog & News", icon: <FileTextOutlined />, path: "/blog/news" },
-    { key: "export-products", label: "Export Products", icon: <AppstoreAddOutlined />, path: "/products" },
+    { key: "export-products", label: "Export Products", icon: <AppstoreAddOutlined />, path: "/industries" },
     { key: "profile", label: "Profile", icon: <UserOutlined />, path: "/buyerprofile" },
     { key: "logout", label: "Logout", icon: <AppstoreOutlined />, path: "/" },
   ],
   supplier: [
     { key: "dashboard", label: "Dashboard", icon: <DashboardOutlined />, path: "/supplier/dashboard" },
-    // { key: "open-requests", label: "Open Requests", icon: <AppstoreOutlined />, path: "/open-requests" },
     { key: "my-quotes", label: "Quotes", icon: <AppstoreAddOutlined />, path: "/my-quotes" },
     { key: "my-inspections", label: "Inspections", icon: <SafetyOutlined />, path: "/my-inspections" },
     { key: "profile", label: "Profile", icon: <UserOutlined />, path: "/SupplierProfile" },
-    { key: "verification-status", label: "Verification ", icon: <CustomerServiceOutlined />, path: "/verification-status" },
+    { key: "verification-status", label: "Verification", icon: <CustomerServiceOutlined />, path: "/verification-status" },
     { key: "logout", label: "Logout", icon: <AppstoreOutlined />, path: "/" },
   ],
   student: [
@@ -77,7 +76,7 @@ const menuItemsByRole: Record<Role, MenuItem[]> = {
   ],
   admin: [
     { key: "dashboard", label: "Dashboard", icon: <DashboardOutlined />, path: "/admin/dashboard" },
-    { key: "blogs", label: "Blog&testmony", icon: <AppstoreAddOutlined />, path: "/blogs" },
+    { key: "blogs", label: "Blog & Testimony", icon: <AppstoreAddOutlined />, path: "/blogs" },
     { key: "sourcing", label: "Sourcing", icon: <AppstoreOutlined />, path: "/sourcing" },
     { key: "support", label: "Support", icon: <CustomerServiceOutlined />, path: "/support" },
     { key: "shipments", label: "Shipments", icon: <TruckOutlined />, path: "/shipments" },
@@ -93,8 +92,7 @@ const menuItemsByRole: Record<Role, MenuItem[]> = {
     { key: "suppliers", label: "Suppliers (Verify)", icon: <SafetyOutlined />, path: "/allsuppliers" },
     { key: "shipments", label: "Shipments", icon: <TruckOutlined />, path: "/allshipments" },
     { key: "inspections", label: "Inspections", icon: <SafetyOutlined />, path: "/allinspections" },
-    { key: "business-trips", label: "Business Trips&visa", icon: <TruckOutlined />, path: "/alltrips" },
-    // { key: "visa-invitations", label: "Visa Invitations", icon: <CustomerServiceOutlined />, path: "/allvisa" },
+    { key: "business-trips", label: "Business Trips & Visa", icon: <TruckOutlined />, path: "/alltrips" },
     { key: "payments", label: "Payments", icon: <DollarCircleOutlined />, path: "/allpayments" },
     { key: "support-tickets", label: "Support Tickets", icon: <CustomerServiceOutlined />, path: "/all-support-tickets" },
     { key: "export-products", label: "Export Products", icon: <AppstoreAddOutlined />, path: "/all-port-Products" },
@@ -122,7 +120,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
           if (item.path) navigate(item.path);
         }}
         className={`flex items-center w-full py-2 px-4 rounded-lg transition-all cursor-pointer ${
-          selectedKey === item.key ? "font-semibold bg-white/20" : ""
+          selectedKey === item.key ? "font-semibold bg-white/20" : "hover:bg-white/10"
         }`}
         style={{ paddingLeft: `${16 + depth * 16}px` }}
       >
@@ -154,7 +152,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
       </div>
 
       {/* Menu */}
-      <div className="flex-1 overflow-y-auto px-1 mt-1" style={{ scrollbarWidth: "none" }}>
+      <div className="flex-1 overflow-y-auto mt-1" style={{ scrollbarWidth: "none" }}>
         {menuItemsByRole[role]?.map((item) => renderMenuItem(item))}
       </div>
 

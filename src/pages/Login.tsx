@@ -7,13 +7,16 @@ import type { Role } from "../components/Sidebar";
 /* ================= MOCK USERS ================= */
 const MOCK_USERS: { email: string; password: string; role: Role }[] = [
   { email: "buyer@example.com", password: "password123", role: "buyer" },
+  { email: "supplier@example.com", password: "password123", role: "supplier" },
   { email: "admin@example.com", password: "password123", role: "admin" },
+  { email: "superadmin@example.com", password: "password123", role: "super-admin" },
+  { email: "logistics@example.com", password: "password123", role: "logistics" },
 ];
 
 /* ================= PROPS ================= */
 interface LoginProps {
   setRole: (role: Role | null) => void;
-  setEmail: (email: string | null) => void; // added
+  setEmail: (email: string | null) => void;
 }
 
 /* ================= FORM VALUES ================= */
@@ -23,6 +26,16 @@ interface LoginFormValues {
   remember?: boolean;
 }
 
+/* ================= DASHBOARD ROUTES ================= */
+const DASHBOARD_BY_ROLE: Record<Role, string> = {
+  buyer: "/buyer/dashboard",
+  supplier: "/supplier/dashboard",
+  admin: "/admin/dashboard",
+  "super-admin": "/superadmin/dashboard",
+  logistics: "/logistics/dashboard",
+  student: "/student/dashboard", // safe fallback
+};
+
 /* ================= COMPONENT ================= */
 const Login: React.FC<LoginProps> = ({ setRole, setEmail }) => {
   const [loading, setLoading] = useState(false);
@@ -31,7 +44,7 @@ const Login: React.FC<LoginProps> = ({ setRole, setEmail }) => {
   const onFinish = async (values: LoginFormValues) => {
     setLoading(true);
 
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    await new Promise((res) => setTimeout(res, 700));
 
     const user = MOCK_USERS.find(
       (u) => u.email === values.email && u.password === values.password
@@ -43,23 +56,16 @@ const Login: React.FC<LoginProps> = ({ setRole, setEmail }) => {
       return;
     }
 
-    // Save role and email
-    if (values.remember) {
-      localStorage.setItem("role", user.role);
-      localStorage.setItem("email", user.email);
-    } else {
-      sessionStorage.setItem("role", user.role);
-      sessionStorage.setItem("email", user.email);
-    }
+    const storage = values.remember ? localStorage : sessionStorage;
+    storage.setItem("role", user.role);
+    storage.setItem("email", user.email);
 
     setRole(user.role);
-    setEmail(user.email); // set email in state
+    setEmail(user.email);
 
-    message.success("Login successful!");
+    message.success(`Welcome ${user.role.replace("-", " ")}`);
 
-    // Redirect
-    navigate(`/${user.role}/dashboard`, { replace: true });
-
+    navigate(DASHBOARD_BY_ROLE[user.role], { replace: true });
     setLoading(false);
   };
 
@@ -79,15 +85,15 @@ const Login: React.FC<LoginProps> = ({ setRole, setEmail }) => {
               { type: "email", message: "Enter a valid email" },
             ]}
           >
-            <Input />
+            <Input placeholder="you@example.com" />
           </Form.Item>
 
           <Form.Item
             name="password"
             label="Password"
-            rules={[{ required: true, message: "Enter your password" }]}
+            rules={[{ required: true, message: "Password is required" }]}
           >
-            <Input.Password />
+            <Input.Password placeholder="••••••••" />
           </Form.Item>
 
           <Form.Item name="remember" valuePropName="checked">
@@ -103,20 +109,18 @@ const Login: React.FC<LoginProps> = ({ setRole, setEmail }) => {
             </span>
           </div>
 
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              block
-              loading={loading}
-              className="!bg-[#0F3952]"
-            >
-              Login
-            </Button>
-          </Form.Item>
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={loading}
+            block
+            className="!bg-[#0F3952]"
+          >
+            Login
+          </Button>
         </Form>
 
-        <p className="text-center mt-4">
+        <p className="text-center mt-4 text-sm">
           Don’t have an account?{" "}
           <span
             onClick={() => navigate("/register")}

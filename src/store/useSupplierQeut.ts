@@ -1,4 +1,3 @@
-// src/store/useSupplierStore.ts
 import { create } from "zustand";
 
 interface SourcingRequest {
@@ -14,10 +13,17 @@ interface SourcingRequest {
   created_at: string;
 }
 
+interface Quote {
+  price: number;
+  moq: number;
+  lead_time: string;
+  notes?: string;
+}
+
 interface SupplierStore {
   sourcingRequests: SourcingRequest[];
 
-  submitQuote: (request_id: string, quote: { price: number; moq: number; lead_time: string; notes?: string }) => void;
+  submitQuote: (request_id: string, quote?: Quote) => void;
 }
 
 export const useSupplierStore = create<SupplierStore>((set, get) => ({
@@ -48,7 +54,7 @@ export const useSupplierStore = create<SupplierStore>((set, get) => ({
     },
   ],
 
-  submitQuote: (request_id, quote) => {
+  submitQuote: (request_id) => {
     // Mock: mark request as quoted
     set({
       sourcingRequests: get().sourcingRequests.map((r) =>

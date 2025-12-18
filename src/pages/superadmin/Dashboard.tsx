@@ -1,5 +1,5 @@
 // src/pages/superAdmin/Dashboard.tsx
-import React from "react";
+import  { type JSX } from "react";
 import {
   UserOutlined,
   ShopOutlined,
@@ -21,27 +21,50 @@ import {
   LabelList,
 } from "recharts";
 
+/* ==================== TYPES ==================== */
+interface Action {
+  label: string;
+  path: string;
+}
+
+interface StatCardProps {
+  icon: JSX.Element;
+  title: string;
+  value: string | number;
+}
+
+/* ==================== COMPONENT ==================== */
 export default function Dashboard() {
-  const actions = [
-    { label: "total Buyers", path: "/super-admin/buyers" },
+  // Quick Actions
+  const actions: Action[] = [
+    { label: "Total Buyers", path: "/super-admin/buyers" },
     { label: "Suppliers", path: "/super-admin/suppliers" },
-    { label: " Sourcing Requests", path: "/super-admin/sourcing" },
-    { label: "total Shipmentment orders", path: "/super-admin/shipments" },
+    { label: "Sourcing Requests", path: "/super-admin/sourcing" },
+    { label: "Total Shipment Orders", path: "/super-admin/shipments" },
     { label: "Inspection Requests", path: "/super-admin/inspection" },
-    { label: "tolal Payments", path: "/super-admin/payments" },
-    { label: "Business Trips requests", path: "/super-admin/trips" },
+    { label: "Total Payments", path: "/super-admin/payments" },
+    { label: "Business Trips Requests", path: "/super-admin/trips" },
     { label: "Support Requests", path: "/super-admin/support" },
   ];
 
-  /** PIE CHART FOR CONTROLS */
-  const pieData = actions.map((a, index) => ({
+  // Pie Chart Data
+  const pieData: Record<string, any>[] = actions.map((a, i) => ({
     name: a.label,
-    value: Math.floor(Math.random() * 40) + 5, // demo dynamic stats
-    color: ["#0284FF", "#FDBA21", "#FF4D4F", "#22C55E", "#8B5CF6", "#E11D48", "#0EA5E9", "#A855F7"][index],
+    value: Math.floor(Math.random() * 40) + 5,
+    color: [
+      "#0284FF",
+      "#FDBA21",
+      "#FF4D4F",
+      "#22C55E",
+      "#8B5CF6",
+      "#E11D48",
+      "#0EA5E9",
+      "#A855F7",
+    ][i],
   }));
 
-  /** MONTHLY SHIPMENTS */
-  const barData = [
+  // Bar Chart Data
+  const barData: Record<string, any>[] = [
     { month: "Jan", shipments: 22 },
     { month: "Feb", shipments: 35 },
     { month: "Mar", shipments: 30 },
@@ -79,19 +102,13 @@ export default function Dashboard() {
 
       {/* CHARTS */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
         {/* PIE CHART */}
         <div className="bg-white shadow rounded-xl p-6">
           <h2 className="text-lg font-semibold mb-4">Control Activity Summary</h2>
           <ResponsiveContainer width="100%" height={320}>
             <PieChart>
               <Tooltip />
-              <Pie
-                data={pieData}
-                dataKey="value"
-                outerRadius={120}
-                label
-              >
+              <Pie data={pieData} dataKey="value" outerRadius={120} label>
                 {pieData.map((item, i) => (
                   <Cell key={i} fill={item.color} />
                 ))}
@@ -115,14 +132,13 @@ export default function Dashboard() {
             </BarChart>
           </ResponsiveContainer>
         </div>
-
       </div>
     </div>
   );
 }
 
-/* COMPONENT */
-function StatCard({ icon, title, value }) {
+/* ==================== STAT CARD COMPONENT ==================== */
+function StatCard({ icon, title, value }: StatCardProps) {
   return (
     <div className="relative bg-white shadow rounded-xl p-6 flex items-center">
       <div className="absolute inset-y-0 left-0 w-2 bg-yellow-500 rounded-l-xl"></div>

@@ -1,5 +1,5 @@
 // src/pages/supplier/MyInspections.tsx
-import React, { useState } from "react";
+import { useState } from "react";
 import { Table, Button, Modal, Space, message, Tag, Input, Upload } from "antd";
 import { EyeOutlined, CheckOutlined, CloseOutlined, UploadOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";

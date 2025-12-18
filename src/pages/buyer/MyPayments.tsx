@@ -1,6 +1,6 @@
 // src/pages/buyer/MyPayments.tsx
-import React, { useState } from "react";
-import { Table, Button, Drawer, Form, InputNumber, Select, Tag } from "antd";
+import  { useState } from "react";
+import { Table, Button, Drawer, Form, Input, InputNumber, Select, Tag } from "antd";
 import dayjs from "dayjs";
 
 const { Option } = Select;
@@ -45,6 +45,7 @@ export default function MyPayments() {
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [form] = Form.useForm();
 
+  // Type-safe columns
   const columns = [
     {
       title: "Payment ID",
@@ -93,14 +94,11 @@ export default function MyPayments() {
       key: "actions",
       render: (_: any, record: Payment) => (
         <Button
-          style={{
-            backgroundColor: "#0f3952",
-            color: "white",
-            border: "none",
-          }}
+          style={{ backgroundColor: "#0f3952", color: "white", border: "none" }}
           onClick={() => {
             setSelectedPayment(record);
             setOpenDrawer(true);
+            form.setFieldsValue({ payment_method: record.payment_method });
           }}
         >
           Make Payment
@@ -109,18 +107,16 @@ export default function MyPayments() {
     },
   ];
 
-  const handleMakePayment = (values: any) => {
+  // Type-safe payment handler
+  const handleMakePayment = (values: { payment_method: Payment["payment_method"] }) => {
     if (!selectedPayment) return;
 
-    const updatedPayments = payments.map((p) =>
+    const updatedPayments: Payment[] = payments.map((p) =>
       p.payment_id === selectedPayment.payment_id
-        ? {
-            ...p,
-            payment_method: values.payment_method,
-            status: "completed",
-          }
+        ? { ...p, payment_method: values.payment_method, status: "completed" }
         : p
     );
+
     setPayments(updatedPayments);
     setOpenDrawer(false);
     form.resetFields();
@@ -146,11 +142,7 @@ export default function MyPayments() {
         {selectedPayment && selectedPayment.status !== "completed" ? (
           <Form layout="vertical" form={form} onFinish={handleMakePayment}>
             <Form.Item label="Service Type">
-              <InputNumber
-                value={selectedPayment.service_type}
-                disabled
-                style={{ width: "100%" }}
-              />
+              <Input value={selectedPayment.service_type.toUpperCase()} disabled />
             </Form.Item>
 
             <Form.Item label="Amount">

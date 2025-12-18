@@ -1,5 +1,5 @@
 // src/pages/superAdmin/Testimonials.tsx
-import React, { useState } from "react";
+import { useState } from "react";
 import { Table, Button, Modal, Form, Input, Rate, Select, Space, Tag, message } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 

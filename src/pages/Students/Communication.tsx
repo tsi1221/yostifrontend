@@ -1,5 +1,5 @@
 // src/pages/student/Communication.tsx
-import React, { useState, useRef, useEffect } from "react";
+import  { useState, useRef, useEffect } from "react";
 import { Input, Button, List } from "antd";
 import { SendOutlined, TeamOutlined } from "@ant-design/icons";
 

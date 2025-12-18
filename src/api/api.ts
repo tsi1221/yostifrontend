@@ -12,23 +12,27 @@ const api = axios.create({
 // ===============================
 // Register User
 // ===============================
-export const registerUser = async (data: { name: string; email: string; password: string }) => {
-  try {
-    const response = await api.post("/users/register", data);
-    return response.data;
-  } catch (error: any) {        ) {
-    throw error.response?.data || error.message;
-  }
+export const registerUser = async (data: {
+  name: string;
+  email: string;
+  password: string;
+}) => {
+  const response = await api.post("/users/register", data);
+  return response.data;
 };
 
 // ===============================
 // Login User
 // ===============================
 export const loginUser = async (data: { email: string; password: string }) => {
-  try {
-    const response = await api.post("/users/login", data);
-    return response.data;
-  } catch (error: any) {
-    throw error.response?.data || error.message;
-  }
+  const response = await api.post("/users/login", data);
+  return response.data;
+};
+
+// ===============================
+// Example: Fetch Protected Resource
+// ===============================
+export const getProtectedData = async () => {
+  const response = await api.get("/protected");
+  return response.data;
 };

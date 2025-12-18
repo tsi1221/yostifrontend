@@ -59,11 +59,19 @@ const shipments = [
   { title: "Shipment #AS-008 (Scheduled)", status: "Scheduled", statusColor: "text-gray-700 bg-gray-200" },
 ];
 
-const notifications = [
+// TypeScript-corrected notifications array
+interface NotificationProps {
+  message: string;
+  time: string;
+  type?: "info" | "warning" | "success" | "new";
+}
+
+const notifications: NotificationProps[] = [
   { message: "Quote Received for <b>RFQ #FAS-008</b>", time: "Just now", type: "new" },
   { message: "<b>Shipment #CN-001</b> is delayed by 1 day", time: "1 hour ago", type: "warning" },
   { message: "Your account profile is <b>75% complete</b>", time: "Yesterday", type: "info" },
   { message: "Welcome to the platform! <b>Get started here</b>", time: "3 days ago", type: "info" },
+  { message: "RFQ #ELC-005 processed successfully", time: "Today", type: "success" },
 ];
 
 // ============================================
@@ -103,12 +111,6 @@ const PanelItem: React.FC<PanelItemProps> = ({ title, status, statusColor }) => 
     </span>
   </div>
 );
-
-interface NotificationProps {
-  message: string;
-  time: string;
-  type?: "info" | "warning" | "success" | "new";
-}
 
 const Notification: React.FC<NotificationProps> = ({ message, time, type = "info" }) => {
   const bgColor =

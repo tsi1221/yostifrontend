@@ -1,5 +1,5 @@
-// src/pages/supplier/Profile.tsx
-import React, { useState } from "react";
+// src/pages/Supplier/Profile.tsx
+import { useState } from "react";
 import { Button, Input, Upload, message, Form, Table, Modal, Tag } from "antd";
 import { UploadOutlined, EditOutlined, SaveOutlined, EyeOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -53,7 +53,7 @@ const initialVerifications: SupplierVerification[] = [
 
 export default function SupplierProfile() {
   const [supplier, setSupplier] = useState<Supplier>(initialSupplier);
-  const [verifications, setVerifications] = useState<SupplierVerification[]>(initialVerifications);
+  const [verifications] = useState<SupplierVerification[]>(initialVerifications); // removed unused setVerifications
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<Supplier>>(supplier);
   const [logoFile, setLogoFile] = useState<any>(null);
@@ -119,7 +119,7 @@ export default function SupplierProfile() {
     {
       title: "Actions",
       key: "actions",
-      render: (_: any, record: SupplierVerification) => (
+      render: (_: any) => (
         <Button icon={<EyeOutlined />} type="link" onClick={() => setViewModalVisible(true)}>
           View
         </Button>
@@ -178,7 +178,7 @@ export default function SupplierProfile() {
             <Form.Item label="Company Name" required>
               {editing ? <Input value={formData.name} onChange={(e) => handleInputChange("name", e.target.value)} style={inputStyle} /> : <span>{supplier.name}</span>}
             </Form.Item>
-            
+
             {/* Contact Information - Side by Side */}
             <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
               <div style={{ flex: "1", minWidth: "200px" }}>
@@ -196,11 +196,11 @@ export default function SupplierProfile() {
             <Form.Item label="Email" required>
               {editing ? <Input value={formData.email} onChange={(e) => handleInputChange("email", e.target.value)} style={inputStyle} /> : <span>{supplier.email}</span>}
             </Form.Item>
-            
+
             <Form.Item label="Address">
               {editing ? <Input value={formData.address} onChange={(e) => handleInputChange("address", e.target.value)} style={inputStyle} /> : <span>{supplier.address}</span>}
             </Form.Item>
-            
+
             {/* Location - Side by Side */}
             <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
               <div style={{ flex: "1", minWidth: "200px" }}>

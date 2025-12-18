@@ -1,18 +1,29 @@
-import { useState } from "react";
+import React from "react";
 import { Form, Input, Button, Select, message } from "antd";
 import { EnvironmentOutlined, PhoneOutlined, MailOutlined } from "@ant-design/icons";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { FaTelegramPlane, FaEnvelope, FaPhoneAlt } from "react-icons/fa";
-import { SiTiktok, SiWechat } from "react-icons/si";
 import { motion } from "framer-motion";
-import headerImg from "../../assets/image7.png";
+import { FaTelegramPlane, FaEnvelope, FaPhoneAlt, FaDirections } from "react-icons/fa";
+import { SiTiktok, SiWechat } from "react-icons/si";
+import headerImg from "../../assets/5823ec57d1038d4c4f62805e3151d728.jpeg";
+
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
 const { Option } = Select;
-
 const PRIMARY_COLOR = "#0F3952";
-const ACCENT_COLOR = "#FACC15"; // Yellow accent
+const ACCENT_COLOR = "#FACC15";
+
+// Fix Leaflet default icons
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
 
 // Custom map pin
 const customPin = new L.DivIcon({
@@ -23,12 +34,23 @@ const customPin = new L.DivIcon({
   iconAnchor: [25, 50],
 });
 
-const offices = [
-  { name: "Shanghai Office", position: [31.2304, 121.4737], address: "Shanghai, China" },
-  { name: "Yiwu Office", position: [29.3061, 120.0728], address: "Yiwu, Zhejiang, China" },
+// Office locations
+interface Office {
+  name: string;
+  position: [number, number];
+  address: string;
+}
+const offices: Office[] = [
+  { name: "Shanghai Office", position: [31.2304, 121.4737], address: "Room A13, 10th Floor, No.1 Lane 1136, Xinzha Road, Jing’an District, Shanghai, China" },
+  { name: "Yiwu Office", position: [29.3061, 120.0728], address: "Room 2106, Building 3, Zhongfu Plaza, Futian Street, Yiwu, Zhejiang Province, China" },
 ];
 
-const socialLinks = [
+// Social links
+interface SocialLink {
+  icon: React.ReactNode;
+  link: string;
+}
+const socialLinks: SocialLink[] = [
   { icon: <SiWechat />, link: "weixin://dl/chat?username=Yosti-Trade" },
   { icon: <FaTelegramPlane />, link: "https://t.me/Yostil0ve" },
   { icon: <SiTiktok />, link: "https://www.tiktok.com/@yosti.import.expo" },
@@ -36,27 +58,34 @@ const socialLinks = [
   { icon: <FaPhoneAlt />, link: "tel:+8618621980391" },
 ];
 
-// Fit map bounds automatically
-const FitBounds = ({ positions }) => {
+// Fit map bounds
+const FitBounds: React.FC<{ positions: [number, number][] }> = ({ positions }) => {
   const map = useMap();
-  const bounds = L.latLngBounds(positions);
-  setTimeout(() => map.fitBounds(bounds, { padding: [50, 50] }), 100);
+  React.useEffect(() => {
+    const bounds = L.latLngBounds(positions);
+    map.fitBounds(bounds, { padding: [50, 50] });
+  }, [map, positions]);
   return null;
 };
 
-// Animated contact card
-const ContactCard = ({ icon, title, text }) => (
+// Contact card component
+interface ContactCardProps {
+  icon: React.ReactNode;
+  title: string;
+  text: string;
+}
+const ContactCard: React.FC<ContactCardProps> = ({ icon, title, text }) => (
   <motion.div
     whileHover={{ scale: 1.05 }}
     className="flex flex-col items-center text-center p-5 bg-white rounded-xl shadow-lg"
   >
-    <div className={`text-3xl mb-2`} style={{ color: ACCENT_COLOR }}>{icon}</div>
+    <div className="text-3xl mb-2" style={{ color: ACCENT_COLOR }}>{icon}</div>
     <h3 className="font-bold text-gray-800">{title}</h3>
     <p className="text-gray-500 text-sm break-words">{text}</p>
   </motion.div>
 );
 
-const ContactSection = () => {
+const ContactSection: React.FC = () => {
   const [form] = Form.useForm();
 
   const handleSubmit = () => {
@@ -64,9 +93,9 @@ const ContactSection = () => {
     form.resetFields();
   };
 
-  const contactInfo = [
-    { icon: <EnvironmentOutlined />, title: "Shanghai Office", text: "Room A13, 10th Floor, No.1 Lane 1136, Xinzha Road, Jing’an District, Shanghai, China" },
-    { icon: <EnvironmentOutlined />, title: "Yiwu Office", text: "Room 2106, Building 3, Zhongfu Plaza, Futian Street, Yiwu, Zhejiang Province, China" },
+  const contactInfo: ContactCardProps[] = [
+    { icon: <EnvironmentOutlined />, title: "Shanghai Office", text: offices[0].address },
+    { icon: <EnvironmentOutlined />, title: "Yiwu Office", text: offices[1].address },
     { icon: <PhoneOutlined />, title: "Phone / WhatsApp", text: "+86 186 2198 0391" },
     { icon: <MailOutlined />, title: "Email", text: "info@yostiimportexport.com" },
   ];
@@ -75,10 +104,7 @@ const ContactSection = () => {
     <section className="w-full bg-gray-50" id="contact">
       {/* Header */}
       <motion.div className="w-full h-64 md:h-72 relative">
-        <div
-          style={{ backgroundImage: `url(${headerImg})` }}
-          className="absolute inset-0 bg-cover bg-center"
-        />
+        <div style={{ backgroundImage: `url(${headerImg})` }} className="absolute inset-0 bg-cover bg-center" />
         <div className="absolute inset-0 bg-[#0F395280] flex items-center justify-center">
           <motion.h1
             className="text-3xl md:text-5xl font-extrabold text-yellow-400 text-center px-4"
@@ -127,7 +153,7 @@ const ContactSection = () => {
                 <Button
                   type="primary"
                   htmlType="submit"
-                  className="w-full  !bg-[#0F3952] text-white font-bold hover:bg-[#0d2f42] transition-all"
+                  className="w-full !bg-[#0F3952] text-white font-bold hover:bg-[#0d2f42] transition-all"
                   size="large"
                 >
                   Send Message
@@ -175,23 +201,44 @@ const ContactSection = () => {
         </motion.div>
       </div>
 
-      {/* Map */}
+      {/* Map Section */}
       <motion.div
-        className="w-full h-96"
+        className="w-full h-96 relative"
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 1 }}
       >
-        <MapContainer center={offices[0].position} zoom={6} className="h-full w-full" scrollWheelZoom={false}>
+        <MapContainer
+          center={offices[0].position}
+          zoom={15}
+          scrollWheelZoom={false}
+          dragging={false}
+          className="w-full h-full rounded-xl shadow-lg"
+        >
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           {offices.map((office) => (
             <Marker key={office.name} position={office.position} icon={customPin}>
-              <Popup>{office.name}</Popup>
+              <Popup>
+                <div className="font-bold">{office.name}</div>
+                <div className="text-sm">{office.address}</div>
+              </Popup>
             </Marker>
           ))}
           <FitBounds positions={offices.map((o) => o.position)} />
         </MapContainer>
+
+        {/* Floating Google Maps Button */}
+        <motion.a
+          href={`https://www.google.com/maps/dir/?api=1&destination=${offices[0].position[0]},${offices[0].position[1]}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          whileHover={{ scale: 1.1 }}
+          className="absolute bottom-4 right-4 bg-[#0F3952] text-white p-3 rounded-full shadow-lg flex items-center justify-center hover:bg-[#0a2b46] transition-colors"
+          title="Get Directions"
+        >
+          <FaDirections size={20} />
+        </motion.a>
       </motion.div>
     </section>
   );

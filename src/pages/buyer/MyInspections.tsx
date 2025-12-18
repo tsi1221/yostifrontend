@@ -1,5 +1,5 @@
 // src/pages/buyer/MyInspections.tsx
-import React, { useState } from "react";
+import  { useState } from "react";
 import { Table, Button, Drawer, Form, Input, Select, DatePicker, Switch } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";

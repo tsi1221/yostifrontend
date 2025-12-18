@@ -1,6 +1,18 @@
+// src/pages/Admin/Support.tsx
 import { useState, useEffect } from "react";
-import { Table, Tag, Drawer, Form, Input, Select, Button, Space, message } from "antd";
+import {
+  Table,
+  Tag,
+  Drawer,
+  Form,
+  Input,
+  Select,
+  Button,
+  Space,
+  message,
+} from "antd";
 import { EyeOutlined, EditOutlined, CloseOutlined, SaveOutlined } from "@ant-design/icons";
+import type { ColumnsType } from "antd/es/table";
 
 const { Option } = Select;
 
@@ -65,7 +77,12 @@ const SupportTable: React.FC = () => {
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [form] = Form.useForm();
-  const [filters, setFilters] = useState({ status: "", urgency: "" });
+
+  // Now filters are properly used
+  const [filters, setFilters] = useState<{ status: string; urgency: string }>({
+    status: "",
+    urgency: "",
+  });
 
   useEffect(() => {
     setTickets(mockTickets);
@@ -104,24 +121,20 @@ const SupportTable: React.FC = () => {
     }
   };
 
-  const handleFilterChange = (key: string, value: string) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-  };
-
   const filteredTickets = tickets.filter((t) => {
     const statusMatch = filters.status ? t.status === filters.status : true;
     const urgencyMatch = filters.urgency ? t.urgency === filters.urgency : true;
     return statusMatch && urgencyMatch;
   });
 
-  const columns = [
+  const columns: ColumnsType<SupportTicket> = [
     { title: "Order Ref", dataIndex: "orderReference", key: "orderReference" },
     { title: "Issue Type", dataIndex: "issueType", key: "issueType" },
-    { 
-      title: "Status", 
-      dataIndex: "status", 
+    {
+      title: "Status",
+      dataIndex: "status",
       key: "status",
-      render: (status: string) => {
+      render: (status: SupportTicket["status"]) => {
         const color = status === "open" ? "red" : status === "resolved" ? "green" : "gray";
         return <Tag color={color}>{status.toUpperCase()}</Tag>;
       },
@@ -130,13 +143,13 @@ const SupportTable: React.FC = () => {
         { text: "Resolved", value: "resolved" },
         { text: "Closed", value: "closed" },
       ],
-      onFilter: (value: string, record: SupportTicket) => record.status === value
+      onFilter: (value, record) => record.status === value as SupportTicket["status"],
     },
     {
       title: "Urgency",
       dataIndex: "urgency",
       key: "urgency",
-      render: (urgency: string) => {
+      render: (urgency: SupportTicket["urgency"]) => {
         const color = urgency === "high" ? "volcano" : urgency === "medium" ? "gold" : "green";
         return <Tag color={color}>{urgency?.toUpperCase()}</Tag>;
       },
@@ -145,7 +158,7 @@ const SupportTable: React.FC = () => {
         { text: "Medium", value: "medium" },
         { text: "Low", value: "low" },
       ],
-      onFilter: (value: string, record: SupportTicket) => record.urgency === value
+      onFilter: (value, record) => record.urgency === value as SupportTicket["urgency"],
     },
     {
       title: "Action",
@@ -159,8 +172,8 @@ const SupportTable: React.FC = () => {
             Edit
           </Button>
         </Space>
-      )
-    }
+      ),
+    },
   ];
 
   return (
@@ -168,6 +181,33 @@ const SupportTable: React.FC = () => {
       <h2 style={{ color: "#0F3952", fontSize: 22, fontWeight: 700, marginBottom: 24 }}>
         Support Tickets
       </h2>
+
+      {/* Filters */}
+      <Space style={{ marginBottom: 16 }}>
+        <Select
+          placeholder="Filter by status"
+          value={filters.status || undefined}
+          onChange={(value) => setFilters((prev) => ({ ...prev, status: value }))}
+          style={{ width: 150 }}
+        >
+          <Option value="">All</Option>
+          <Option value="open">Open</Option>
+          <Option value="resolved">Resolved</Option>
+          <Option value="closed">Closed</Option>
+        </Select>
+
+        <Select
+          placeholder="Filter by urgency"
+          value={filters.urgency || undefined}
+          onChange={(value) => setFilters((prev) => ({ ...prev, urgency: value }))}
+          style={{ width: 150 }}
+        >
+          <Option value="">All</Option>
+          <Option value="low">Low</Option>
+          <Option value="medium">Medium</Option>
+          <Option value="high">High</Option>
+        </Select>
+      </Space>
 
       <Table
         dataSource={filteredTickets}

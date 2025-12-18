@@ -1,5 +1,5 @@
 // src/pages/superAdmin/BusinessTrips.tsx
-import React, { useState } from "react";
+import  { useState } from "react";
 import {
   Table,
   Tag,

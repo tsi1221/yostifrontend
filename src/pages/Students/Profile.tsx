@@ -1,5 +1,5 @@
 // src/pages/student/Profile.tsx
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button, Input, Upload, message, Form } from "antd";
 import { UploadOutlined, EditOutlined, SaveOutlined } from "@ant-design/icons";
 

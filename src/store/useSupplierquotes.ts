@@ -1,7 +1,5 @@
-// src/store/useSupplierStore.ts
 import { create } from "zustand";
 
-// Types
 export interface SourcingRequest {
   request_id: string;
   product_name: string;
@@ -30,46 +28,17 @@ export interface SupplierQuote {
 interface SupplierStore {
   openRequests: SourcingRequest[];
   myQuotes: SupplierQuote[];
-
-  // Actions
   submitQuote: (quote: SupplierQuote) => void;
 }
 
-export const useSupplierStore = create<SupplierStore>((set, get) => ({
+export const useSupplierStore = create<SupplierStore>((set) => ({
   openRequests: [
-    {
-      request_id: "REQ-001",
-      product_name: "iPhone Charger",
-      description: "Fast charging, 20W",
-      quantity: 500,
-      target_price: 2.5,
-      supplier_region: "Yiwu",
-      sample_required: true,
-      deadline: "2025-12-05",
-      status: "open",
-      created_at: "2025-10-01",
-    },
-    {
-      request_id: "REQ-002",
-      product_name: "USB Cable",
-      description: "Type-C, 1m length",
-      quantity: 1000,
-      target_price: 1.2,
-      supplier_region: "Guangzhou",
-      sample_required: false,
-      deadline: "2025-12-10",
-      status: "open",
-      created_at: "2025-11-01",
-    },
+    { request_id: "REQ-001", product_name: "iPhone Charger", description: "Fast charging, 20W", quantity: 500, target_price: 2.5, supplier_region: "Yiwu", sample_required: true, deadline: "2025-12-05", status: "open", created_at: "2025-10-01" },
+    { request_id: "REQ-002", product_name: "USB Cable", description: "Type-C, 1m", quantity: 1000, target_price: 1.2, supplier_region: "Guangzhou", sample_required: false, deadline: "2025-12-10", status: "open", created_at: "2025-11-01" },
   ],
   myQuotes: [],
-
-  submitQuote: (quote) => {
-    set((state) => ({
-      myQuotes: [...state.myQuotes, quote],
-      openRequests: state.openRequests.map((r) =>
-        r.request_id === quote.request_id ? { ...r, status: "quoted" } : r
-      ),
-    }));
-  },
+  submitQuote: (quote) => set((state) => ({
+    myQuotes: [...state.myQuotes, quote],
+    openRequests: state.openRequests.map(r => r.request_id === quote.request_id ? { ...r, status: "quoted" } : r),
+  })),
 }));

@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+// src/pages/superAdmin/SourcingRequests.tsx
+import { useState } from "react";
 import { SearchOutlined } from "@ant-design/icons";
-import { Drawer, Button, Input, Checkbox, Modal } from "antd";
+import { Drawer, Button, Input, Checkbox, Modal, type CheckboxChangeEvent } from "antd";
 
 interface SourcingRequest {
   id: string;
@@ -12,13 +13,45 @@ interface SourcingRequest {
   supplierRegion: string;
   sampleRequired: boolean;
   createdAt: string;
+  deadline?: string;
+}
+
+interface FormData {
+  userName: string;
+  productName: string;
+  description: string;
+  quantity: string;
+  targetPrice: string;
+  supplierRegion: string;
+  sampleRequired: boolean;
+  deadline: string;
 }
 
 let requestIdCounter = 7;
 
 const initialRequests: SourcingRequest[] = [
-  { id: "SR001", userName: "John Doe", productName: "Coffee Beans", description: "High quality Arabica", quantity: 100, targetPrice: 500, supplierRegion: "Yiwu", sampleRequired: true, createdAt: "2025-11-24" },
-  { id: "SR002", userName: "Alice Smith", productName: "Mobile Phones", description: "Latest model, unlocked", quantity: 50, targetPrice: 15000, supplierRegion: "Shenzhen", sampleRequired: false, createdAt: "2025-11-22" },
+  {
+    id: "SR001",
+    userName: "John Doe",
+    productName: "Coffee Beans",
+    description: "High quality Arabica",
+    quantity: 100,
+    targetPrice: 500,
+    supplierRegion: "Yiwu",
+    sampleRequired: true,
+    createdAt: "2025-11-24",
+  },
+  {
+    id: "SR002",
+    userName: "Alice Smith",
+    productName: "Mobile Phones",
+    description: "Latest model, unlocked",
+    quantity: 50,
+    targetPrice: 15000,
+    supplierRegion: "Shenzhen",
+    sampleRequired: false,
+    createdAt: "2025-11-22",
+  },
 ];
 
 export default function SourcingRequests() {
@@ -29,7 +62,7 @@ export default function SourcingRequests() {
   const [editingRequest, setEditingRequest] = useState<SourcingRequest | null>(null);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [viewRequest, setViewRequest] = useState<SourcingRequest | null>(null);
-  const [formData, setFormData] = useState<any>({
+  const [formData, setFormData] = useState<FormData>({
     userName: "",
     productName: "",
     description: "",
@@ -56,15 +89,24 @@ export default function SourcingRequests() {
   const handleNextPage = () => currentPage < totalPages && setCurrentPage(currentPage + 1);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     if (editingRequest) {
-      setEditingRequest({ ...editingRequest, [name]: type === "checkbox" ? checked : value });
+      setEditingRequest({ ...editingRequest, [name]: value } as SourcingRequest);
     } else {
-      setFormData((prev: any) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
-  const validateForm = (data: any) => {
+  const handleCheckboxChange = (e: CheckboxChangeEvent) => {
+    const { name, checked } = e.target as unknown as { name: string; checked: boolean };
+    if (editingRequest) {
+      setEditingRequest({ ...editingRequest, [name]: checked } as SourcingRequest);
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: checked }));
+    }
+  };
+
+  const validateForm = (data: SourcingRequest | FormData) => {
     return data.userName && data.productName && data.quantity && data.targetPrice && data.supplierRegion;
   };
 
@@ -81,6 +123,7 @@ export default function SourcingRequests() {
       supplierRegion: formData.supplierRegion,
       sampleRequired: formData.sampleRequired,
       createdAt: new Date().toISOString().split("T")[0],
+      deadline: formData.deadline || undefined,
     };
 
     setRequests([newReq, ...requests]);
@@ -100,18 +143,17 @@ export default function SourcingRequests() {
     setViewRequest(req);
     setViewModalOpen(true);
   };
-
   const handleEditRequest = (req: SourcingRequest) => {
     setEditingRequest(req);
     setDrawerOpen(true);
   };
-
   const handleDeleteRequest = (id: string) => {
     setRequests(requests.filter((r) => r.id !== id));
   };
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
         <div>
           <h1 className="text-3xl font-bold mb-1">Sourcing Requests</h1>
@@ -128,6 +170,7 @@ export default function SourcingRequests() {
         </Button>
       </div>
 
+      {/* Search */}
       <div className="relative w-full md:w-1/3 mb-4">
         <Input
           placeholder="Search by product or user..."
@@ -140,6 +183,7 @@ export default function SourcingRequests() {
         />
       </div>
 
+      {/* Table */}
       <div className="overflow-x-auto bg-white shadow rounded-lg">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -185,13 +229,14 @@ export default function SourcingRequests() {
         </table>
       </div>
 
+      {/* Pagination */}
       <div className="mt-4 flex justify-end items-center gap-2">
         <Button onClick={handlePrevPage} disabled={currentPage === 1}>Previous</Button>
         <span className="px-3 py-1 text-sm font-medium">Page {currentPage} of {totalPages}</span>
         <Button onClick={handleNextPage} disabled={currentPage === totalPages}>Next</Button>
       </div>
 
-      {/* Drawer for Create/Edit */}
+      {/* Drawer */}
       <Drawer
         title={editingRequest ? "Edit Sourcing Request" : "Create Sourcing Request"}
         placement="right"
@@ -225,8 +270,8 @@ export default function SourcingRequests() {
           <option value="Shenzhen">Shenzhen</option>
           <option value="Other">Other</option>
         </select>
-        <Checkbox name="sampleRequired" checked={editingRequest?.sampleRequired || formData.sampleRequired} onChange={handleInputChange}>Sample Required</Checkbox>
-        <Input type="date" name="deadline" value={editingRequest?.createdAt || formData.deadline} onChange={handleInputChange} />
+        <Checkbox name="sampleRequired" checked={editingRequest?.sampleRequired || formData.sampleRequired} onChange={handleCheckboxChange}>Sample Required</Checkbox>
+        <Input type="date" name="deadline" value={editingRequest?.deadline || formData.deadline} onChange={handleInputChange} />
       </Drawer>
 
       {/* View Modal */}
@@ -247,6 +292,7 @@ export default function SourcingRequests() {
             <p><strong>Region:</strong> {viewRequest.supplierRegion}</p>
             <p><strong>Sample Required:</strong> {viewRequest.sampleRequired ? "Yes" : "No"}</p>
             <p><strong>Created At:</strong> {viewRequest.createdAt}</p>
+            {viewRequest.deadline && <p><strong>Deadline:</strong> {viewRequest.deadline}</p>}
           </div>
         )}
       </Modal>

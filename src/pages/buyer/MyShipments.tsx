@@ -1,6 +1,6 @@
 // src/pages/buyer/MyShipments.tsx
-import React, { useState } from "react";
-import { Table, Drawer, Button, Form, Input, InputNumber, Select } from "antd";
+import { useState } from "react";
+import { Drawer, Button, Form, Input, InputNumber, Select, Table } from "antd";
 import { EnvironmentOutlined, PlusOutlined } from "@ant-design/icons";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import dayjs from "dayjs";
@@ -28,7 +28,7 @@ interface Shipment {
   volume: number;
   shipping_method: "sea" | "air" | "express";
   tracking_number: string;
-  status: "booked" | "in transit" | "at port" | "customs" | "delivered";
+  status: ShipmentUpdate["status"];
   estimated_delivery: string;
   updates: ShipmentUpdate[];
 }
@@ -75,6 +75,18 @@ export default function MyShipments() {
   const [selectedShipment, setSelectedShipment] = useState<Shipment | null>(null);
   const [form] = Form.useForm();
 
+  const timelineSteps: ShipmentUpdate["status"][] = [
+    "booked",
+    "in transit",
+    "at port",
+    "customs",
+    "delivered",
+  ];
+
+  // Helper to get update info safely
+  const getUpdate = (shipment: Shipment, step: ShipmentUpdate["status"]) =>
+    shipment.updates.find((u) => u.status === step);
+
   const columns = [
     {
       title: "Tracking No.",
@@ -82,7 +94,12 @@ export default function MyShipments() {
       key: "tracking_number",
       render: (text: string) => <span className="font-semibold text-gray-900">{text}</span>,
     },
-    { title: "Destination", render: (r: Shipment) => `${r.destination_city}, ${r.destination_country}` },
+    {
+      title: "Destination",
+      key: "destination",
+      render: (_: any, record: Shipment) =>
+        `${record.destination_city}, ${record.destination_country}`,
+    },
     { title: "Method", dataIndex: "shipping_method", key: "shipping_method" },
     { title: "Status", dataIndex: "status", key: "status" },
     {
@@ -111,8 +128,10 @@ export default function MyShipments() {
   ];
 
   const handleBook = (values: any) => {
+    const shipmentId = `SHP-${Math.floor(Math.random() * 999).toString().padStart(3, "0")}`;
+    const updateId = `UPD-${Math.floor(Math.random() * 999).toString().padStart(3, "0")}`;
     const newShipment: Shipment = {
-      shipment_id: `SHP-${Math.floor(Math.random() * 999).toString().padStart(3, "0")}`,
+      shipment_id: shipmentId,
       user_id: "USR-001",
       pickup_location: values.pickup_location,
       destination_country: values.destination_country,
@@ -126,8 +145,8 @@ export default function MyShipments() {
       estimated_delivery: dayjs().add(15, "day").format("YYYY-MM-DD"),
       updates: [
         {
-          update_id: `UPD-${Math.floor(Math.random() * 999)}`,
-          shipment_id: `SHP-${Math.floor(Math.random() * 999)}`,
+          update_id: updateId,
+          shipment_id: shipmentId,
           location: values.pickup_location,
           status: "booked",
           remarks: "Shipment booked",
@@ -140,22 +159,8 @@ export default function MyShipments() {
     setOpenBook(false);
   };
 
-  const timelineSteps: ShipmentUpdate["status"][] = [
-    "booked",
-    "in transit",
-    "at port",
-    "customs",
-    "delivered",
-  ];
-
-  const getUpdateTime = (shipment: Shipment, step: ShipmentUpdate["status"]) => {
-    const upd = shipment.updates.find((u) => u.status === step);
-    return upd ? dayjs(upd.update_time).format("YYYY-MM-DD HH:mm") : "-";
-  };
-
   return (
     <div className="p-6 bg-white min-h-screen">
-      {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900">My Shipments</h1>
         <Button
@@ -167,7 +172,6 @@ export default function MyShipments() {
         </Button>
       </div>
 
-      {/* TABLE */}
       <Table
         dataSource={shipments}
         columns={columns}
@@ -227,35 +231,32 @@ export default function MyShipments() {
       >
         {selectedShipment && (
           <div className="space-y-4">
-            {/* STATUS TIMELINE */}
             <div>
               <h3 className="font-semibold text-gray-900 mb-2">Status Timeline</h3>
               <ul className="space-y-2">
-                {timelineSteps.map((step) => (
-                  <li key={step} className="p-2 rounded border border-gray-300">
-                    <div className="flex justify-between">
-                      <span className="font-medium">{step.toUpperCase()}</span>
-                      <span className="text-sm">{getUpdateTime(selectedShipment, step)}</span>
-                    </div>
-                    <div className="text-gray-700">
-                      {selectedShipment.updates.find((u) => u.status === step)?.location || ""}
-                      {selectedShipment.updates.find((u) => u.status === step)?.remarks
-                        ? " — " + selectedShipment.updates.find((u) => u.status === step)?.remarks
-                        : ""}
-                    </div>
-                  </li>
-                ))}
+                {timelineSteps.map((step) => {
+                  const update = getUpdate(selectedShipment, step);
+                  return (
+                    <li key={step} className="p-2 rounded border border-gray-300">
+                      <div className="flex justify-between">
+                        <span className="font-medium">{step.toUpperCase()}</span>
+                        <span className="text-sm">
+                          {update ? dayjs(update.update_time).format("YYYY-MM-DD HH:mm") : "-"}
+                        </span>
+                      </div>
+                      <div className="text-gray-700">
+                        {update?.location}
+                        {update?.remarks ? " — " + update.remarks : ""}
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
 
-            {/* MAP VIEW */}
             <h3 className="font-semibold text-gray-900">Live Map</h3>
             <div className="h-64 rounded overflow-hidden">
-              <MapContainer
-                center={[30.6, 104.0]} // Example coordinates
-                zoom={5}
-                style={{ height: "100%", width: "100%" }}
-              >
+              <MapContainer center={[30.6, 104.0]} zoom={5} style={{ height: "100%", width: "100%" }}>
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                 <Marker position={[30.6, 104.0]}>
                   <Popup>Shipment is in transit</Popup>
