@@ -1,5 +1,5 @@
 // src/pages/supplier/OpenRequests.tsx
-import React, { useState } from "react";
+import  { useState } from "react";
 import { Table, Button, Drawer, Input, Upload, message, Modal, Form } from "antd";
 import { UploadOutlined, EyeOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";

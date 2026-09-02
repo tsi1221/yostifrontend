@@ -1,14 +1,46 @@
 // src/pages/superAdmin/Settings.tsx
-import React, { useState } from "react";
-import { Form, Input, Button, Switch, Card, Row, Col, Upload, message, Space } from "antd";
+import  { useState } from "react";
+import {
+  Form,
+  Input,
+  Button,
+  Switch,
+  Card,
+  Row,
+  Col,
+  Upload,
+  message,
+} from "antd";
 import { UploadOutlined } from "@ant-design/icons";
+import type { UploadFile } from "antd/es/upload/interface";
+
+interface FormValues {
+  platformName: string;
+  adminEmail: string;
+  enableNotifications: boolean;
+  maintenanceMode: boolean;
+  logo?: UploadFile[];
+  themeColor?: string;
+  newPassword?: string;
+  confirmPassword?: string;
+  apiKey?: string;
+  enableIntegration?: boolean;
+}
 
 export default function Settings() {
-  const [form] = Form.useForm();
+  const [form] = Form.useForm<FormValues>();
   const [loading, setLoading] = useState(false);
 
-  const saveSettings = async (values: any) => {
+  const saveSettings = async (values: FormValues) => {
     setLoading(true);
+
+    // Optional: validate passwords match
+    if (values.newPassword && values.newPassword !== values.confirmPassword) {
+      message.error("Passwords do not match");
+      setLoading(false);
+      return;
+    }
+
     try {
       console.log("Saved settings:", values);
       message.success("Settings updated successfully!");
@@ -21,7 +53,14 @@ export default function Settings() {
 
   return (
     <div style={{ padding: 24, minHeight: "100vh" }}>
-      <h2 style={{ fontSize: 22, fontWeight: 700, color: "#0F3952", marginBottom: 24 }}>
+      <h2
+        style={{
+          fontSize: 22,
+          fontWeight: 700,
+          color: "#0F3952",
+          marginBottom: 24,
+        }}
+      >
         Superadmin Settings
       </h2>
 
@@ -51,7 +90,9 @@ export default function Settings() {
               <Form.Item
                 name="adminEmail"
                 label="Admin Contact Email"
-                rules={[{ required: true, type: "email", message: "Enter a valid email" }]}
+                rules={[
+                  { required: true, type: "email", message: "Enter a valid email" },
+                ]}
               >
                 <Input placeholder="Enter admin email" />
               </Form.Item>
@@ -82,8 +123,8 @@ export default function Settings() {
           {/* Appearance */}
           <Col xs={24} md={12}>
             <Card title="Platform Appearance" bordered>
-              <Form.Item name="logo" label="Platform Logo">
-                <Upload beforeUpload={() => false} maxCount={1}>
+              <Form.Item name="logo" label="Platform Logo" valuePropName="fileList" getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}>
+                <Upload beforeUpload={() => false} maxCount={1} listType="picture">
                   <Button icon={<UploadOutlined />}>Upload Logo</Button>
                 </Upload>
               </Form.Item>
@@ -114,7 +155,11 @@ export default function Settings() {
                 <Input placeholder="Enter API key" />
               </Form.Item>
 
-              <Form.Item name="enableIntegration" label="Enable Third-party Integrations" valuePropName="checked">
+              <Form.Item
+                name="enableIntegration"
+                label="Enable Third-party Integrations"
+                valuePropName="checked"
+              >
                 <Switch />
               </Form.Item>
             </Card>

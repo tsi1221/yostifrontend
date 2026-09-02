@@ -1,8 +1,17 @@
 // src/pages/buyer/MyQuotes.tsx
-import React, { useState } from "react";
+import { useState } from "react";
 import { Table, Button, Drawer, Input, Space, message } from "antd";
 import { EyeOutlined, MessageOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
+
+// ================================
+// TYPES
+// ================================
+interface Reply {
+  sender: "buyer" | "supplier";
+  message: string;
+  created_at: string;
+}
 
 interface SupplierQuote {
   quote_id: string;
@@ -13,9 +22,12 @@ interface SupplierQuote {
   lead_time: string;
   notes: string; // supplier note
   created_at: string;
-  replies?: { sender: "buyer" | "supplier"; message: string; created_at: string }[];
+  replies?: Reply[];
 }
 
+// ================================
+// INITIAL DATA
+// ================================
 const initialQuotes: SupplierQuote[] = [
   {
     quote_id: "Q-001",
@@ -58,6 +70,9 @@ const initialQuotes: SupplierQuote[] = [
   },
 ];
 
+// ================================
+// COMPONENT
+// ================================
 export default function MyQuotes() {
   const [quotes, setQuotes] = useState<SupplierQuote[]>(initialQuotes);
   const [viewDrawer, setViewDrawer] = useState(false);
@@ -65,6 +80,9 @@ export default function MyQuotes() {
   const [selectedQuote, setSelectedQuote] = useState<SupplierQuote | null>(null);
   const [replyText, setReplyText] = useState("");
 
+  // ================================
+  // TABLE COLUMNS
+  // ================================
   const columns = [
     {
       title: "Request ID",
@@ -124,6 +142,9 @@ export default function MyQuotes() {
     },
   ];
 
+  // ================================
+  // SEND REPLY
+  // ================================
   const handleSendReply = () => {
     if (!replyText.trim()) {
       message.error("Reply cannot be empty.");
@@ -136,7 +157,7 @@ export default function MyQuotes() {
               ...q,
               replies: [
                 ...(q.replies || []),
-                { sender: "buyer", message: replyText, created_at: new Date().toISOString() },
+                { sender: "buyer", message: replyText, created_at: new Date().toISOString() } as Reply,
               ],
             }
           : q
@@ -147,6 +168,9 @@ export default function MyQuotes() {
     }
   };
 
+  // ================================
+  // RENDER
+  // ================================
   return (
     <div className="p-6 min-h-screen bg-white">
       <h1 className="text-3xl font-bold text-[#0A1A4E] mb-6">My Quotes</h1>

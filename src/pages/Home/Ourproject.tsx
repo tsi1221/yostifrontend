@@ -1,151 +1,187 @@
-import { useState, useRef } from "react";
-import { motion } from "framer-motion";
-import { LeftOutlined, RightOutlined } from "@ant-design/icons";
-;
+import React, { useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { LeftOutlined, RightOutlined, ArrowRightOutlined } from "@ant-design/icons";
+import { Link } from "react-router-dom";
 
-// --- Project Card Data ---
-interface ProjectCardProps {
-  title: string;
-  desc: string;
-  img: string;
-  index: number;
-}
-
-import project1 from "../../assets/construction.png";
-import project2 from "../../assets/startup.png";
-import project3 from "../../assets/agriculutre.png";
-import project4 from "../../assets/package.png";
-import project5 from "../../assets/toy.png";
-import project6 from "../../assets/shiping.png";
-import project7 from "../../assets/startup.png";
+// --- Import your local assets here ---
+import project1 from "../../../public/assets/construction.png";
+import project2 from "../../../public/assets/fac.png";
+import project3 from "../../../public/assets/agrin.png";
+import project4 from "../../../public/assets/package.png";
+import project5 from "../../../public/assets/toy.png";
+import project6 from "../../../public/assets/87cb5f0c32788f098e4e22ae7d792af1.jpeg";
+import project7 from "../../../public/assets/goverment.png";
+import newhero from "../../../public/assets/heroman.png";
 
 const projects = [
-  { title: "Construction Machinery & Spare Parts", img: project1, desc: "Container shipments of construction machinery and spare parts to Ethiopia." },
-  { title: "Factory Sourcing & Product Development", img: project2, desc: "Factory sourcing and product development for startups in Ethiopia." },
-  { title: "Agricultural Tools & Irrigation Systems", img: project3, desc: "Supply of agricultural tools and irrigation systems to rural farming cooperatives." },
-  { title: "Food & Beverage Packaging Solutions", img: project4, desc: "Packaging solutions delivered to clients in Kenya." },
-  { title: "Educational Toys Logistics", img: project5, desc: "Toy sourcing and logistics for early childhood centers in Nigeria." },
-  { title: "Door-to-Door Shipping", img: project6, desc: "Door-to-door coordination from Yiwu to Addis Ababa." },
-  { title: "Long-Term Government Contracts", img: project7, desc: "Repeat shipments and contracts with government institutions." },
+  { title: "Construction Machinery", category: "Heavy Equipment", img: project1, desc: "Container shipments of construction machinery and spare parts to Ethiopia." },
+  { title: "Factory Sourcing", category: "Startup Support", img: project2, desc: "Factory sourcing and product development for startups in Ethiopia." },
+  { title: "Agricultural Systems", category: "Agri-Tech", img: project3, desc: "Supply of agricultural tools and irrigation systems to rural farming cooperatives." },
+  { title: "Packaging Solutions", category: "Logistics", img: project4, desc: "Food & Beverage packaging solutions delivered to clients in Kenya." },
+  { title: "Educational Logistics", category: "Retail", img: project5, desc: "Toy sourcing and logistics for early childhood centers in Nigeria." },
+  { title: "Door-to-Door Shipping", category: "Shipping", img: project6, desc: "Seamless door-to-door coordination from Yiwu to Addis Ababa." },
+  { title: "Government Contracts", category: "Public Sector", img: project7, desc: "Repeat shipments and long-term contracts with government institutions." },
 ];
 
-// --- ProjectCard Component ---
-const ProjectCard: React.FC<ProjectCardProps> = ({ title, desc, img, index }) => {
-  const [loading, setLoading] = useState(true);
-  const slideFrom = index % 2 === 0 ? -100 : 100;
+interface Project {
+  title: string;
+  category: string;
+  img: string;
+  desc: string;
+}
 
+const ProjectCard = ({ project, index }: { project: Project; index: number }) => {
   return (
     <motion.div
-      initial={{ opacity: 0, x: slideFrom }}
-      whileInView={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.7, ease: "easeOut" }}
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="relative min-w-[300px] w-[300px] bg-white shadow-lg rounded-2xl overflow-hidden border-4 border-[#0F3952] hover:shadow-2xl flex-shrink-0"
+      transition={{ duration: 0.6, delay: index * 0.1 }}
+      className="group relative flex-shrink-0 w-[300px] sm:w-[350px] h-[450px] rounded-2xl overflow-hidden shadow-xl bg-white border border-gray-100"
     >
-      <div className="relative w-full h-52 overflow-hidden group">
-        {loading && <div className="absolute inset-0 bg-gray-200 animate-pulse"></div>}
-
+      {/* Image Container */}
+      <div className="absolute inset-0">
         <img
-          src={img}
-          alt={title}
-          loading="lazy"
-          onLoad={() => setLoading(false)}
-          className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-105"
+          src={project.img}
+          alt={project.title}
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
-
-        {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black/60"></div>
+        {/* Dark Overlay for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0F3952] via-[#0F3952]/40 to-transparent opacity-90" />
       </div>
 
-      <div className="p-5 relative z-10">
-        <h3 className="text-xl font-bold text-[#0F3952] mb-2">{title}</h3>
-        <p className="text-yellow-400 text-sm leading-relaxed">{desc}</p>
+      {/* Card Content */}
+      <div className="absolute bottom-0 left-0 p-6 w-full text-white">
+        <span className="inline-block px-3 py-1 bg-yellow-400 text-[#0F3952] text-[10px] font-bold rounded-full uppercase tracking-widest mb-3">
+          {project.category}
+        </span>
+        <h3 className="text-xl font-bold mb-2 group-hover:text-yellow-400 transition-colors">
+          {project.title}
+        </h3>
+        <p className="text-gray-200 text-sm leading-relaxed line-clamp-3 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+          {project.desc}
+        </p>
+        <div className="mt-4 flex items-center text-yellow-400 text-xs font-bold uppercase tracking-wider group-hover:gap-2 transition-all cursor-pointer">
+          Learn More <ArrowRightOutlined className="ml-1" />
+        </div>
       </div>
     </motion.div>
   );
 };
 
-// --- OURPROJECT Page ---
 const OURPROJECT: React.FC = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const visibleCards = 3;
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef(null);
 
-  const handlePrev = () => {
-    setCurrentIndex((prev) => Math.max(prev - 1, 0));
-    containerRef.current?.scrollBy({ left: -320, behavior: "smooth" });
-  };
+  // Parallax effect for the header background
+  const { scrollYProgress } = useScroll({
+    target: headerRef,
+    offset: ["start start", "end start"],
+  });
+  const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
 
-  const handleNext = () => {
-    setCurrentIndex((prev) => Math.min(prev + 1, projects.length - visibleCards));
-    containerRef.current?.scrollBy({ left: 320, behavior: "smooth" });
+  const scroll = (direction: "left" | "right") => {
+    if (scrollRef.current) {
+      const { scrollLeft, clientWidth } = scrollRef.current;
+      const scrollTo = direction === "left" ? scrollLeft - clientWidth : scrollLeft + clientWidth;
+      scrollRef.current.scrollTo({ left: scrollTo, behavior: "smooth" });
+    }
   };
 
   return (
-    <div className="bg-white">
+    <div className="bg-white min-h-screen">
+      {/* --- Professional Hero Section with Background Image --- */}
+      <header ref={headerRef} className="relative h-[70vh] flex items-center justify-center overflow-hidden">
+        {/* Background Image with Parallax */}
+        <motion.div 
+          style={{ y: backgroundY }}
+          className="absolute inset-0 z-0"
+        >
+          <div className="absolute inset-0 bg-black/70 z-10" /> {/* Blue Overlay */}
+          <img 
+            src={newhero} // High-end logistics/port image
+            alt="Background" 
+            className="w-full h-full object-cover"
+          />
+        </motion.div>
 
-      {/* --- Header with curved blue background --- */}
-      <header className="relative">
-        <div className="absolute top-0 left-0 w-full h-[220px] sm:h-[300px] bg-[#0F3952] rounded-b-[90px] sm:rounded-b-full opacity-90 z-0"></div>
-        
-        <div className="relative z-10 flex flex-col items-center justify-center text-center py-16 px-5 sm:px-16">
-          <motion.h1
-            initial={{ opacity: 0, y: -20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-4xl sm:text-5xl font-extrabold text-yellow-400 mb-6"
+        <div className="relative z-20 text-center px-6 max-w-4xl">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
           >
-            Our Projects
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: -10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-center text-yellow-400 text-lg sm:text-xl max-w-3xl"
-          >
-            Over the years, Yosti Import & Export Trading Co., Ltd. has successfully completed a wide range of sourcing and shipping projects for clients across Africa.
-          </motion.p>
+            <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6">
+              Our <span className="text-yellow-400">Projects</span>
+            </h1>
+            <div className="w-24 h-2 bg-yellow-400 mx-auto mb-8 rounded-full" />
+            <p className="text-white text-lg md:text-xl leading-relaxed font-light opacity-90">
+              Over the years, <span className="font-bold text-yellow-400">Yosti Import & Export Trading Co., Ltd.</span> has successfully
+              completed a wide range of sourcing and shipping projects for clients across Africa.
+            </p>
+          </motion.div>
         </div>
       </header>
 
-      {/* --- Projects Carousel --- */}
-      <section className="w-full bg-[#F8FAFC] py-12 px-5 md:px-16 mb-16 relative">
-        <div className="relative">
-          {/* Left Arrow */}
-          <button
-            onClick={handlePrev}
-            className="absolute left-0 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white p-2 rounded-full shadow z-20"
-            disabled={currentIndex === 0}
-          >
-            <LeftOutlined className="text-[#0F3952]" />
-          </button>
+      {/* --- Carousel Section --- */}
+      <section className="py-20 bg-gray-50 relative">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex justify-between items-center mb-12">
+            <div>
+              <h2 className="text-3xl font-bold text-[#0F3952]">Proven Success</h2>
+              <p className="text-gray-500 mt-2">Swipe to explore our international operations</p>
+            </div>
+            
+            <div className="flex gap-3">
+              <button 
+                onClick={() => scroll("left")}
+                className="w-12 h-12 flex items-center justify-center rounded-full bg-white border border-gray-200 text-[#0F3952] hover:bg-yellow-400 hover:border-yellow-400 transition-all shadow-sm"
+              >
+                <LeftOutlined />
+              </button>
+              <button 
+                onClick={() => scroll("right")}
+                className="w-12 h-12 flex items-center justify-center rounded-full bg-[#0F3952] text-white hover:bg-[#1a4a66] transition-all shadow-md"
+              >
+                <RightOutlined />
+              </button>
+            </div>
+          </div>
 
-          {/* Right Arrow */}
-          <button
-            onClick={handleNext}
-            className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white p-2 rounded-full shadow z-20"
-            disabled={currentIndex >= projects.length - visibleCards}
-          >
-            <RightOutlined className="text-[#0F3952]" />
-          </button>
-
-          {/* Cards container */}
+          {/* Scrolling Container */}
           <div
-            ref={containerRef}
-            className="flex gap-6 overflow-hidden scroll-smooth touch-pan-x"
+            ref={scrollRef}
+            className="flex gap-6 overflow-x-auto pb-10 no-scrollbar snap-x snap-mandatory"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {projects.map((project, i) => (
-              <ProjectCard
-                key={i}
-                title={project.title}
-                desc={project.desc}
-                img={project.img}
-                index={i}
-              />
+              <div key={i} className="snap-center">
+                <ProjectCard project={project} index={i} />
+              </div>
             ))}
           </div>
         </div>
+      </section>
+
+      {/* --- Professional Conclusion Section --- */}
+      <section className="py-20 px-6 text-center">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          className="max-w-3xl mx-auto"
+        >
+          <h2 className="text-3xl font-bold text-[#0F3952] mb-6">Ready to expand your business?</h2>
+          <p className="text-gray-600 mb-10 text-lg">
+            Whether you need heavy machinery or retail consumer goods, our team handles 
+            the complexity so you can focus on growth.
+          </p>
+         <Link
+  to="/login"
+  className="bg-[#0F3952] text-white px-12 py-4 rounded-full font-bold hover:bg-yellow-400 hover:text-[#0F3952] transition-all shadow-xl inline-block text-center"
+>
+  Discuss Your Project
+</Link>
+        </motion.div>
       </section>
     </div>
   );

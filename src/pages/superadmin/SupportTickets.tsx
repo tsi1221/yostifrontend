@@ -1,5 +1,5 @@
 // src/pages/superAdmin/SupportTickets.tsx
-import React, { useState, useEffect } from "react";
+import  { useState, useEffect } from "react";
 import {
   Table,
   Tag,

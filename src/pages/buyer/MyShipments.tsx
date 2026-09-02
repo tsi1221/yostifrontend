@@ -1,270 +1,156 @@
-// src/pages/buyer/MyShipments.tsx
-import React, { useState } from "react";
-import { Table, Drawer, Button, Form, Input, InputNumber, Select } from "antd";
-import { EnvironmentOutlined, PlusOutlined } from "@ant-design/icons";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import dayjs from "dayjs";
-import "leaflet/dist/leaflet.css";
+import  { useState } from "react";
+import useShipments, { type Shipment, type CreateShipmentInput } from "../../hooks/useShipmentBuyer";
+import { Modal, Button, Form, Input, Select, message, Spin } from "antd";
 
 const { Option } = Select;
 
-interface ShipmentUpdate {
-  update_id: string;
-  shipment_id: string;
-  location: string;
-  status: "booked" | "in transit" | "at port" | "customs" | "delivered";
-  remarks: string;
-  update_time: string;
-}
+const statusColors: Record<string, string> = {
+  booked: "bg-blue-100 text-blue-800",
+  "at-port": "bg-yellow-100 text-yellow-800",
+  "in-transit": "bg-purple-100 text-purple-800",
+  customs: "bg-orange-100 text-orange-800",
+  delivered: "bg-green-100 text-green-800",
+  cancelled: "bg-red-100 text-red-800",
+};
 
-interface Shipment {
-  shipment_id: string;
-  user_id: string;
-  pickup_location: string;
-  destination_country: string;
-  destination_city: string;
-  goods_description: string;
-  weight: number;
-  volume: number;
-  shipping_method: "sea" | "air" | "express";
-  tracking_number: string;
-  status: "booked" | "in transit" | "at port" | "customs" | "delivered";
-  estimated_delivery: string;
-  updates: ShipmentUpdate[];
-}
-
-const initialShipments: Shipment[] = [
-  {
-    shipment_id: "SHP-001",
-    user_id: "USR-001",
-    pickup_location: "Guangzhou Warehouse",
-    destination_country: "Ethiopia",
-    destination_city: "Addis Ababa",
-    goods_description: "Bluetooth Speakers",
-    weight: 120,
-    volume: 3.5,
-    shipping_method: "air",
-    tracking_number: "TRK-99231A",
-    status: "in transit",
-    estimated_delivery: "2025-12-01",
-    updates: [
-      {
-        update_id: "UPD-001",
-        shipment_id: "SHP-001",
-        location: "Guangzhou Warehouse",
-        status: "booked",
-        remarks: "Shipment booked",
-        update_time: "2025-11-01 10:00",
-      },
-      {
-        update_id: "UPD-002",
-        shipment_id: "SHP-001",
-        location: "Guangzhou Airport",
-        status: "in transit",
-        remarks: "Shipment departed",
-        update_time: "2025-11-03 14:30",
-      },
-    ],
-  },
-];
-
-export default function MyShipments() {
-  const [shipments, setShipments] = useState<Shipment[]>(initialShipments);
-  const [openBook, setOpenBook] = useState(false);
-  const [openTrack, setOpenTrack] = useState(false);
+const MyShipments: React.FC = () => {
+  const { shipments, loading, createShipment, getShipmentById } = useShipments();
   const [selectedShipment, setSelectedShipment] = useState<Shipment | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
   const [form] = Form.useForm();
 
-  const columns = [
-    {
-      title: "Tracking No.",
-      dataIndex: "tracking_number",
-      key: "tracking_number",
-      render: (text: string) => <span className="font-semibold text-gray-900">{text}</span>,
-    },
-    { title: "Destination", render: (r: Shipment) => `${r.destination_city}, ${r.destination_country}` },
-    { title: "Method", dataIndex: "shipping_method", key: "shipping_method" },
-    { title: "Status", dataIndex: "status", key: "status" },
-    {
-      title: "Est. Delivery",
-      dataIndex: "estimated_delivery",
-      key: "estimated_delivery",
-      render: (d: string) => dayjs(d).format("YYYY-MM-DD"),
-    },
-    {
-      title: "Actions",
-      key: "actions",
-      render: (_: any, record: Shipment) => (
-        <Button
-          icon={<EnvironmentOutlined />}
-          style={{ backgroundColor: "#0f3952", color: "white", border: "none" }}
-          size="small"
-          onClick={() => {
-            setSelectedShipment(record);
-            setOpenTrack(true);
-          }}
-        >
-          Track
-        </Button>
-      ),
-    },
-  ];
-
-  const handleBook = (values: any) => {
-    const newShipment: Shipment = {
-      shipment_id: `SHP-${Math.floor(Math.random() * 999).toString().padStart(3, "0")}`,
-      user_id: "USR-001",
-      pickup_location: values.pickup_location,
-      destination_country: values.destination_country,
-      destination_city: values.destination_city,
-      goods_description: values.goods_description,
-      weight: values.weight,
-      volume: values.volume,
-      shipping_method: values.shipping_method,
-      tracking_number: "TRK-" + Math.random().toString(36).substr(2, 6).toUpperCase(),
-      status: "booked",
-      estimated_delivery: dayjs().add(15, "day").format("YYYY-MM-DD"),
-      updates: [
-        {
-          update_id: `UPD-${Math.floor(Math.random() * 999)}`,
-          shipment_id: `SHP-${Math.floor(Math.random() * 999)}`,
-          location: values.pickup_location,
-          status: "booked",
-          remarks: "Shipment booked",
-          update_time: dayjs().format("YYYY-MM-DD HH:mm"),
-        },
-      ],
-    };
-    setShipments([newShipment, ...shipments]);
-    form.resetFields();
-    setOpenBook(false);
+  const handleViewDetails = async (id: string) => {
+    try {
+      const shipment = await getShipmentById(id);
+      setSelectedShipment(shipment);
+    } catch (error) {
+      console.error("Failed to fetch shipment details", error);
+      message.error("Failed to fetch shipment details");
+    }
   };
 
-  const timelineSteps: ShipmentUpdate["status"][] = [
-    "booked",
-    "in transit",
-    "at port",
-    "customs",
-    "delivered",
-  ];
-
-  const getUpdateTime = (shipment: Shipment, step: ShipmentUpdate["status"]) => {
-    const upd = shipment.updates.find((u) => u.status === step);
-    return upd ? dayjs(upd.update_time).format("YYYY-MM-DD HH:mm") : "-";
+  const handleCreate = async () => {
+    try {
+      const values: CreateShipmentInput = await form.validateFields();
+      await createShipment(values);
+      message.success("Shipment created successfully");
+      setModalVisible(false);
+      form.resetFields();
+    } catch (error) {
+      console.error("Failed to create shipment", error);
+      message.error("Failed to create shipment");
+    }
   };
 
   return (
-    <div className="p-6 bg-white min-h-screen">
-      {/* HEADER */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">My Shipments</h1>
-        <Button
-          icon={<PlusOutlined />}
-          style={{ backgroundColor: "#0f3952", color: "white", border: "none" }}
-          onClick={() => setOpenBook(true)}
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">My Shipments</h1>
+      <Button type="primary" className="mb-4" onClick={() => setModalVisible(true)}>
+        Create Shipment
+      </Button>
+
+      {loading ? (
+        <Spin />
+      ) : shipments.length === 0 ? (
+        <p>No shipments found.</p>
+      ) : (
+        <table className="min-w-full border border-gray-200 rounded-md">
+          <thead className="bg-gray-100">
+            <tr>
+              <th>Tracking #</th>
+              <th>Goods</th>
+              <th>Route</th>
+              <th>Method</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {shipments.map((shipment) => (
+              <tr key={shipment._id} className="border-b">
+                <td>{shipment.trackingNumber || "N/A"}</td>
+                <td>{shipment.goodsDescription}</td>
+                <td>{shipment.pickupLocation} → {shipment.destinationCity}, {shipment.destinationCountry}</td>
+                <td className="capitalize">{shipment.shippingMethod}</td>
+                <td>
+                  <span className={`px-2 py-1 rounded-full text-sm font-semibold ${statusColors[shipment.status]}`}>
+                    {shipment.status}
+                  </span>
+                </td>
+                <td>
+                  <Button type="link" onClick={() => handleViewDetails(shipment._id)}>View</Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      {selectedShipment && (
+        <Modal
+          title="Shipment Details"
+          visible={!!selectedShipment}
+          onCancel={() => setSelectedShipment(null)}
+          footer={null}
         >
-          Book Shipment
-        </Button>
-      </div>
+          <p><strong>Tracking #:</strong> {selectedShipment.trackingNumber}</p>
+          <p><strong>Goods:</strong> {selectedShipment.goodsDescription}</p>
+          <p><strong>Route:</strong> {selectedShipment.pickupLocation} → {selectedShipment.destinationCity}, {selectedShipment.destinationCountry}</p>
+          <p><strong>Method:</strong> {selectedShipment.shippingMethod}</p>
+          <p><strong>Status:</strong> {selectedShipment.status}</p>
 
-      {/* TABLE */}
-      <Table
-        dataSource={shipments}
-        columns={columns}
-        rowKey="shipment_id"
-        pagination={{ position: ["bottomRight"], pageSize: 5 }}
-      />
-
-      {/* BOOKING DRAWER */}
-      <Drawer
-        title="Book New Shipment"
-        open={openBook}
-        width={400}
-        onClose={() => setOpenBook(false)}
-      >
-        <Form layout="vertical" form={form} onFinish={handleBook}>
-          <Form.Item label="Pickup Location" name="pickup_location" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item label="Destination Country" name="destination_country" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item label="Destination City" name="destination_city" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item label="Goods Description" name="goods_description" rules={[{ required: true }]}>
-            <Input.TextArea rows={2} />
-          </Form.Item>
-          <Form.Item label="Weight (kg)" name="weight" rules={[{ required: true }]}>
-            <InputNumber className="w-full" />
-          </Form.Item>
-          <Form.Item label="Volume (m³)" name="volume" rules={[{ required: true }]}>
-            <InputNumber className="w-full" />
-          </Form.Item>
-          <Form.Item label="Shipping Method" name="shipping_method" rules={[{ required: true }]}>
-            <Select>
-              <Option value="sea">Sea</Option>
-              <Option value="air">Air</Option>
-              <Option value="express">Express</Option>
-            </Select>
-          </Form.Item>
-          <Button
-            htmlType="submit"
-            className="w-full"
-            style={{ backgroundColor: "#0f3952", color: "white", border: "none" }}
-          >
-            Confirm Booking
-          </Button>
-        </Form>
-      </Drawer>
-
-      {/* TRACKING DRAWER */}
-      <Drawer
-        title="Live Shipment Tracking"
-        open={openTrack}
-        width={450}
-        onClose={() => setOpenTrack(false)}
-      >
-        {selectedShipment && (
-          <div className="space-y-4">
-            {/* STATUS TIMELINE */}
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">Status Timeline</h3>
-              <ul className="space-y-2">
-                {timelineSteps.map((step) => (
-                  <li key={step} className="p-2 rounded border border-gray-300">
-                    <div className="flex justify-between">
-                      <span className="font-medium">{step.toUpperCase()}</span>
-                      <span className="text-sm">{getUpdateTime(selectedShipment, step)}</span>
-                    </div>
-                    <div className="text-gray-700">
-                      {selectedShipment.updates.find((u) => u.status === step)?.location || ""}
-                      {selectedShipment.updates.find((u) => u.status === step)?.remarks
-                        ? " — " + selectedShipment.updates.find((u) => u.status === step)?.remarks
-                        : ""}
-                    </div>
+          {selectedShipment.updates?.length ? (
+            <>
+              <h3>Updates:</h3>
+              <ul className="list-disc list-inside">
+                {selectedShipment.updates.map((update) => (
+                  <li key={update._id}>
+                    {new Date(update.updateTime).toLocaleString()} — {update.location} ({update.status})
+                    {update.remarks && `: ${update.remarks}`}
                   </li>
                 ))}
               </ul>
-            </div>
+            </>
+          ) : null}
+        </Modal>
+      )}
 
-            {/* MAP VIEW */}
-            <h3 className="font-semibold text-gray-900">Live Map</h3>
-            <div className="h-64 rounded overflow-hidden">
-              <MapContainer
-                center={[30.6, 104.0]} // Example coordinates
-                zoom={5}
-                style={{ height: "100%", width: "100%" }}
-              >
-                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                <Marker position={[30.6, 104.0]}>
-                  <Popup>Shipment is in transit</Popup>
-                </Marker>
-              </MapContainer>
-            </div>
-          </div>
-        )}
-      </Drawer>
+      <Modal
+        title="Create Shipment"
+        visible={modalVisible}
+        onCancel={() => setModalVisible(false)}
+        onOk={handleCreate}
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item name="pickupLocation" label="Pickup Location" rules={[{ required: true }]}>
+            <Input placeholder="Guangzhou Warehouse" />
+          </Form.Item>
+          <Form.Item name="destinationCountry" label="Destination Country" rules={[{ required: true }]}>
+            <Input placeholder="Ethiopia" />
+          </Form.Item>
+          <Form.Item name="destinationCity" label="Destination City" rules={[{ required: true }]}>
+            <Input placeholder="Addis Ababa" />
+          </Form.Item>
+          <Form.Item name="goodsDescription" label="Goods Description" rules={[{ required: true }]}>
+            <Input placeholder="1000 Cotton T-Shirts" />
+          </Form.Item>
+          <Form.Item name="weight" label="Weight (kg)" rules={[{ required: true }]}>
+            <Input type="number" placeholder="1000" />
+          </Form.Item>
+          <Form.Item name="volume" label="Volume (m³)">
+            <Input type="number" placeholder="50" />
+          </Form.Item>
+          <Form.Item name="shippingMethod" label="Shipping Method" rules={[{ required: true }]}>
+            <Select placeholder="Select method">
+              <Option value="air">Air</Option>
+              <Option value="sea">Sea</Option>
+              <Option value="express">Express</Option>
+            </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
-}
+};
+
+export default MyShipments;

@@ -1,198 +1,581 @@
 import { useEffect, useState } from "react";
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 
-import Sidebar  from "./components/Sidebar";            
-import         type { Role } from "./components/Sidebar";
-import Header from "./components/Header";
+/* =========================================================
+   AUTH
+========================================================= */
 
-/* ===================== ADMIN ===================== */
-import AdminDashboard from "./pages/Admin/Dashboard";
-import Blogs from "./pages/Admin/Blogs";
-import SourcingDashboard from "./pages/Admin/Sourcing";
-import SupportTable from "./pages/Admin/Support";
-import Shipments from "./pages/Admin/Shipments";
-import Inspections from "./pages/Admin/Inspections";
-import Payments from "./pages/Admin/Payments";
-import AdminProfile from "./pages/Admin/Profile";
+import Login from "./shared/Auth/login/Login";
+import Register from "./shared/Auth/Register";
+import ForgotPassword from "./shared/Auth/ForgotPassword";
+import TwoFA from "./shared/Auth/TwoFA";
 
-/* ===================== BUYER ===================== */
-import BuyerDashboard from "./pages/buyer/Dashboard";
-import Requests from "./pages/buyer/MyRequests";
-import Quotes from "./pages/buyer/MyQuotes";
-import Trips from "./pages/buyer/MyTrips";
-import MyShipments from "./pages/buyer/MyShipments";
-import MyPayments from "./pages/buyer/MyPayments";
-import Support from "./pages/buyer/Support";
-import BuyerProfile from "./pages/buyer/Profile";
-import MyInspectionsBuyer from "./pages/buyer/MyInspections";
+/* =========================================================
+   ROLE ROUTING
+========================================================= */
 
-/* ===================== SUPPLIER ===================== */
-import SupplierDashboard from "./pages/Supplier/Dashboard";
-import OpenRequests from "./pages/Supplier/OpenRequests";
-import MyQuotes from "./pages/Supplier/MyQuotes";
-import MyInspections from "./pages/Supplier/MyInspections";
-import VerificationStatus from "./pages/Supplier/VerificationStatus";
-import SupplierProfile from "./pages/Supplier/Profile";
+import SuperAdminRouting from "./Superadmin/Routing/SuperAdminRouting";
 
-/* ===================== SUPER ADMIN ===================== */
-import SuperDashboard from "./pages/superadmin/Dashboard";
-import SourcingRequests from "./pages/superadmin/SourcingRequests";
-import SuperAdminQuotes from "./pages/superadmin/SupplierQuotes";
-import AllSuppliers from "./pages/superadmin/Suppliers";
-import BusinessTrips from "./pages/superadmin/BusinessTrips";
-import AllVisaInvitations from "./pages/superadmin/VisaInvitations";
-import SupportTickets from "./pages/superadmin/SupportTickets";
-import StaffManagement from "./pages/superadmin/StaffManagement";
-import AllShipments from "./pages/superadmin/Shipments";
-import AllInspections from "./pages/superadmin/Inspections";
-import AllPayments from "./pages/superadmin/Payments";
-import AllExportProducts from "./pages/superadmin/ExportProducts";
-import AllBlog from "./pages/superadmin/Blog";
-import AllTestimonials from "./pages/superadmin/Testimonials";
-import AllUsers from "./pages/superadmin/Users";
-import Settings from "./pages/superadmin/Settings";
+/*
+  Add these when their routing files are ready:
 
-/* ===================== PUBLIC ===================== */
-import Navbar from "./pages/Home/Navbar";
-import Footer from "./pages/Home/Footer";
-import HeroSection from "./pages/Home/HeroSection";
-import AboutSection from "./pages/Home/AboutSection";
-import ServicesSection from "./pages/Home/ServicesSection";
-import ContactSection from "./pages/Home/ContactSection";
-import Blog from "./pages/Home/Blog";
-import WhyChoose from "./pages/Home/Whychoose";
-import OURPROJECT from "./pages/Home/Ourproject";
-import ProductPage from "./pages/product/product";
-import Productt from "./pages/Home/product";
+  import AdminRouting from "./Admin/Routing/AdminRouting";
+  import BuyerRouting from "./Buyer/Routing/BuyerRouting";
+  import SupplierRouting from "./Supplier/Routing/SupplierRouting";
+  import LogisticsRouting from "./Logistics/Routing/LogisticsRouting";
+*/
 
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import TwoFA from "./pages/TwoFA";
-import ForgotPassword from "./pages/ForgotPassword";
+/* =========================================================
+   PUBLIC HOME
+========================================================= */
 
-const App = () => {
-  const location = useLocation();
-  const [role, setRole] = useState<Role | null>(null);
-  const [email, setEmail] = useState<string | null>(null);
+import Navbar from "./Pages/Home/Navbar";
+import Footer from "./Pages/Home/Footer";
+import HeroSection from "./Pages/Home/HeroSection";
+import AboutSection from "./Pages/Home/AboutSection";
+import ServicesSection from "./Pages/Home/ServicesSection";
+import ContactSection from "./Pages/Home/ContactSection";
+import Blog from "./Pages/Home/Blog";
+import WhyChoose from "./Pages/Home/Whychoose";
+import OurProject from "./Pages/Home/Ourproject";
+import Statics from "./Pages/Home/Statics";
+import TestimonialsPage from "./Pages/Home/TestimonialsSection";
+import ProductsSection from "./Pages/Home/ExportProductsSection";
+import Staff from "./Pages/Home/Staff";
 
-  // Load role and email from storage
-  useEffect(() => {
-    const savedRole = (localStorage.getItem("role") || sessionStorage.getItem("role")) as Role | null;
-    const savedEmail = (localStorage.getItem("email") || sessionStorage.getItem("email")) || null;
-    if (savedRole) setRole(savedRole);
-    if (savedEmail) setEmail(savedEmail);
-  }, []);
+/* =========================================================
+   PRODUCT PAGES
+========================================================= */
 
-  const dashboardPaths: Record<Role, string> = {
-    admin: "/admin",
-    buyer: "/buyer",
-    supplier: "/supplier",
-    logistics: "/logistics",
-    student: "/student",
-    "super-admin": "/superadmin",
-  };
+import ProductPage from "./Pages/Home/product";
 
-  const isDashboard = role !== null && location.pathname.startsWith(dashboardPaths[role]);
-  const hideLayout = ["/login", "/register"].includes(location.pathname);
+/* =========================================================
+   ROLE TYPE
+========================================================= */
 
-  return (
-    <>
-      {isDashboard && role && (
-        <>
-          <Sidebar role={role} />
-          <Header role={role} email={email || ""} setRole={setRole} />
-        </>
-      )}
+import type { UserRole } from "./shared/layout/Sidebar";
 
-      {!isDashboard && !hideLayout && <Navbar />}
+/* =========================================================
+   VALID ROLES
+========================================================= */
 
-      <Routes>
-        {/* ================= ADMIN ================= */}
-        {role === "admin" && (
-          <>
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/blogs" element={<Blogs />} />
-            <Route path="/sourcing" element={<SourcingDashboard />} />
-            <Route path="/support" element={<SupportTable />} />
-            <Route path="/shipments" element={<Shipments />} />
-            <Route path="/inspections" element={<Inspections />} />
-            <Route path="/payments" element={<Payments />} />
-            <Route path="/profile" element={<AdminProfile />} />
-            <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
-          </>
-        )}
+const VALID_ROLES: UserRole[] = [
+  "SUPER_ADMIN",
+  "STAFF",
+  "BUYER",
+  "SUPPLIER",
+  "LOGISTICS_PARTNER",
+];
 
-        {/* ================= BUYER ================= */}
-        {role === "buyer" && (
-          <>
-            <Route path="/buyer/dashboard" element={<BuyerDashboard />} />
-            <Route path="/requests" element={<Requests />} />
-            <Route path="/quotes" element={<Quotes />} />
-            <Route path="/trips" element={<Trips />} />
-            <Route path="/shipments" element={<MyShipments />} />
-            <Route path="/payments" element={<MyPayments />} />
-            <Route path="/support" element={<Support />} />
-            <Route path="/buyerinspection" element={<MyInspectionsBuyer />} />
-            <Route path="/buyerprofile" element={<BuyerProfile />} />
-            <Route path="*" element={<Navigate to="/buyer/dashboard" replace />} />
-          </>
-        )}
+/* =========================================================
+   NORMALIZE ROLE
+========================================================= */
 
-        {/* ================= SUPPLIER ================= */}
-        {role === "supplier" && (
-          <>
-            <Route path="/supplier/dashboard" element={<SupplierDashboard />} />
-            <Route path="/open-requests" element={<OpenRequests />} />
-            <Route path="/my-quotes" element={<MyQuotes />} />
-            <Route path="/my-inspections" element={<MyInspections />} />
-            <Route path="/verification-status" element={<VerificationStatus />} />
-            <Route path="/supplier/profile" element={<SupplierProfile />} />
-            <Route path="*" element={<Navigate to="/supplier/dashboard" replace />} />
-          </>
-        )}
+const normalizeRole = (
+  value: string | null
+): UserRole | null => {
+  if (!value) {
+    return null;
+  }
 
-        {/* ================= SUPER ADMIN ================= */}
-        {role === "super-admin" && (
-          <>
-            <Route path="/superadmin/dashboard" element={<SuperDashboard />} />
-            <Route path="/allsourcing" element={<SourcingRequests />} />
-            <Route path="/allquotes" element={<SuperAdminQuotes />} />
-            <Route path="/allsuppliers" element={<AllSuppliers />} />
-            <Route path="/alltrips" element={<BusinessTrips />} />
-            <Route path="/allvisa" element={<AllVisaInvitations />} />
-            <Route path="/all-support-tickets" element={<SupportTickets />} />
-            <Route path="/staff-management" element={<StaffManagement />} />
-            <Route path="/allshipments" element={<AllShipments />} />
-            <Route path="/allinspections" element={<AllInspections />} />
-            <Route path="/allpayments" element={<AllPayments />} />
-            <Route path="/all-port-products" element={<AllExportProducts />} />
-            <Route path="/allblogs" element={<AllBlog />} />
-            <Route path="/alltestimonials" element={<AllTestimonials />} />
-            <Route path="/allusers" element={<AllUsers />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="*" element={<Navigate to="/superadmin/dashboard" replace />} />
-          </>
-        )}
+  const normalized = value
+    .trim()
+    .toUpperCase();
 
-        {/* ================= PUBLIC ================= */}
-        <Route path="/" element={<HeroSection />} />
-        <Route path="/about" element={<AboutSection />} />
-        <Route path="/services" element={<ServicesSection />} />
-        <Route path="/whychoose" element={<WhyChoose />} />
-        <Route path="/ourproject" element={<OURPROJECT />} />
-        <Route path="/projectt" element={<Productt />} />
-        <Route path="/blog/news" element={<Blog />} />
-        <Route path="/products" element={<ProductPage />} />
-        <Route path="/contact" element={<ContactSection />} />
-        <Route path="/2fa" element={<TwoFA />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/login" element={<Login setRole={setRole} setEmail={setEmail} />} />
-        <Route path="/register" element={<Register />} />
-      </Routes>
+  if (
+    VALID_ROLES.includes(
+      normalized as UserRole
+    )
+  ) {
+    return normalized as UserRole;
+  }
 
-      {!isDashboard && !hideLayout && <Footer />}
-    </>
-  );
+  /*
+    Also support old lowercase values that
+    may already exist in localStorage.
+  */
+
+  switch (value.trim().toLowerCase()) {
+    case "super-admin":
+    case "super_admin":
+    case "superadmin":
+      return "SUPER_ADMIN";
+
+    case "staff":
+    case "admin":
+      return "STAFF";
+
+    case "buyer":
+      return "BUYER";
+
+    case "supplier":
+      return "SUPPLIER";
+
+    case "logistics":
+    case "logistics-partner":
+    case "logistics_partner":
+      return "LOGISTICS_PARTNER";
+
+    default:
+      return null;
+  }
 };
 
-export default App;
+/* =========================================================
+   APP
+========================================================= */
+
+export default function App() {
+  const location = useLocation();
+
+  const [role, setRole] =
+    useState<UserRole | null>(null);
+
+  const [, setEmail] =
+    useState<string | null>(null);
+
+  /* =======================================================
+     LOAD STORED AUTHENTICATION
+  ======================================================= */
+
+  useEffect(() => {
+    const storedRole =
+      localStorage.getItem("role") ||
+      sessionStorage.getItem("role");
+
+    const storedEmail =
+      localStorage.getItem("email") ||
+      sessionStorage.getItem("email");
+
+    const normalizedRole =
+      normalizeRole(storedRole);
+
+    if (normalizedRole) {
+      setRole(normalizedRole);
+    } else {
+      setRole(null);
+    }
+
+    if (storedEmail) {
+      setEmail(storedEmail);
+    } else {
+      setEmail(null);
+    }
+  }, []);
+
+  /* =======================================================
+     AUTH PAGES
+  ======================================================= */
+
+  const isAuthPage = [
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/two-fa",
+    "/2fa",
+  ].includes(location.pathname);
+
+  /* =======================================================
+     PUBLIC PAGES
+  ======================================================= */
+
+  const isPublicPage =
+    location.pathname === "/" ||
+    location.pathname.startsWith("/about") ||
+    location.pathname.startsWith("/services") ||
+    location.pathname.startsWith("/industries") ||
+    location.pathname.startsWith("/contact") ||
+    location.pathname.startsWith("/blog") ||
+    location.pathname.startsWith("/products") ||
+    location.pathname.startsWith("/projectt") ||
+    location.pathname.startsWith("/ourproject") ||
+    location.pathname.startsWith("/staffs");
+
+  /* =======================================================
+     AUTH ROUTES
+  ======================================================= */
+
+  if (isAuthPage) {
+    return (
+      <Routes>
+        {/* LOGIN */}
+
+        <Route
+          path="/login"
+          element={
+            <Login
+              setRole={setRole}
+              setEmail={setEmail}
+            />
+          }
+        />
+
+        {/* REGISTER */}
+
+        <Route
+          path="/register"
+          element={<Register />}
+        />
+
+        {/* FORGOT PASSWORD */}
+
+        <Route
+          path="/forgot-password"
+          element={<ForgotPassword />}
+        />
+
+        {/* TWO FACTOR */}
+
+        <Route
+          path="/two-fa"
+          element={<TwoFA />}
+        />
+
+        {/* TWO FACTOR ALIAS */}
+
+        <Route
+          path="/2fa"
+          element={<TwoFA />}
+        />
+
+        {/* AUTH FALLBACK */}
+
+        <Route
+          path="*"
+          element={
+            <Navigate
+              to="/login"
+              replace
+            />
+          }
+        />
+      </Routes>
+    );
+  }
+
+  /* =======================================================
+     MAIN APPLICATION
+  ======================================================= */
+
+  return (
+    <div className="min-h-screen bg-white">
+      {/* ===================================================
+          PUBLIC NAVBAR
+      =================================================== */}
+
+      {isPublicPage && <Navbar />}
+
+      {/* ===================================================
+          ROUTES
+      =================================================== */}
+
+      <Routes>
+        {/* =================================================
+            HOME
+        ================================================== */}
+
+        <Route
+          path="/"
+          element={
+            <>
+              <HeroSection />
+
+              <ProductsSection />
+
+              <ServicesSection />
+
+              <WhyChoose />
+
+              <Statics />
+
+              <TestimonialsPage />
+            </>
+          }
+        />
+
+        {/* =================================================
+            ABOUT
+        ================================================== */}
+
+        <Route
+          path="/about"
+          element={
+            <AboutSection />
+          }
+        />
+
+        {/* =================================================
+            SERVICES
+        ================================================== */}
+
+        <Route
+          path="/services"
+          element={
+            <ServicesSection />
+          }
+        />
+
+        {/* =================================================
+            INDUSTRIES
+        ================================================== */}
+
+        <Route
+          path="/industries"
+          element={
+            <ProductsSection />
+          }
+        />
+
+        {/* =================================================
+            CONTACT
+        ================================================== */}
+
+        <Route
+          path="/contact"
+          element={
+            <ContactSection />
+          }
+        />
+
+        {/* =================================================
+            BLOG
+        ================================================== */}
+
+        <Route
+          path="/blog/news"
+          element={
+            <Blog />
+          }
+        />
+
+        {/* =================================================
+            PRODUCTS
+        ================================================== */}
+
+        <Route
+          path="/products"
+          element={
+            <ProductPage />
+          }
+        />
+
+        {/* =================================================
+            PROJECT PAGE
+        ================================================== */}
+
+        <Route
+          path="/projectt"
+          element={
+            <ProductPage />
+          }
+        />
+
+        {/* =================================================
+            OUR PROJECTS
+        ================================================== */}
+
+        <Route
+          path="/ourproject"
+          element={
+            <OurProject />
+          }
+        />
+
+        {/* =================================================
+            STAFF
+        ================================================== */}
+
+        <Route
+          path="/staffs"
+          element={
+            <Staff />
+          }
+        />
+
+        {/* =================================================
+            LOGIN
+        ================================================== */}
+
+        <Route
+          path="/login"
+          element={
+            <Login
+              setRole={setRole}
+              setEmail={setEmail}
+            />
+          }
+        />
+
+        {/* =================================================
+            REGISTER
+        ================================================== */}
+
+        <Route
+          path="/register"
+          element={
+            <Register />
+          }
+        />
+
+        {/* =================================================
+            FORGOT PASSWORD
+        ================================================== */}
+
+        <Route
+          path="/forgot-password"
+          element={
+            <ForgotPassword />
+          }
+        />
+
+        {/* =================================================
+            TWO FA
+        ================================================== */}
+
+        <Route
+          path="/two-fa"
+          element={
+            <TwoFA />
+          }
+        />
+
+        <Route
+          path="/2fa"
+          element={
+            <TwoFA />
+          }
+        />
+
+        {/* =================================================
+            SUPER ADMIN
+        ================================================== */}
+
+        <Route
+          path="/superadmin/*"
+          element={
+            role === "SUPER_ADMIN" ? (
+              <SuperAdminRouting />
+            ) : (
+              <Navigate
+                to="/login"
+                replace
+              />
+            )
+          }
+        />
+
+        {/* =================================================
+            ADMIN / STAFF
+        ================================================== */}
+
+        {/*
+        <Route
+          path="/admin/*"
+          element={
+            role === "STAFF" ? (
+              <AdminRouting />
+            ) : (
+              <Navigate
+                to="/login"
+                replace
+              />
+            )
+          }
+        />
+        */}
+
+        {/* =================================================
+            BUYER
+        ================================================== */}
+
+        {/*
+        <Route
+          path="/buyer/*"
+          element={
+            role === "BUYER" ? (
+              <BuyerRouting />
+            ) : (
+              <Navigate
+                to="/login"
+                replace
+              />
+            )
+          }
+        />
+        */}
+
+        {/* =================================================
+            SUPPLIER
+        ================================================== */}
+
+        {/*
+        <Route
+          path="/supplier/*"
+          element={
+            role === "SUPPLIER" ? (
+              <SupplierRouting />
+            ) : (
+              <Navigate
+                to="/login"
+                replace
+              />
+            )
+          }
+        />
+        */}
+
+        {/* =================================================
+            LOGISTICS
+        ================================================== */}
+
+        {/*
+        <Route
+          path="/logistics/*"
+          element={
+            role === "LOGISTICS_PARTNER" ? (
+              <LogisticsRouting />
+            ) : (
+              <Navigate
+                to="/login"
+                replace
+              />
+            )
+          }
+        />
+        */}
+
+        {/* =================================================
+            FALLBACK
+        ================================================== */}
+
+        <Route
+          path="*"
+          element={
+            role === "SUPER_ADMIN" ? (
+              <Navigate
+                to="/superadmin"
+                replace
+              />
+            ) : (
+              <Navigate
+                to="/"
+                replace
+              />
+            )
+          }
+        />
+      </Routes>
+
+      {/* ===================================================
+          PUBLIC FOOTER
+      =================================================== */}
+
+      {isPublicPage && <Footer />}
+    </div>
+  );
+}

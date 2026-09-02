@@ -1,203 +1,354 @@
-import { useState, useEffect } from "react";
-import { Table, Drawer, Button, Space, Tag, Input, Select, Form, InputNumber, DatePicker } from "antd";
-import { EyeOutlined, UserSwitchOutlined, PlusOutlined } from "@ant-design/icons";
+import { useState } from "react";
+import {
+  Table, Drawer, Button, Space, Tag, Select, 
+  Form, Input, InputNumber, DatePicker, 
+  message, Timeline, Card, Spin, Tooltip
+} from "antd";
+import type { ColumnsType } from "antd/es/table";
+import { 
+  EyeOutlined, 
+  PlusCircleOutlined, 
+  ContainerOutlined,
+  EditOutlined,
+  UserAddOutlined,
+  GlobalOutlined,
+  CloseOutlined,
+  RadarChartOutlined
+} from "@ant-design/icons";
+import dayjs from "dayjs";
+import { motion, AnimatePresence } from "framer-motion";
+import { useShipmentAdmin, type Shipment } from "../../hooks/useShipmentAdmin";
 
 const { Option } = Select;
 
-interface Shipment {
-  shipment_id: string;
-  user_id: string;
-  pickup_location: string;
-  destination_country: string;
-  destination_city: string;
-  goods_description: string;
-  weight: number;
-  volume: number;
-  shipping_method: "sea" | "air" | "express";
-  tracking_number: string;
-  status: "booked" | "in transit" | "at port" | "customs" | "delivered";
-  estimated_delivery_date?: string;
-  created_at: string;
-  assigned_logistic?: string;
-}
+export default function ShipmentsAdmin() {
+  const {
+    shipments,
+    loading,
+    getShipmentById,
+    assignLogistic,
+    updateShipment,
+    addShipmentUpdate,
+    fetchShipments,
+  } = useShipmentAdmin();
 
-const mockShipments: Shipment[] = [
-  { shipment_id: "SHP001", user_id: "USR001", pickup_location: "Addis Ababa", destination_country: "USA", destination_city: "New York", goods_description: "Electronics", weight: 150, volume: 1.2, shipping_method: "air", tracking_number: "TRK001", status: "in transit", estimated_delivery_date: "2025-12-05", created_at: "2025-11-15" },
-  { shipment_id: "SHP002", user_id: "USR002", pickup_location: "Bahir Dar", destination_country: "Germany", destination_city: "Berlin", goods_description: "Textiles", weight: 500, volume: 3, shipping_method: "sea", tracking_number: "TRK002", status: "booked", estimated_delivery_date: "2025-12-20", created_at: "2025-11-16" },
-  { shipment_id: "SHP003", user_id: "USR003", pickup_location: "Mekelle", destination_country: "UK", destination_city: "London", goods_description: "Machinery", weight: 1200, volume: 8, shipping_method: "sea", tracking_number: "TRK003", status: "at port", estimated_delivery_date: "2025-12-25", created_at: "2025-11-17" },
-];
-
-const Shipments: React.FC = () => {
-  const [shipments, setShipments] = useState<Shipment[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [mode, setMode] = useState<"view" | "assign" | "add" | null>(null);
-  const [selectedShipment, setSelectedShipment] = useState<Shipment | null>(null);
+  const [drawerLoading, setDrawerLoading] = useState(false);
+  const [mode, setMode] = useState<"view" | "assign" | "update" | "addUpdate">("view");
+  const [selected, setSelected] = useState<Shipment | null>(null);
   const [form] = Form.useForm();
 
-  const logisticsUsers = ["Logistic1", "Logistic2", "Logistic3"];
-
-  useEffect(() => {
-    setShipments(mockShipments);
-  }, []);
-
-  const openDrawer = (drawerMode: "view" | "assign" | "add", shipment?: Shipment) => {
-    setMode(drawerMode);
-    setSelectedShipment(shipment || null);
-    if (drawerMode === "add") form.resetFields();
-    if (shipment) form.setFieldsValue(shipment);
+  const openDrawer = async (m: "view" | "assign" | "update" | "addUpdate", s: Shipment) => {
+    setDrawerLoading(true);
     setDrawerOpen(true);
+    setMode(m);
+    
+    try {
+      const full = await getShipmentById(s._id);
+      if (full) {
+        setSelected(full);
+        form.resetFields();
+        form.setFieldsValue({
+          ...full,
+          estimatedDeliveryDate: full.estimatedDeliveryDate ? dayjs(full.estimatedDeliveryDate) : null,
+          statusUpdate: full.status 
+        });
+      }
+    } catch (err) {
+      message.error("Failed to fetch shipment details");
+      setDrawerOpen(false);
+    } finally {
+      setDrawerLoading(false);
+    }
   };
 
-  const handleAssign = (logistic: string) => {
-    if (!selectedShipment) return;
-    setShipments((prev) =>
-      prev.map((s) =>
-        s.shipment_id === selectedShipment.shipment_id ? { ...s, assigned_logistic: logistic } : s
-      )
-    );
-    setDrawerOpen(false);
+  const onFinish = async (values: any) => {
+    if (!selected) return;
+    setDrawerLoading(true);
+    try {
+      if (mode === "assign") {
+        await assignLogistic(selected._id, values.assignedLogistic);
+        message.success("Logistic partner assigned");
+      } else if (mode === "update") {
+        const payload = {
+          ...values,
+          estimatedDeliveryDate: values.estimatedDeliveryDate?.format("YYYY-MM-DD"),
+        };
+        await updateShipment(selected._id, payload);
+        message.success("Shipment details updated");
+      } else if (mode === "addUpdate") {
+        await addShipmentUpdate(selected._id, {
+          location: values.location,
+          status: values.statusUpdate,
+          remarks: values.remarks,
+        });
+        message.success("Tracking update posted");
+      }
+      setDrawerOpen(false);
+      fetchShipments();
+    } catch (err) {
+      message.error("Operation failed");
+    } finally {
+      setDrawerLoading(false);
+    }
   };
 
-  const handleAddShipment = async () => {
-    const values = await form.validateFields();
-    const newShipment: Shipment = {
-      shipment_id: `SHP${shipments.length + 1}`,
-      tracking_number: `TRK${shipments.length + 1}`,
-      created_at: new Date().toISOString().split("T")[0],
-      ...values,
-    };
-    setShipments([...shipments, newShipment]);
-    setDrawerOpen(false);
-  };
-
-  const columns = [
-    { title: "User ID", dataIndex: "user_id" },
-    { title: "Tracking #", dataIndex: "tracking_number" },
-    { title: "Destination", render: (_:  unknown       , r: Shipment) => `${r.destination_city}, ${r.destination_country}` },
-    { title: "Method", dataIndex: "shipping_method", render: (m: string) => m.charAt(0).toUpperCase() + m.slice(1) },
+  const columns: ColumnsType<Shipment> = [
     {
-      title: "Status",
+      title: <span className="text-[12px] uppercase tracking-[0.2em] text-slate-400 font-black">Tracking Unit</span>,
+      dataIndex: "trackingNumber",
+      render: (t) => t ? (
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm border border-slate-100 transition-all group-hover:shadow-md">
+            <ContainerOutlined className="text-indigo-500 text-lg" />
+          </div>
+          <b className="text-[#0F172A] font-mono text-sm uppercase tracking-tighter">{t}</b>
+        </div>
+      ) : (
+        <Tag className="border-dashed bg-slate-100 text-slate-400 text-[10px] font-black px-4 py-1">PENDING_ID</Tag>
+      ),
+    },
+    {
+      title: <span className="text-[12px] uppercase tracking-[0.2em] text-slate-400 font-black">Route Node</span>,
+      render: (_, r) => (
+        <div className="flex flex-col">
+          <span className="font-black text-[#0F172A] text-sm uppercase">{r.destinationCity}</span>
+          <span className="text-[11px] text-indigo-600 font-bold uppercase tracking-tight flex items-center gap-1">
+            <GlobalOutlined size={12} /> {r.destinationCountry}
+          </span>
+        </div>
+      ),
+    },
+    {
+      title: <span className="text-[12px] uppercase tracking-[0.2em] text-slate-400 font-black">Live Status</span>,
       dataIndex: "status",
       render: (s: string) => {
-        const color = s === "booked" ? "blue" : s === "in transit" ? "gold" : s === "at port" ? "orange" : s === "customs" ? "purple" : "green";
-        return <Tag color={color}>{s.toUpperCase()}</Tag>;
+        const colors: Record<string, string> = {
+          booked: "#3b82f6", "in-transit": "#f59e0b", "at-port": "#06b6d4",
+          customs: "#8b5cf6", delivered: "#10b981", cancelled: "#ef4444"
+        };
+        return (
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: colors[s] || "#64748b" }} />
+            <span className="uppercase font-black text-[11px] tracking-widest" style={{ color: colors[s] || "#64748b" }}>
+              {s}
+            </span>
+          </div>
+        );
       },
     },
-    { title: "Assigned Logistic", dataIndex: "assigned_logistic", render: (l: string) => l || <Tag>Not Assigned</Tag> },
     {
-      title: "Action",
-      render: (_: unknown, record: Shipment) => (
-        <Space>
-          <Button onClick={() => openDrawer("view", record)} icon={<EyeOutlined />}>View</Button>
-          <Button onClick={() => openDrawer("assign", record)} icon={<UserSwitchOutlined />}>Assign</Button>
+      title: <span className="text-[12px] uppercase tracking-[0.2em] text-slate-400 font-black text-right block">Command</span>,
+      align: 'right',
+      render: (_, r) => (
+        <Space size={12}>
+          <Tooltip title="View Log">
+            <Button 
+              shape="circle"
+              className="border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-600 h-10 w-10 flex items-center justify-center"
+              icon={<EyeOutlined style={{ fontSize: '16px' }} />} 
+              onClick={() => openDrawer("view", r)} 
+            />
+          </Tooltip>
+          <Tooltip title="Add Milestone">
+            <Button 
+              shape="circle"
+              className="border-slate-200 text-slate-600 hover:text-emerald-600 hover:border-emerald-600 h-10 w-10 flex items-center justify-center"
+              icon={<PlusCircleOutlined style={{ fontSize: '16px' }} />} 
+              onClick={() => openDrawer("addUpdate", r)} 
+            />
+          </Tooltip>
+          <Tooltip title="Assign Carrier">
+            <Button 
+              shape="circle"
+              className="border-slate-200 text-slate-600 hover:text-amber-600 hover:border-amber-600 h-10 w-10 flex items-center justify-center"
+              icon={<UserAddOutlined style={{ fontSize: '16px' }} />} 
+              onClick={() => openDrawer("assign", r)} 
+            />
+          </Tooltip>
+          <Tooltip title="Edit Metadata">
+            <Button 
+              shape="circle"
+              className="border-slate-200 text-slate-600 hover:text-slate-900 hover:border-slate-900 h-10 w-10 flex items-center justify-center"
+              icon={<EditOutlined style={{ fontSize: '16px' }} />} 
+              onClick={() => openDrawer("update", r)} 
+            />
+          </Tooltip>
         </Space>
       ),
     },
   ];
 
   return (
-    <div style={{ padding: 32, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
-      <h2 style={{ color: "#0F3952", fontWeight: 700, marginBottom: 24 }}>Shipments Management</h2>
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="p-10 bg-[#F8FAFC] min-h-screen font-sans"
+    >
+      <div className="max-w-7xl mx-auto">
+        <header className="mb-12 flex items-center gap-5">
+          <div className="bg-indigo-600 p-3 rounded-2xl shadow-xl shadow-indigo-200">
+            <RadarChartOutlined className="text-white text-3xl" />
+          </div>
+          <div>
+            <h1 className="text-4xl font-black text-[#0F172A] tracking-tighter m-0 uppercase">
+              Yosti <span className="text-indigo-600">Shipment</span>
+            </h1>
+            <p className="text-[12px] font-bold text-slate-400 uppercase tracking-[0.4em] mt-1">
+              Operational Terminal Admin
+            </p>
+          </div>
+        </header>
 
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          style={{ background: "#0F3952", borderRadius: 6 }}
-          onClick={() => openDrawer("add")}
+        <Card 
+          bordered={false} 
+          className="shadow-2xl shadow-slate-200/60 rounded-[2.5rem] overflow-hidden border border-white"
+          bodyStyle={{ padding: 0 }}
         >
-          Add Shipment
-        </Button>
+          <Table
+            rowKey="_id"
+            loading={loading}
+            dataSource={shipments}
+            columns={columns}
+            pagination={{ 
+              pageSize: 8, 
+              className: "px-10 py-8",
+              showSizeChanger: false
+            }}
+          />
+        </Card>
       </div>
 
-      <Table dataSource={shipments} columns={columns} rowKey="shipment_id" pagination={{ pageSize: 5 }} />
-
       <Drawer
-        title={mode === "view" ? "Shipment Details" : mode === "assign" ? "Assign Logistic" : "Add New Shipment"}
-        placement="right"
-        width={450}
+        title={
+          <div className="flex flex-col py-2">
+             <span className="text-[11px] text-indigo-500 font-black uppercase tracking-[0.4em] mb-2">System Command</span>
+             <h3 className="text-[#0F172A] font-black uppercase text-2xl m-0">{mode.replace(/([A-Z])/g, ' $1')}</h3>
+          </div>
+        }
         open={drawerOpen}
+        width={450}
         onClose={() => setDrawerOpen(false)}
+        closeIcon={<CloseOutlined className="text-slate-400 hover:text-red-500 transition-colors text-xl" />}
+        contentWrapperStyle={{ borderLeft: '1px solid #e2e8f0' }}
       >
-        {mode === "view" && selectedShipment && (
-          <Space direction="vertical" style={{ width: "100%", lineHeight: 1.8 }}>
-            <p><strong>Tracking #:</strong> {selectedShipment.tracking_number}</p>
-            <p><strong>User ID:</strong> {selectedShipment.user_id}</p>
-            <p><strong>Pickup:</strong> {selectedShipment.pickup_location}</p>
-            <p><strong>Destination:</strong> {selectedShipment.destination_city}, {selectedShipment.destination_country}</p>
-            <p><strong>Goods:</strong> {selectedShipment.goods_description}</p>
-            <p><strong>Weight:</strong> {selectedShipment.weight} kg</p>
-            <p><strong>Volume:</strong> {selectedShipment.volume} m³</p>
-            <p><strong>Shipping Method:</strong> {selectedShipment.shipping_method}</p>
-            <p><strong>Status:</strong> {selectedShipment.status.toUpperCase()}</p>
-            <p><strong>Estimated Delivery:</strong> {selectedShipment.estimated_delivery_date || "N/A"}</p>
-            <p><strong>Assigned Logistic:</strong> {selectedShipment.assigned_logistic || "Not Assigned"}</p>
-          </Space>
-        )}
-
-        {(mode === "assign" || mode === "add") && (
-          <Form form={form} layout="vertical">
-            <Form.Item name="user_id" label="User ID" rules={[{ required: true }]}>
-              <Input disabled={mode === "assign"} />
-            </Form.Item>
-            <Form.Item name="pickup_location" label="Pickup Location" rules={[{ required: true }]}>
-              <Input disabled={mode === "assign"} />
-            </Form.Item>
-            <Form.Item name="destination_country" label="Destination Country" rules={[{ required: true }]}>
-              <Input disabled={mode === "assign"} />
-            </Form.Item>
-            <Form.Item name="destination_city" label="Destination City" rules={[{ required: true }]}>
-              <Input disabled={mode === "assign"} />
-            </Form.Item>
-            <Form.Item name="goods_description" label="Goods Description" rules={[{ required: true }]}>
-              <Input.TextArea rows={2} disabled={mode === "assign"} />
-            </Form.Item>
-            <Form.Item name="weight" label="Weight (kg)" rules={[{ required: true }]}>
-              <InputNumber min={0} style={{ width: "100%" }} disabled={mode === "assign"} />
-            </Form.Item>
-            <Form.Item name="volume" label="Volume (m³)" rules={[{ required: true }]}>
-              <InputNumber min={0} style={{ width: "100%" }} disabled={mode === "assign"} />
-            </Form.Item>
-            <Form.Item name="shipping_method" label="Shipping Method" rules={[{ required: true }]}>
-              <Select disabled={mode === "assign"}>
-                <Option value="sea">Sea</Option>
-                <Option value="air">Air</Option>
-                <Option value="express">Express</Option>
-              </Select>
-            </Form.Item>
-            <Form.Item name="status" label="Status" rules={[{ required: true }]}>
-              <Select disabled={mode === "assign"}>
-                <Option value="booked">Booked</Option>
-                <Option value="in transit">In Transit</Option>
-                <Option value="at port">At Port</Option>
-                <Option value="customs">Customs</Option>
-                <Option value="delivered">Delivered</Option>
-              </Select>
-            </Form.Item>
-            <Form.Item name="estimated_delivery_date" label="Estimated Delivery Date">
-              <DatePicker style={{ width: "100%" }} disabled={mode === "assign"} />
-            </Form.Item>
-            <Form.Item name="assigned_logistic" label="Assign Logistic">
-              <Select
-                placeholder="Select Logistic User"
-                style={{ width: "100%" }}
-                onChange={(value) => mode === "assign" && handleAssign(value)}
+        <Spin spinning={drawerLoading}>
+          <AnimatePresence mode="wait">
+            {selected && (
+              <motion.div 
+                key={mode}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-10"
               >
-                {logisticsUsers.map((user) => (
-                  <Option key={user} value={user}>{user}</Option>
-                ))}
-              </Select>
-            </Form.Item>
-            {mode === "add" && (
-              <Button type="primary" onClick={handleAddShipment} style={{ width: "100%", background: "#0F3952", borderRadius: 6 }}>
-                Add Shipment
-              </Button>
-            )}
-          </Form>
-        )}
-      </Drawer>
-    </div>
-  );
-};
+                {mode === "view" ? (
+                  <>
+                    <div className="bg-[#0F172A] p-8 rounded-[2rem] relative overflow-hidden shadow-2xl shadow-indigo-900/30">
+                      <div className="relative z-10">
+                        <p className="text-[11px] font-black text-indigo-400 uppercase tracking-[0.3em] mb-3">Electronic Manifest</p>
+                        <p className="font-mono text-2xl font-black text-white mb-8 tracking-tight">{selected.trackingNumber || "ID_PENDING"}</p>
+                        
+                        <div className="grid grid-cols-2 gap-6 border-t border-white/10 pt-6">
+                          <div>
+                            <p className="text-[10px] uppercase font-bold text-slate-500 mb-2">Carrier</p>
+                            <p className="text-[14px] font-black text-white uppercase">{selected.assignedLogistic || "Awaiting..."}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] uppercase font-bold text-slate-500 mb-2">Node Status</p>
+                            <p className="text-[14px] font-black text-indigo-400 uppercase">{selected.status}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <RadarChartOutlined className="absolute -right-10 -bottom-10 text-white/5 text-[14rem] rotate-12" />
+                    </div>
 
-export default Shipments;
+                    <div className="px-4">
+                      <h4 className="text-[12px] font-black text-slate-400 uppercase tracking-[0.3em] mb-10">Transit Timeline</h4>
+                      <Timeline
+                        items={selected.updates?.map((u, idx) => ({
+                          color: idx === 0 ? '#4F46E5' : '#CBD5E1',
+                          children: (
+                            <div className="pb-8">
+                              <div className="font-black text-slate-800 text-[14px] uppercase tracking-wide">{u.status}</div>
+                              <div className="text-[11px] font-bold text-indigo-500 uppercase mt-2">
+                                {u.location} • {dayjs(u.update_time).format("DD MMM, HH:mm")}
+                              </div>
+                              {u.remarks && <p className="mt-4 text-[13px] text-slate-500 bg-slate-50 p-4 rounded-2xl border border-slate-100 italic leading-relaxed">"{u.remarks}"</p>}
+                            </div>
+                          )
+                        }))}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <Form form={form} layout="vertical" onFinish={onFinish}>
+                    <div className="bg-slate-50 p-8 rounded-3xl border border-slate-100 mb-6">
+                      {mode === "assign" && (
+                        <Form.Item name="assignedLogistic" label={<span className="text-[12px] font-black text-slate-400 uppercase tracking-widest">Logistic Partner</span>} rules={[{ required: true }]}>
+                          <Select size="large" placeholder="SELECT CARRIER" className="h-12 text-lg">
+                            <Option value="DHL">DHL AVIATION</Option>
+                            <Option value="Maersk">MAERSK OCEAN</Option>
+                            <Option value="FedEx">FEDEX NETWORK</Option>
+                          </Select>
+                        </Form.Item>
+                      )}
+
+                      {mode === "addUpdate" && (
+                        <div className="space-y-6">
+                          <Form.Item name="statusUpdate" label={<span className="text-[12px] font-black text-slate-400 uppercase tracking-widest">Next Milestone</span>} rules={[{ required: true }]}>
+                            <Select size="large" className="h-12">
+                              <Option value="In Transit">IN TRANSIT</Option>
+                              <Option value="Port Arrival">PORT ARRIVAL</Option>
+                              <Option value="Customs Cleared">CUSTOMS CLEARED</Option>
+                              <Option value="Delivered">DELIVERED</Option>
+                            </Select>
+                          </Form.Item>
+                          <Form.Item name="location" label={<span className="text-[12px] font-black text-slate-400 uppercase tracking-widest">Current Node</span>} rules={[{ required: true }]}>
+                            <Input size="large" placeholder="CITY, COUNTRY" className="h-12" />
+                          </Form.Item>
+                          <Form.Item name="remarks" label={<span className="text-[12px] font-black text-slate-400 uppercase tracking-widest">Operational Remarks</span>}>
+                            <Input.TextArea rows={4} placeholder="Detailed notes..." className="rounded-2xl text-base" />
+                          </Form.Item>
+                        </div>
+                      )}
+
+                      {mode === "update" && (
+                        <div className="grid grid-cols-2 gap-6">
+                          <Form.Item className="col-span-2" name="status" label={<span className="text-[12px] font-black text-slate-400 uppercase tracking-widest">System Status</span>}>
+                            <Select size="large" className="h-12">
+                              <Option value="booked">BOOKED</Option>
+                              <Option value="in-transit">IN TRANSIT</Option>
+                              <Option value="delivered">DELIVERED</Option>
+                            </Select>
+                          </Form.Item>
+                          <Form.Item name="weight" label={<span className="text-[12px] font-black text-slate-400 uppercase tracking-widest">Weight (KG)</span>}>
+                            <InputNumber size="large" className="w-full h-12 flex items-center" />
+                          </Form.Item>
+                          <Form.Item name="volume" label={<span className="text-[12px] font-black text-slate-400 uppercase tracking-widest">Vol (CBM)</span>}>
+                            <InputNumber size="large" className="w-full h-12 flex items-center" />
+                          </Form.Item>
+                          <Form.Item className="col-span-2" name="estimatedDeliveryDate" label={<span className="text-[12px] font-black text-slate-400 uppercase tracking-widest">Target ETA</span>}>
+                            <DatePicker size="large" className="w-full h-12" />
+                          </Form.Item>
+                        </div>
+                      )}
+                    </div>
+
+                    <Button 
+                      type="primary" 
+                      htmlType="submit" 
+                      block 
+                      className="bg-[#0F172A] h-16 font-black uppercase text-base tracking-[0.3em] rounded-2xl shadow-2xl shadow-slate-200 border-0 hover:bg-indigo-600 transition-all active:scale-[0.98]"
+                    >
+                      EXECUTE_{mode.toUpperCase()}
+                    </Button>
+                  </Form>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </Spin>
+      </Drawer>
+    </motion.div>
+  );
+}

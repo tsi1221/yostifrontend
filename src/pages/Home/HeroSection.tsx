@@ -1,117 +1,477 @@
-import { useState, useEffect } from "react";
-import { LeftOutlined, RightOutlined } from "@ant-design/icons";
+
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  LeftOutlined,
+  RightOutlined,
+} from "@ant-design/icons";
 
-import Image1 from "../../assets/image5.png";
-import Image2 from "../../assets/Hero.png";
-import Image3 from "../../assets/image6.png";
-import Image4 from "../../assets/image7.png";
-import Image5 from "../../assets/image1.png";
+/* =========================================================
+   HERO IMAGES
+========================================================= */
+
+import HeroImage1 from "../../../public/assets/Hero.png";
+import HeroImage2 from "../../../public/assets/87cb5f0c32788f098e4e22ae7d792af1.jpeg";
+import HeroImage3 from "../../../public/assets/image7.png";
+
+/* =========================================================
+   HERO SLIDES
+========================================================= */
 
 const slides = [
-  { image: Image1 },
-  { image: Image2 },
-  { image: Image3 },
-  { image: Image4 },
-  { image: Image5 },
+  {
+    id: 1,
+    image: HeroImage1,
+  },
+  {
+    id: 2,
+    image: HeroImage2,
+  },
+  {
+    id: 3,
+    image: HeroImage3,
+  },
 ];
 
+/* =========================================================
+   COMPONENT
+========================================================= */
+
 const HeroSection: React.FC = () => {
-  const [current, setCurrent] = useState(0);
   const navigate = useNavigate();
 
+  const [current, setCurrent] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  /* =======================================================
+     LOADING
+  ======================================================= */
+
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % slides.length);
-    }, 5000);
-    return () => clearInterval(interval);
+    const timer = window.setTimeout(() => {
+      setIsLoading(false);
+    }, 700);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
   }, []);
 
-  const prevSlide = () =>
-    setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
-  const nextSlide = () => setCurrent((prev) => (prev + 1) % slides.length);
+  /* =======================================================
+     NEXT SLIDE
+  ======================================================= */
+
+  const nextSlide = () => {
+    setCurrent((prev) => (prev + 1) % slides.length);
+  };
+
+  /* =======================================================
+     PREVIOUS SLIDE
+  ======================================================= */
+
+  const prevSlide = () => {
+    setCurrent(
+      (prev) => (prev - 1 + slides.length) % slides.length
+    );
+  };
+
+  /* =======================================================
+     AUTO PLAY
+  ======================================================= */
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    const interval = window.setInterval(() => {
+      setCurrent((prev) => (prev + 1) % slides.length);
+    }, 6000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [isLoading]);
+
+  /* =======================================================
+     LOADING SCREEN
+  ======================================================= */
+
+  if (isLoading) {
+    return (
+      <div
+        className="
+          h-[520px]
+          w-full
+          animate-pulse
+          bg-slate-950
+        "
+      />
+    );
+  }
+
+  /* =======================================================
+     HERO
+  ======================================================= */
 
   return (
-    <section className="relative h-screen w-full overflow-hidden">
-      {/* Slides */}
+    <section
+      className="
+        relative
+        h-[520px]
+        w-full
+        overflow-hidden
+        bg-slate-950
+        sm:h-[560px]
+        lg:h-[620px]
+      "
+    >
+      {/* ===================================================
+          FULL BACKGROUND IMAGE
+      ==================================================== */}
+
       <AnimatePresence mode="wait">
         <motion.div
-          key={current}
-          initial={{ opacity: 0, scale: 1.05 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 1.05 }}
-          transition={{ duration: 1 }}
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${slides[current].image})` }}
-        />
+          key={slides[current].id}
+          initial={{
+            opacity: 0,
+            scale: 1.03,
+          }}
+          animate={{
+            opacity: 1,
+            scale: 1,
+          }}
+          exit={{
+            opacity: 0,
+            scale: 1.01,
+          }}
+          transition={{
+            duration: 0.8,
+            ease: "easeOut",
+          }}
+          className="
+            absolute
+            inset-0
+            bg-cover
+            bg-center
+            bg-no-repeat
+          "
+          style={{
+            backgroundImage: `url("${slides[current].image}")`,
+          }}
+        >
+          {/* Dark overlay */}
+
+          <div
+            className="
+              absolute
+              inset-0
+              bg-slate-950/35
+            "
+          />
+
+          {/* Left readability gradient */}
+
+          <div
+            className="
+              absolute
+              inset-0
+              bg-gradient-to-r
+              from-slate-950/80
+              via-slate-950/35
+              to-transparent
+            "
+          />
+        </motion.div>
       </AnimatePresence>
 
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black/60" />
+      {/* ===================================================
+          MAIN CONTENT
+      ==================================================== */}
 
-      {/* Navigation Arrows */}
-      <button
-        onClick={prevSlide}
-        className="absolute top-1/2 left-6 -translate-y-1/2 p-4 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/40 shadow-lg transition z-10"
+      <div
+        className="
+          relative
+          z-10
+          mx-auto
+          flex
+          h-full
+          max-w-[1440px]
+          items-center
+          px-5
+          sm:px-10
+          lg:px-16
+        "
       >
-        <LeftOutlined className="text-white text-2xl" />
-      </button>
-      <button
-        onClick={nextSlide}
-        className="absolute top-1/2 right-6 -translate-y-1/2 p-4 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/40 shadow-lg transition z-10"
+        <div className="max-w-3xl">
+
+          {/* =================================================
+              TITLE
+          ================================================== */}
+
+          <motion.h1
+            initial={{
+              opacity: 0,
+              y: 20,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{
+              duration: 0.6,
+              ease: "easeOut",
+            }}
+            className="
+              text-4xl
+              font-extrabold
+              leading-[1.05]
+              tracking-tight
+              text-amber-400
+              sm:text-5xl
+              md:text-6xl
+              lg:text-7xl
+          "
+          >
+            <span className="block whitespace-nowrap">
+              YOUR BRIDGE TO GLOBAL
+            </span>
+
+            <span className="mt-1 block">
+              MARKETS
+            </span>
+          </motion.h1>
+
+          {/* =================================================
+              DESCRIPTION
+          ================================================== */}
+
+          <motion.p
+            initial={{
+              opacity: 0,
+              y: 20,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{
+              delay: 0.15,
+              duration: 0.6,
+            }}
+            className="
+              mt-7
+              max-w-3xl
+              text-base
+              font-medium
+              leading-7
+              text-slate-100
+              sm:text-lg
+              sm:leading-8
+              lg:text-xl
+              lg:leading-9
+            "
+          >
+            <span className="block">
+              Yosti Import & Export Trading Co., Ltd. provides seamless sourcing
+            </span>
+
+            <span className="block">
+              and logistics solutions for clients worldwide.
+            </span>
+          </motion.p>
+
+          {/* =================================================
+              ACTION BUTTONS
+          ================================================== */}
+
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 20,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{
+              delay: 0.3,
+              duration: 0.6,
+            }}
+            className="
+              mt-9
+              flex
+              flex-wrap
+              items-center
+              gap-5
+            "
+          >
+            {/* Start Now */}
+
+            <button
+              type="button"
+              onClick={() => navigate("/login")}
+              className="
+                rounded-md
+                bg-amber-400
+                px-9
+                py-4
+                text-base
+                font-bold
+                tracking-wide
+                text-black
+                shadow-lg
+                transition-all
+                duration-300
+                hover:-translate-y-1
+                hover:bg-amber-300
+                hover:shadow-xl
+              "
+            >
+              Start Now
+            </button>
+
+            {/* Contact Us */}
+
+            <button
+              type="button"
+              onClick={() => navigate("/contact")}
+              className="
+                rounded-md
+                border
+                border-white
+                bg-white
+                px-9
+                py-4
+                text-base
+                font-bold
+                tracking-wide
+                text-black
+                shadow-md
+                transition-all
+                duration-300
+                hover:-translate-y-1
+                hover:bg-white
+                hover:text-black
+                hover:shadow-xl
+              "
+            >
+              Contact Us
+            </button>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* ===================================================
+          SLIDE INDICATORS
+      ==================================================== */}
+
+      <div
+        className="
+          absolute
+          bottom-7
+          left-5
+          z-20
+          flex
+          items-center
+          gap-2
+          sm:left-10
+          lg:left-16
+        "
       >
-        <RightOutlined className="text-white text-2xl" />
-      </button>
+        {slides.map((slide, index) => (
+          <button
+            key={slide.id}
+            type="button"
+            onClick={() => setCurrent(index)}
+            aria-label={`Go to slide ${index + 1}`}
+            className={`
+              h-1.5
+              rounded-full
+              transition-all
+              duration-300
+              ${
+                current === index
+                  ? "w-10 bg-amber-400"
+                  : "w-5 bg-white/50 hover:bg-white"
+              }
+            `}
+          />
+        ))}
+      </div>
 
-      {/* Content */}
-      <div className="relative z-10 flex flex-col justify-center h-full pl-10 md:pl-32 lg:pl-40">
-        <motion.h1
-          initial={{ opacity: 0, y: -50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1 }}
-          className="text-yellow-400 font-extrabold text-[3.5rem] sm:text-[3.8rem] md:text-[3.9rem] mb-8"
-        >
-          Bridging Business Between Africa and China
-        </motion.h1>
+      {/* ===================================================
+          CAROUSEL CONTROLS
+      ==================================================== */}
 
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.3 }}
-          className="text-left max-w-3xl space-y-6"
-        >
-          <p className="text-yellow-400 text-lg sm:text-xl md:text-2xl">
-            Yosti Import & Export Trading Co., Ltd. has successfully completed a wide range of sourcing and shipping projects for clients across Africa.
-          </p>
-          <p className="text-yellow-400 text-lg sm:text-xl md:text-2xl">
-            Ensuring your goods arrive safely and on time.
-          </p>
-        </motion.div>
+      <div
+        className="
+          absolute
+          bottom-6
+          right-5
+          z-20
+          flex
+          gap-3
+          sm:right-10
+          lg:right-16
+        "
+      >
+        {/* Previous */}
 
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.6 }}
-          className="flex flex-wrap gap-6 mt-10"
+        <button
+          type="button"
+          onClick={prevSlide}
+          aria-label="Previous slide"
+          className="
+            flex
+            h-10
+            w-10
+            items-center
+            justify-center
+            rounded-full
+            border
+            border-white/40
+            bg-slate-900/50
+            text-white
+            backdrop-blur-sm
+            transition-all
+            duration-300
+            hover:scale-110
+            hover:border-amber-400
+            hover:bg-amber-400
+            hover:text-black
+          "
         >
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate("/login")}
-            className="px-12 py-4 bg-yellow-400 text-[#0F3952] font-bold rounded-md border border-[#0F3952] shadow-2xl hover:bg-yellow-300 transition-all duration-300"
-          >
-            Start Now
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate("/contact")}
-            className="px-12 py-4 bg-yellow-400 text-[#0F3952] font-bold rounded-md border border-[#0F3952] shadow-2xl hover:bg-yellow-300 transition-all duration-300"
-          >
-            Contact Us
-          </motion.button>
-        </motion.div>
+          <LeftOutlined className="text-xs" />
+        </button>
+
+        {/* Next */}
+
+        <button
+          type="button"
+          onClick={nextSlide}
+          aria-label="Next slide"
+          className="
+            flex
+            h-10
+            w-10
+            items-center
+            justify-center
+            rounded-full
+            border
+            border-white/40
+            bg-slate-900/50
+            text-white
+            backdrop-blur-sm
+            transition-all
+            duration-300
+            hover:scale-110
+            hover:border-amber-400
+            hover:bg-amber-400
+            hover:text-black
+          "
+        >
+          <RightOutlined className="text-xs" />
+        </button>
       </div>
     </section>
   );

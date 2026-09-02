@@ -1,5 +1,5 @@
 // src/pages/superAdmin/Suppliers.tsx
-import React, { useState } from "react";
+import { useState } from "react";
 import { Modal, Input, Button, Select, message } from "antd";
 
 const { Option } = Select;

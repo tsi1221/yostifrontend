@@ -1,5 +1,4 @@
-// src/pages/supplier/Dashboard.tsx
-import React from "react";
+import  { type JSX } from "react";
 import { useSupplierStore } from "../../store/useSupplierStore";
 import {
   FileTextOutlined,
@@ -18,9 +17,16 @@ import {
   YAxis,
   Legend,
   ResponsiveContainer,
+  
 } from "recharts";
 
-const statsData = [
+interface StatItem {
+  key: string;
+  title: string;
+  icon: JSX.Element;
+}
+
+const statsData: StatItem[] = [
   { key: "totalRFQs", title: "Total RFQs Received", icon: <FileTextOutlined /> },
   { key: "pendingQuotes", title: "Pending Quotes", icon: <EditOutlined /> },
   { key: "activeOrders", title: "Active Orders", icon: <ShoppingCartOutlined /> },
@@ -38,6 +44,12 @@ export default function DashboardSupplier() {
     pieData,
     barData,
   } = useSupplierStore();
+
+  // Ensure pieData has correct Recharts type
+  const typedPieData: unknown[] = pieData.map((item) => ({
+    name: item.name,
+    value: item.value,
+  }));
 
   const statsMap: Record<string, number> = {
     totalRFQs,
@@ -72,7 +84,7 @@ export default function DashboardSupplier() {
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie
-                data={pieData}
+                
                 dataKey="value"
                 nameKey="name"
                 cx="50%"
@@ -81,7 +93,7 @@ export default function DashboardSupplier() {
                 fill="#8884d8"
                 label
               >
-                {pieData.map((entry, index) => (
+                {typedPieData.map((_, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
