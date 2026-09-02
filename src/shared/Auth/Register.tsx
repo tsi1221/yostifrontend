@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
   Form,
@@ -7,90 +8,310 @@ import {
   Checkbox,
   message,
 } from "antd";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-const { Option } = Select;
-
-/* =========================================================
-   TYPES
-========================================================= */
+type RegisterRole =
+  | "Buyer"
+  | "Supplier"
+  | "Logistics Partner";
 
 interface RegisterFormValues {
-  full_name: string;
-  company_name?: string;
-  country: string;
-  phone: string;
+  fullname: string;
   email: string;
   password: string;
-  account_type: "buyer" | "supplier" | "logistics";
-  language_preference: "en" | "am" | "om" | "cn";
+  companyName?: string;
+  country: string;
+  phoneWhatsapp: string;
+  role: RegisterRole;
   terms: boolean;
 }
 
-/* =========================================================
-   COMPONENT
-========================================================= */
+interface RegisterPayload {
+  fullname: string;
+  email: string;
+  password: string;
+  companyName?: string;
+  country: string;
+  phoneWhatsapp: string;
+  role: RegisterRole;
+  roleId: number;
+}
+
+interface ApiResponse {
+  message?: string | string[];
+  error?: string | string[];
+  statusCode?: number;
+}
+
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://yosti.nedhigibe.com/api/";
+
+const ROLE_OPTIONS: {
+  label: string;
+  value: RegisterRole;
+  roleId: number;
+}[] = [
+  {
+    label: "Buyer",
+    value: "Buyer",
+    roleId: 1,
+  },
+  {
+    label: "Supplier",
+    value: "Supplier",
+    roleId: 2,
+  },
+  {
+    label: "Logistics Partner",
+    value: "Logistics Partner",
+    roleId: 3,
+  },
+];
+
+const getApiErrorMessage = (
+  data: ApiResponse | null,
+  fallback: string
+): string => {
+  if (!data) {
+    return fallback;
+  }
+
+  if (Array.isArray(data.message)) {
+    return data.message.join(", ");
+  }
+
+  if (typeof data.message === "string") {
+    return data.message;
+  }
+
+  if (Array.isArray(data.error)) {
+    return data.error.join(", ");
+  }
+
+  if (typeof data.error === "string") {
+    return data.error;
+  }
+
+  return fallback;
+};
+
+const parseResponse = async (
+  response: Response
+): Promise<ApiResponse | null> => {
+  const contentType =
+    response.headers.get("content-type") || "";
+
+  if (!contentType.includes("application/json")) {
+    return null;
+  }
+
+  try {
+    return (await response.json()) as ApiResponse;
+  } catch {
+    return null;
+  }
+};
 
 const Register = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  /* =======================================================
-     SUBMIT
-  ======================================================= */
+  const handleSubmit = async (
+    values: RegisterFormValues
+  ) => {
+    if (loading) {
+      return;
+    }
 
-  const handleSubmit = (values: RegisterFormValues) => {
     if (!values.terms) {
-      message.error("You must accept the Terms & Conditions");
+      message.error(
+        "Please accept the Terms & Conditions."
+      );
+      return;
+    }
+
+    const selectedRole = ROLE_OPTIONS.find(
+      (item) => item.value === values.role
+    );
+
+    if (!selectedRole) {
+      message.error(
+        "Please select a valid account type."
+      );
       return;
     }
 
     setLoading(true);
 
-    console.log("Registration Data:", values);
+    try {
+      const payload: RegisterPayload = {
+        fullname: values.fullname.trim(),
+        email: values.email.trim().toLowerCase(),
+        password: values.password,
+        companyName:
+          values.companyName?.trim() || undefined,
+        country: values.country.trim(),
+        phoneWhatsapp: values.phoneWhatsapp.trim(),
+        role: selectedRole.value,
+        roleId: selectedRole.roleId,
+      };
 
-    // TODO: Connect to backend API
+      const response = await fetch(
+        `${API_BASE_URL}auth/register`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
-    setTimeout(() => {
+      const data = await parseResponse(response);
+
+      if (!response.ok) {
+        throw new Error(
+          getApiErrorMessage(
+            data,
+            `Registration failed. Server returned ${response.status}.`
+          )
+        );
+      }
+
+      message.success({
+        content:
+          typeof data?.message === "string"
+            ? data.message
+            : "Account created successfully!",
+        duration: 3,
+      });
+
+      setTimeout(() => {
+        navigate("/login", {
+          replace: true,
+          state: {
+            registered: true,
+            email: values.email
+              .trim()
+              .toLowerCase(),
+          },
+        });
+      }, 800);
+    } catch (error) {
+      console.error(
+        "Registration error:",
+        error
+      );
+
+      if (
+        error instanceof TypeError &&
+        error.message.toLowerCase().includes("fetch")
+      ) {
+        message.error({
+          content:
+            "Unable to connect to the server. Please check your internet connection or contact the administrator.",
+          duration: 5,
+        });
+      } else {
+        message.error({
+          content:
+            error instanceof Error
+              ? error.message
+              : "Unable to create your account. Please try again.",
+          duration: 5,
+        });
+      }
+    } finally {
       setLoading(false);
-      message.success("Account created successfully!");
-    }, 1000);
+    }
   };
 
-  /* =======================================================
-     UI
-  ======================================================= */
-
   return (
-    <div className="min-h-screen w-full bg-slate-50 px-4 py-8 flex items-center justify-center">
-      <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,57,82,0.10)] overflow-hidden">
-        
-        {/* Header */}
-        <div className="px-6 pt-7 pb-3 text-center sm:px-8">
-          <h1 className="text-2xl font-bold text-[#0F3952]">
+    <div
+      className="
+        flex
+        min-h-screen
+        w-full
+        items-center
+        justify-center
+        bg-slate-50
+        px-4
+        py-8
+      "
+    >
+      <div
+        className="
+          w-full
+          max-w-lg
+          overflow-hidden
+          rounded-2xl
+          border
+          border-slate-200
+          bg-white
+          shadow-[0_20px_60px_rgba(15,57,82,0.10)]
+        "
+      >
+        <div
+          className="
+            px-6
+            pb-4
+            pt-7
+            text-center
+            sm:px-8
+          "
+        >
+          <h1
+            className="
+              text-2xl
+              font-bold
+              text-[#0F3952]
+            "
+          >
             Create Your Account
           </h1>
 
-          <p className="mt-1 text-sm text-slate-500">
-            Register to get started
+          <p
+            className="
+              mt-1
+              text-sm
+              text-slate-500
+            "
+          >
+            Register to get started with Yosti
           </p>
         </div>
 
-        {/* Form */}
-        <div className="px-6 pb-6 sm:px-8">
+        <div
+          className="
+            px-6
+            pb-6
+            sm:px-8
+          "
+        >
           <Form<RegisterFormValues>
             layout="vertical"
             onFinish={handleSubmit}
             requiredMark={false}
+            autoComplete="off"
+            disabled={loading}
           >
-            {/* Full Name */}
             <Form.Item
-              name="full_name"
+              name="fullname"
               label="Full Name"
               className="!mb-3"
               rules={[
                 {
                   required: true,
-                  message: "Full name is required",
+                  whitespace: true,
+                  message:
+                    "Full name is required",
+                },
+                {
+                  min: 2,
+                  message:
+                    "Full name must be at least 2 characters",
                 },
               ]}
             >
@@ -98,23 +319,23 @@ const Register = () => {
                 size="large"
                 placeholder="Enter your full name"
                 className="!rounded-lg"
+                autoComplete="name"
               />
             </Form.Item>
 
-            {/* Company */}
             <Form.Item
-              name="company_name"
-              label="Company Name (optional)"
+              name="companyName"
+              label="Company Name"
               className="!mb-3"
             >
               <Input
                 size="large"
-                placeholder="Enter company name"
+                placeholder="Enter company name (optional)"
                 className="!rounded-lg"
+                autoComplete="organization"
               />
             </Form.Item>
 
-            {/* Country */}
             <Form.Item
               name="country"
               label="Country"
@@ -122,7 +343,9 @@ const Register = () => {
               rules={[
                 {
                   required: true,
-                  message: "Please enter your country",
+                  whitespace: true,
+                  message:
+                    "Country is required",
                 },
               ]}
             >
@@ -130,29 +353,36 @@ const Register = () => {
                 size="large"
                 placeholder="Enter your country"
                 className="!rounded-lg"
+                autoComplete="country-name"
               />
             </Form.Item>
 
-            {/* Phone */}
             <Form.Item
-              name="phone"
+              name="phoneWhatsapp"
               label="Phone / WhatsApp"
               className="!mb-3"
               rules={[
                 {
                   required: true,
-                  message: "Phone number is required",
+                  whitespace: true,
+                  message:
+                    "Phone / WhatsApp number is required",
+                },
+                {
+                  min: 7,
+                  message:
+                    "Enter a valid phone number",
                 },
               ]}
             >
               <Input
                 size="large"
-                placeholder="Enter phone number"
+                placeholder="+251 9XX XXX XXX"
                 className="!rounded-lg"
+                autoComplete="tel"
               />
             </Form.Item>
 
-            {/* Email */}
             <Form.Item
               name="email"
               label="Email"
@@ -160,11 +390,14 @@ const Register = () => {
               rules={[
                 {
                   required: true,
-                  message: "Email is required",
+                  whitespace: true,
+                  message:
+                    "Email is required",
                 },
                 {
                   type: "email",
-                  message: "Enter a valid email",
+                  message:
+                    "Enter a valid email address",
                 },
               ]}
             >
@@ -172,10 +405,10 @@ const Register = () => {
                 size="large"
                 placeholder="Enter your email"
                 className="!rounded-lg"
+                autoComplete="email"
               />
             </Form.Item>
 
-            {/* Password */}
             <Form.Item
               name="password"
               label="Password"
@@ -183,72 +416,54 @@ const Register = () => {
               rules={[
                 {
                   required: true,
-                  message: "Password is required",
+                  message:
+                    "Password is required",
                 },
                 {
                   min: 6,
-                  message: "Password must be at least 6 characters",
+                  message:
+                    "Password must be at least 6 characters",
                 },
               ]}
+              extra={
+                <span className="text-xs text-slate-400">
+                  Use at least 6 characters.
+                </span>
+              }
             >
               <Input.Password
                 size="large"
                 placeholder="Create a password"
                 className="!rounded-lg"
+                autoComplete="new-password"
               />
             </Form.Item>
 
-            {/* Account + Language */}
-            <div className="grid grid-cols-1 gap-0 sm:grid-cols-2 sm:gap-4">
-              {/* Account Type */}
-              <Form.Item
-                name="account_type"
-                label="Account Type"
-                className="!mb-3"
-                rules={[
-                  {
-                    required: true,
-                    message: "Select an account type",
-                  },
-                ]}
-              >
-                <Select
-                  size="large"
-                  placeholder="Select account type"
-                  className="w-full"
-                >
-                  <Option value="buyer">Buyer</Option>
-                  <Option value="supplier">Supplier</Option>
-                  <Option value="logistics">Logistics</Option>
-                </Select>
-              </Form.Item>
+            <Form.Item
+              name="role"
+              label="Account Type"
+              className="!mb-3"
+              rules={[
+                {
+                  required: true,
+                  message:
+                    "Please select an account type",
+                },
+              ]}
+            >
+              <Select
+                size="large"
+                placeholder="Select account type"
+                className="w-full"
+                options={ROLE_OPTIONS.map(
+                  (role) => ({
+                    label: role.label,
+                    value: role.value,
+                  })
+                )}
+              />
+            </Form.Item>
 
-              {/* Language */}
-              <Form.Item
-                name="language_preference"
-                label="Language"
-                className="!mb-3"
-                rules={[
-                  {
-                    required: true,
-                    message: "Choose a language",
-                  },
-                ]}
-              >
-                <Select
-                  size="large"
-                  placeholder="Select language"
-                  className="w-full"
-                >
-                  <Option value="en">English</Option>
-                  <Option value="am">Amharic</Option>
-                  <Option value="om">Oromiffa</Option>
-                  <Option value="cn">Chinese</Option>
-                </Select>
-              </Form.Item>
-            </div>
-
-            {/* Terms */}
             <Form.Item
               name="terms"
               valuePropName="checked"
@@ -260,7 +475,7 @@ const Register = () => {
                       ? Promise.resolve()
                       : Promise.reject(
                           new Error(
-                            "Accept the Terms & Conditions"
+                            "Please accept the Terms & Conditions"
                           )
                         ),
                 },
@@ -271,7 +486,11 @@ const Register = () => {
                   I agree to the{" "}
                   <Link
                     to="/terms"
-                    className="font-semibold text-[#0F3952] hover:underline"
+                    className="
+                      font-semibold
+                      text-[#0F3952]
+                      hover:underline
+                    "
                   >
                     Terms & Conditions
                   </Link>
@@ -279,7 +498,6 @@ const Register = () => {
               </Checkbox>
             </Form.Item>
 
-            {/* Register Button */}
             <Form.Item className="!mb-0">
               <Button
                 type="primary"
@@ -287,22 +505,49 @@ const Register = () => {
                 loading={loading}
                 size="large"
                 block
-                className="!h-11 !rounded-lg !border-[#0F3952] !bg-[#0F3952] !font-semibold hover:!border-[#174d6b] hover:!bg-[#174d6b]"
+                className="
+                  !h-11
+                  !rounded-lg
+                  !border-[#0F3952]
+                  !bg-[#0F3952]
+                  !font-semibold
+                  hover:!border-[#174d6b]
+                  hover:!bg-[#174d6b]
+                "
               >
-                Create Account
+                {loading
+                  ? "Creating Account..."
+                  : "Create Account"}
               </Button>
             </Form.Item>
           </Form>
 
-          {/* Login */}
-          <div className="mt-5 border-t border-slate-100 pt-4 text-center">
-            <span className="text-sm text-slate-500">
+          <div
+            className="
+              mt-5
+              border-t
+              border-slate-100
+              pt-4
+              text-center
+            "
+          >
+            <span
+              className="
+                text-sm
+                text-slate-500
+              "
+            >
               Already have an account?{" "}
             </span>
 
             <Link
               to="/login"
-              className="text-sm font-semibold text-[#0F3952] hover:underline"
+              className="
+                text-sm
+                font-semibold
+                text-[#0F3952]
+                hover:underline
+              "
             >
               Login
             </Link>

@@ -1,3 +1,4 @@
+
 import {
   Form,
   Input,
@@ -44,15 +45,7 @@ export default function LoginForm({
       "
     >
       {/* Header */}
-
-      <div
-        className="
-          px-8
-          pt-7
-          pb-2
-          text-center
-        "
-      >
+      <div className="px-8 pt-8 pb-3 text-center">
         <h1
           className="
             text-2xl
@@ -64,20 +57,13 @@ export default function LoginForm({
           Welcome Back
         </h1>
 
-        <p
-          className="
-            mt-1
-            text-sm
-            text-slate-500
-          "
-        >
+        <p className="mt-1 text-sm text-slate-500">
           Sign in to your account
         </p>
       </div>
 
       {/* Form */}
-
-      <div className="px-8 pb-6 pt-2">
+      <div className="px-8 pb-7 pt-3">
         <Form<LoginFormValues>
           layout="vertical"
           onFinish={onFinish}
@@ -85,25 +71,23 @@ export default function LoginForm({
           size="large"
         >
           {/* Email */}
-
           <Form.Item
             name="email"
-            className="!mb-3"
             label={
               <span className="font-medium text-slate-700">
                 Email address
               </span>
             }
+            className="!mb-4"
             rules={[
               {
                 required: true,
-                message:
-                  "Please enter your email.",
+                message: "Please enter your email.",
               },
               {
                 type: "email",
                 message:
-                  "Please enter a valid email.",
+                  "Please enter a valid email address.",
               },
             ]}
           >
@@ -111,27 +95,30 @@ export default function LoginForm({
               prefix={
                 <MailOutlined className="text-slate-400" />
               }
-              placeholder="you@example.com"
+              placeholder="user@gmail.com"
               autoComplete="email"
               className="!rounded-lg"
             />
           </Form.Item>
 
           {/* Password */}
-
           <Form.Item
             name="password"
-            className="!mb-3"
             label={
               <span className="font-medium text-slate-700">
                 Password
               </span>
             }
+            className="!mb-4"
             rules={[
               {
                 required: true,
+                message: "Please enter your password.",
+              },
+              {
+                min: 6,
                 message:
-                  "Please enter your password.",
+                  "Password must be at least 6 characters.",
               },
             ]}
           >
@@ -146,10 +133,9 @@ export default function LoginForm({
           </Form.Item>
 
           {/* Options */}
-
           <div
             className="
-              mb-4
+              mb-5
               flex
               items-center
               justify-between
@@ -181,8 +167,7 @@ export default function LoginForm({
             </button>
           </div>
 
-          {/* Sign In */}
-
+          {/* Submit */}
           <Form.Item className="!mb-0">
             <Button
               type="primary"
@@ -205,21 +190,18 @@ export default function LoginForm({
                 hover:!bg-[#0F3952]/90
               "
             >
-              {loading
-                ? "Signing in..."
-                : "Sign in"}
+              {loading ? "Signing in..." : "Sign in"}
             </Button>
           </Form.Item>
         </Form>
 
         {/* Register */}
-
         <div
           className="
-            mt-5
+            mt-6
             border-t
             border-slate-100
-            pt-4
+            pt-5
             text-center
           "
         >

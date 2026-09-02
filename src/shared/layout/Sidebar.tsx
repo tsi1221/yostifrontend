@@ -1,15 +1,25 @@
-import { useEffect, useState, type ElementType } from "react";
+
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ElementType,
+} from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   Truck,
+
+  LifeBuoy,
+  BriefcaseBusiness,
+  Newspaper,
+  
+  Users,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
   X,
-  Boxes,
-  ShieldAlert,
-  Settings,
 } from "lucide-react";
 
 /* =========================================================
@@ -29,7 +39,7 @@ export type UserRole =
   | "SUPPLIER"
   | "LOGISTICS_PARTNER";
 
-export interface SidebarProps {
+interface SidebarProps {
   role: UserRole;
   collapsed?: boolean;
   onCollapsedChange?: (collapsed: boolean) => void;
@@ -50,21 +60,26 @@ interface NavigationGroup {
 }
 
 /* =========================================================
-   UTILITIES
+   ROLE SLUG
 ========================================================= */
 
 const getRoleSlug = (role: UserRole): string => {
   switch (role) {
     case "SUPER_ADMIN":
       return "superadmin";
+
     case "STAFF":
       return "staff";
+
     case "BUYER":
       return "buyer";
+
     case "SUPPLIER":
       return "supplier";
+
     case "LOGISTICS_PARTNER":
       return "logistics";
+
     default:
       return "dashboard";
   }
@@ -79,6 +94,10 @@ const getNavigationByRole = (
 ): NavigationGroup[] => {
   const roleSlug = getRoleSlug(role);
 
+  /* =======================================================
+     DASHBOARD
+  ======================================================= */
+
   const dashboard: NavigationGroup = {
     label: "Dashboard",
     icon: LayoutDashboard,
@@ -86,40 +105,7 @@ const getNavigationByRole = (
   };
 
   /* =======================================================
-     SOURCING
-  ======================================================= */
-
-  const sourcingAndSuppliers: NavigationGroup = {
-    label: "Sourcing & Suppliers",
-    icon: Boxes,
-    children: [
-      {
-        label: "Product Sourcing & RFQ",
-        path: `/${roleSlug}/sourcing`,
-      },
-      {
-        label: "Suppliers & Factories",
-        path: `/${roleSlug}/suppliers`,
-      },
-      {
-        label: "Export & Import Catalogs",
-        path: `/${roleSlug}/catalogs`,
-      },
-    ].filter((item) => {
-      // Supplier should not manage suppliers/factories
-      if (
-        role === "SUPPLIER" &&
-        item.label === "Suppliers & Factories"
-      ) {
-        return false;
-      }
-
-      return true;
-    }),
-  };
-
-  /* =======================================================
-     LOGISTICS
+     LOGISTICS & OPERATIONS
   ======================================================= */
 
   const logisticsAndOperations: NavigationGroup = {
@@ -128,24 +114,57 @@ const getNavigationByRole = (
     children: [
       {
         label: "Cargo & Tracking",
-        path:
-          role === "LOGISTICS_PARTNER"
-            ? "/logistics/shipments"
-            : `/${roleSlug}/logistics`,
+        path: `/${roleSlug}/logistics`,
       },
       {
         label: "Quality Control",
-        path:
-          role === "LOGISTICS_PARTNER"
-            ? "/logistics/quality-control"
-            : `/${roleSlug}/quality-control`,
+        path: `/${roleSlug}/quality-control`,
       },
       {
-        label: "After Sales & Claims",
-        path:
-          role === "LOGISTICS_PARTNER"
-            ? "/logistics/claims"
-            : `/${roleSlug}/claims`,
+        label: "Trips",
+        path: `/${roleSlug}/trips`,
+      },
+    ],
+  };
+
+  /* =======================================================
+     COMMERCIAL
+  ======================================================= */
+
+  const commercial: NavigationGroup = {
+    label: "Commercial",
+    icon: BriefcaseBusiness,
+    children: [
+      {
+        label: "Visa Invitations",
+        path: `/${roleSlug}/visa-invitations`,
+      },
+      {
+        label: "Payments",
+        path: `/${roleSlug}/payments`,
+      },
+      {
+        label: "Services",
+        path: `/${roleSlug}/services`,
+      },
+    ],
+  };
+
+  /* =======================================================
+     CONTENT
+  ======================================================= */
+
+  const content: NavigationGroup = {
+    label: "Content",
+    icon: Newspaper,
+    children: [
+      {
+        label: "Blogs",
+        path: `/${roleSlug}/blogs`,
+      },
+      {
+        label: "Projects",
+        path: `/${roleSlug}/projects`,
       },
     ],
   };
@@ -156,76 +175,85 @@ const getNavigationByRole = (
 
   const administration: NavigationGroup = {
     label: "Administration",
-    icon: ShieldAlert,
+    icon: Users,
     children: [
       {
         label: "Users Management",
-        path: "/superadmin/users",
+        path: `/${roleSlug}/users`,
       },
       {
-        label: "Roles & Permissions",
-        path: "/superadmin/roles",
+        label: "Contacts",
+        path: `/${roleSlug}/contacts`,
+      },
+      {
+        label: "Files",
+        path: `/${roleSlug}/files`,
       },
     ],
   };
 
   /* =======================================================
-     SETTINGS
+     SUPPORT
   ======================================================= */
 
-  const settings: NavigationGroup = {
-    label: "Settings",
-    icon: Settings,
-    path: `/${roleSlug}/settings`,
+  const support: NavigationGroup = {
+    label: "Support",
+    icon: LifeBuoy,
+    children: [
+      {
+        label: "Support Tickets",
+        path: `/${roleSlug}/supports`,
+      },
+    ],
   };
 
   /* =======================================================
-     ROLE BASED NAVIGATION
+     ROLE NAVIGATION
   ======================================================= */
 
   switch (role) {
     case "SUPER_ADMIN":
       return [
         dashboard,
-        sourcingAndSuppliers,
         logisticsAndOperations,
+        commercial,
+        content,
         administration,
-        settings,
+        support,
       ];
 
     case "STAFF":
       return [
         dashboard,
-        sourcingAndSuppliers,
         logisticsAndOperations,
-        settings,
+        commercial,
+        support,
       ];
 
     case "BUYER":
       return [
         dashboard,
-        sourcingAndSuppliers,
         logisticsAndOperations,
-        settings,
+        commercial,
+        support,
       ];
 
     case "SUPPLIER":
       return [
         dashboard,
-        sourcingAndSuppliers,
         logisticsAndOperations,
-        settings,
+        support,
       ];
 
     case "LOGISTICS_PARTNER":
       return [
         dashboard,
         logisticsAndOperations,
-        settings,
+        support,
       ];
 
     default:
-      return [dashboard, settings];
+      return [dashboard];
   }
 };
 
@@ -242,49 +270,85 @@ export default function Sidebar({
 }: SidebarProps) {
   const location = useLocation();
 
+  /* =======================================================
+     COLLAPSED STATE
+  ======================================================= */
+
   const [internalCollapsed, setInternalCollapsed] =
     useState(false);
 
   const collapsed =
     controlledCollapsed ?? internalCollapsed;
 
-  const navigation = getNavigationByRole(role);
+  /* =======================================================
+     NAVIGATION
+  ======================================================= */
+
+  const navigation = useMemo(
+    () => getNavigationByRole(role),
+    [role]
+  );
 
   /* =======================================================
-     OPEN GROUP STATE
+     ACTIVE PATH
+  ======================================================= */
+
+  const currentPath =
+    location.pathname.replace(/\/+$/, "") || "/";
+
+  const isPathActive = useCallback(
+    (path: string) => {
+      const normalizedPath =
+        path.replace(/\/+$/, "") || "/";
+
+      return currentPath === normalizedPath;
+    },
+    [currentPath]
+  );
+
+  const isChildActive = useCallback(
+    (children?: SubMenuItem[]) => {
+      if (!children) {
+        return false;
+      }
+
+      return children.some((child) =>
+        isPathActive(child.path)
+      );
+    },
+    [isPathActive]
+  );
+
+  const isGroupActive = (
+    group: NavigationGroup
+  ) => {
+    if (group.path) {
+      return isPathActive(group.path);
+    }
+
+    return isChildActive(group.children);
+  };
+
+  /* =======================================================
+     OPEN GROUPS
   ======================================================= */
 
   const [openGroups, setOpenGroups] = useState<
     Record<string, boolean>
-  >(() => {
-    const initialState: Record<string, boolean> = {};
-
-    navigation.forEach((group) => {
-      if (
-        group.children?.some((child) =>
-          location.pathname.startsWith(child.path)
-        )
-      ) {
-        initialState[group.label] = true;
-      }
-    });
-
-    return initialState;
-  });
+  >({});
 
   /* =======================================================
      AUTO OPEN ACTIVE GROUP
   ======================================================= */
 
   useEffect(() => {
-    const activeGroups: Record<string, boolean> = {};
+    const activeGroups: Record<
+      string,
+      boolean
+    > = {};
 
     navigation.forEach((group) => {
-      if (
-        group.children?.some((child) =>
-          location.pathname.startsWith(child.path)
-        )
-      ) {
+      if (isChildActive(group.children)) {
         activeGroups[group.label] = true;
       }
     });
@@ -295,10 +359,14 @@ export default function Sidebar({
         ...activeGroups,
       }));
     }
-  }, [location.pathname, navigation]);
+  }, [
+    currentPath,
+    isChildActive,
+    navigation,
+  ]);
 
   /* =======================================================
-     GROUP TOGGLE
+     TOGGLE GROUP
   ======================================================= */
 
   const toggleGroup = (label: string) => {
@@ -340,10 +408,6 @@ export default function Sidebar({
 
   return (
     <>
-      {/* ===================================================
-          MOBILE BACKDROP
-      ==================================================== */}
-
       {mobileOpen && (
         <div
           className="
@@ -357,10 +421,6 @@ export default function Sidebar({
         />
       )}
 
-      {/* ===================================================
-          SIDEBAR
-      ==================================================== */}
-
       <aside
         className={`
           fixed inset-y-0 left-0 z-50
@@ -370,7 +430,11 @@ export default function Sidebar({
           shadow-[4px_0_24px_rgba(15,57,82,0.06)]
           transition-all duration-300 ease-in-out
 
-          ${collapsed ? "w-[84px]" : "w-[292px]"}
+          ${
+            collapsed
+              ? "w-[84px]"
+              : "w-[292px]"
+          }
 
           ${
             mobileOpen
@@ -383,7 +447,7 @@ export default function Sidebar({
       >
         {/* =================================================
             HEADER
-        ================================================== */}
+        ================================================= */}
 
         <div
           className={`
@@ -403,6 +467,7 @@ export default function Sidebar({
           <div
             className={`
               flex items-center
+
               ${
                 collapsed
                   ? "justify-center"
@@ -410,8 +475,6 @@ export default function Sidebar({
               }
             `}
           >
-            {/* LOGO */}
-
             <div
               className="
                 flex
@@ -431,8 +494,6 @@ export default function Sidebar({
             >
               Y
             </div>
-
-            {/* BRAND */}
 
             {!collapsed && (
               <div className="min-w-0">
@@ -464,8 +525,6 @@ export default function Sidebar({
             )}
           </div>
 
-          {/* MOBILE CLOSE */}
-
           <button
             type="button"
             onClick={onMobileClose}
@@ -484,13 +543,16 @@ export default function Sidebar({
             "
             aria-label="Close sidebar"
           >
-            <X size={20} strokeWidth={2} />
+            <X
+              size={20}
+              strokeWidth={2}
+            />
           </button>
         </div>
 
         {/* =================================================
             NAVIGATION
-        ================================================== */}
+        ================================================= */}
 
         <nav
           className="
@@ -506,21 +568,21 @@ export default function Sidebar({
               const Icon = group.icon;
 
               const hasChildren =
-                Boolean(group.children?.length);
-
-              const isGroupActive =
-                group.path === location.pathname ||
-                group.children?.some((child) =>
-                  location.pathname.startsWith(
-                    child.path
-                  )
+                Boolean(
+                  group.children?.length
                 );
+
+              const groupActive =
+                isGroupActive(group);
 
               /* ===========================================
                  SINGLE ITEM
               =========================================== */
 
-              if (!hasChildren && group.path) {
+              if (
+                !hasChildren &&
+                group.path
+              ) {
                 return (
                   <NavLink
                     key={group.path}
@@ -531,7 +593,10 @@ export default function Sidebar({
                         ? group.label
                         : undefined
                     }
-                    className={({ isActive }) => `
+                    end
+                    className={({
+                      isActive,
+                    }) => `
                       group
                       relative
                       flex
@@ -563,27 +628,32 @@ export default function Sidebar({
                         : undefined
                     }
                   >
-                    {({ isActive }) => (
+                    {({
+                      isActive,
+                    }) => (
                       <>
-                        {isActive && !collapsed && (
-                          <span
-                            className="
-                              absolute
-                              left-0
-                              top-1/2
-                              h-7
-                              w-1
-                              -translate-y-1/2
-                              rounded-r-full
-                              bg-white/80
-                            "
-                          />
-                        )}
+                        {isActive &&
+                          !collapsed && (
+                            <span
+                              className="
+                                absolute
+                                left-0
+                                top-1/2
+                                h-7
+                                w-1
+                                -translate-y-1/2
+                                rounded-r-full
+                                bg-white/80
+                              "
+                            />
+                          )}
 
                         <Icon
                           size={21}
                           strokeWidth={
-                            isActive ? 2.2 : 1.8
+                            isActive
+                              ? 2.2
+                              : 1.8
                           }
                           className={
                             isActive
@@ -593,7 +663,13 @@ export default function Sidebar({
                         />
 
                         {!collapsed && (
-                          <span className="truncate text-[14px] tracking-tight">
+                          <span
+                            className="
+                              truncate
+                              text-[14px]
+                              tracking-tight
+                            "
+                          >
                             {group.label}
                           </span>
                         )}
@@ -608,7 +684,11 @@ export default function Sidebar({
               =========================================== */
 
               const isOpen =
-                Boolean(openGroups[group.label]);
+                Boolean(
+                  openGroups[
+                    group.label
+                  ]
+                );
 
               return (
                 <div
@@ -618,12 +698,19 @@ export default function Sidebar({
                   <button
                     type="button"
                     onClick={() =>
-                      toggleGroup(group.label)
+                      toggleGroup(
+                        group.label
+                      )
                     }
                     title={
                       collapsed
                         ? group.label
                         : undefined
+                    }
+                    aria-expanded={
+                      collapsed
+                        ? undefined
+                        : isOpen
                     }
                     className={`
                       group
@@ -643,34 +730,37 @@ export default function Sidebar({
                       }
 
                       ${
-                        isGroupActive
+                        groupActive
                           ? "text-[#0F3952]"
                           : "text-slate-600 hover:bg-[#0F3952]/[0.055] hover:text-[#0F3952]"
                       }
                     `}
                   >
-                    {isGroupActive && !collapsed && (
-                      <span
-                        className="
-                          absolute
-                          left-0
-                          top-1/2
-                          h-6
-                          w-1
-                          -translate-y-1/2
-                          rounded-r-full
-                          bg-[#0F3952]
-                        "
-                      />
+                    {groupActive &&
+                      !collapsed && (
+                        <span
+                          className="
+                            absolute
+                            left-0
+                            top-1/2
+                            h-6
+                            w-1
+                            -translate-y-1/2
+                            rounded-r-full
+                            bg-[#0F3952]
+                          "
+                        />
                     )}
 
                     <Icon
                       size={21}
                       strokeWidth={
-                        isGroupActive ? 2.1 : 1.8
+                        groupActive
+                          ? 2.1
+                          : 1.8
                       }
                       className={
-                        isGroupActive
+                        groupActive
                           ? "shrink-0 text-[#0F3952]"
                           : "shrink-0 text-slate-500 group-hover:text-[#0F3952]"
                       }
@@ -678,7 +768,15 @@ export default function Sidebar({
 
                     {!collapsed && (
                       <>
-                        <span className="flex-1 truncate text-left text-[14px] tracking-tight">
+                        <span
+                          className="
+                            flex-1
+                            truncate
+                            text-left
+                            text-[14px]
+                            tracking-tight
+                          "
+                        >
                           {group.label}
                         </span>
 
@@ -701,8 +799,6 @@ export default function Sidebar({
                     )}
                   </button>
 
-                  {/* SUB MENU */}
-
                   {!collapsed &&
                     isOpen &&
                     group.children && (
@@ -720,11 +816,16 @@ export default function Sidebar({
                         {group.children.map(
                           (child) => (
                             <NavLink
-                              key={child.path}
-                              to={child.path}
+                              key={
+                                child.path
+                              }
+                              to={
+                                child.path
+                              }
                               onClick={
                                 handleNavigation
                               }
+                              end
                               className={({
                                 isActive,
                               }) => `
@@ -768,7 +869,9 @@ export default function Sidebar({
                                   />
 
                                   <span className="truncate">
-                                    {child.label}
+                                    {
+                                      child.label
+                                    }
                                   </span>
                                 </>
                               )}
@@ -785,7 +888,7 @@ export default function Sidebar({
 
         {/* =================================================
             FOOTER
-        ================================================== */}
+        ================================================= */}
 
         <div
           className="
@@ -844,3 +947,4 @@ export default function Sidebar({
     </>
   );
 }
+

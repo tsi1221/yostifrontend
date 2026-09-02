@@ -1,14 +1,13 @@
+
 import { useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import type { UserRole } from "../../layout/Sidebar"; 
+import type { UserRole } from "../../layout/Sidebar";
 
 import LoginForm, {
   type LoginFormValues,
 } from "./LoginForm";
-
-import { MOCK_USERS } from "./mockUsers";
 
 /* =========================================================
    PROPS
@@ -20,6 +19,27 @@ interface LoginProps {
 }
 
 /* =========================================================
+   API RESPONSE
+========================================================= */
+
+interface LoginResponse {
+  accessToken?: string;
+  access_token?: string;
+  token?: string;
+
+  user?: {
+    id?: string;
+    email?: string;
+    role?: UserRole;
+  };
+
+  email?: string;
+  role?: UserRole;
+
+  message?: string | string[];
+}
+
+/* =========================================================
    ROLE SLUG
 ========================================================= */
 
@@ -27,9 +47,6 @@ const getRoleSlug = (role: UserRole): string => {
   switch (role) {
     case "SUPER_ADMIN":
       return "superadmin";
-
-    case "LOGISTICS_PARTNER":
-      return "logistics";
 
     case "STAFF":
       return "staff";
@@ -39,6 +56,9 @@ const getRoleSlug = (role: UserRole): string => {
 
     case "SUPPLIER":
       return "supplier";
+
+    case "LOGISTICS_PARTNER":
+      return "logistics";
 
     default:
       return "buyer";
@@ -54,9 +74,6 @@ const getRoleLabel = (role: UserRole): string => {
     case "SUPER_ADMIN":
       return "Super Admin";
 
-    case "LOGISTICS_PARTNER":
-      return "Logistics Partner";
-
     case "STAFF":
       return "Staff";
 
@@ -65,6 +82,9 @@ const getRoleLabel = (role: UserRole): string => {
 
     case "SUPPLIER":
       return "Supplier";
+
+    case "LOGISTICS_PARTNER":
+      return "Logistics Partner";
 
     default:
       return role;
@@ -84,7 +104,7 @@ export default function Login({
   const [loading, setLoading] = useState(false);
 
   /* =======================================================
-     LOGIN HANDLER
+     HANDLE LOGIN
   ======================================================= */
 
   const handleLogin = async (
@@ -93,66 +113,159 @@ export default function Login({
     setLoading(true);
 
     try {
-      // Simulate API request
-      await new Promise((resolve) =>
-        setTimeout(resolve, 800)
-      );
+      /* ===================================================
+         NORMALIZE FORM DATA
+      =================================================== */
 
-      const normalizedEmail = values.email
+      const email = values.email
         .trim()
         .toLowerCase();
 
-      const user = MOCK_USERS.find(
-        (item) =>
-          item.email.toLowerCase() ===
-            normalizedEmail &&
-          item.password === values.password
+      const password = values.password;
+
+      /* ===================================================
+         LOGIN REQUEST
+         
+         IMPORTANT:
+         We use /api/auth/login instead of the full
+         backend URL. Vite proxy handles the request.
+      =================================================== */
+
+      const response = await fetch(
+        "/api/auth/login",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+        }
       );
 
-      /* Invalid login */
+      /* ===================================================
+         READ RESPONSE
+      =================================================== */
 
-      if (!user) {
-        message.error(
-          "Invalid email or password."
+      const data: LoginResponse =
+        await response.json().catch(() => ({}));
+
+      /* ===================================================
+         API ERROR
+      =================================================== */
+
+      if (!response.ok) {
+        const apiMessage = Array.isArray(
+          data.message
+        )
+          ? data.message.join(", ")
+          : data.message;
+
+        throw new Error(
+          apiMessage ||
+            "Invalid email or password."
         );
-
-        return;
       }
 
-      const role = user.role;
-      const email = user.email;
+      /* ===================================================
+         TOKEN
+      =================================================== */
 
-      /* Clear old session */
+      const token =
+        data.accessToken ||
+        data.access_token ||
+        data.token;
 
+      /* ===================================================
+         USER EMAIL
+      =================================================== */
+
+      const userEmail =
+        data.user?.email ||
+        data.email ||
+        email;
+
+      /* ===================================================
+         USER ROLE
+      =================================================== */
+
+      const role =
+        data.user?.role ||
+        data.role;
+
+      /*
+       * Your frontend uses the role to determine
+       * which dashboard the user should see.
+       */
+      if (!role) {
+        console.error(
+          "Login response:",
+          data
+        );
+
+        throw new Error(
+          "Login succeeded, but the user role was not returned."
+        );
+      }
+
+      /* ===================================================
+         CLEAR OLD SESSION
+      =================================================== */
+
+      localStorage.removeItem("token");
       localStorage.removeItem("role");
       localStorage.removeItem("email");
 
+      sessionStorage.removeItem("token");
       sessionStorage.removeItem("role");
       sessionStorage.removeItem("email");
 
-      /* Select storage */
+      /* ===================================================
+         SELECT STORAGE
+      =================================================== */
 
       const storage = values.remember
         ? localStorage
         : sessionStorage;
 
-      /* Save authentication */
+      /* ===================================================
+         SAVE TOKEN
+      =================================================== */
+
+      if (token) {
+        storage.setItem("token", token);
+      }
+
+      /* ===================================================
+         SAVE USER DATA
+      =================================================== */
 
       storage.setItem("role", role);
-      storage.setItem("email", email);
+      storage.setItem("email", userEmail);
 
-      /* Update application state */
+      /* ===================================================
+         UPDATE APP STATE
+      =================================================== */
 
       setRole(role);
-      setEmail(email);
+      setEmail(userEmail);
 
-      /* Success message */
+      /* ===================================================
+         SUCCESS
+      =================================================== */
 
       message.success(
         `Welcome back, ${getRoleLabel(role)}!`
       );
 
-      /* Redirect */
+      /* ===================================================
+         REDIRECT
+      =================================================== */
 
       navigate(
         `/${getRoleSlug(role)}/dashboard`,
@@ -167,7 +280,9 @@ export default function Login({
       );
 
       message.error(
-        "Something went wrong. Please try again."
+        error instanceof Error
+          ? error.message
+          : "Unable to sign in. Please try again."
       );
     } finally {
       setLoading(false);
@@ -181,14 +296,14 @@ export default function Login({
   return (
     <main
       className="
+        flex
         min-h-screen
         w-full
+        items-center
+        justify-center
         bg-slate-50
         px-4
         py-6
-        flex
-        items-center
-        justify-center
       "
     >
       <LoginForm
