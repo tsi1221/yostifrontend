@@ -8,10 +8,17 @@ import type {
   PaymentMethodValue,
   PaymentRecord,
   PaymentServiceValue,
+  PaymentUpdateStatusValue,
   PaymentsListQuery,
   PaymentsListResponse,
+  UpdatePaymentFormValues,
+  UpdatePaymentPayload,
 } from "./types";
-import { PAYMENT_METHOD_VALUES, PAYMENT_SERVICE_VALUES } from "./types";
+import {
+  PAYMENT_METHOD_VALUES,
+  PAYMENT_SERVICE_VALUES,
+  PAYMENT_UPDATE_STATUS_VALUES,
+} from "./types";
 
 export { isPreviewAccessToken };
 
@@ -193,11 +200,9 @@ export async function fetchPaymentsList(
   return normalizePaymentsResponse(raw, query);
 }
 
-const PAYMENT_FIELD_KEYS: Array<keyof CreatePaymentPayload> = [
-  "service",
-  "method",
-  "status",
-];
+const PAYMENT_FIELD_KEYS: Array<
+  keyof CreatePaymentPayload | keyof UpdatePaymentPayload
+> = ["service", "method", "status"];
 
 function parseFieldErrors(raw: unknown): PaymentFieldErrors {
   const record = asRecord(raw);
@@ -448,4 +453,195 @@ export async function fetchPayment(id: number): Promise<PaymentRecord> {
   }
 
   return payload;
+}
+
+function matchEnum<T extends string>(value: string, options: readonly T[]): T | undefined {
+  const key = value.trim().toLowerCase();
+  return options.find((option) => option.toLowerCase() === key);
+}
+
+export function asPaymentService(value: string): PaymentServiceValue {
+  return matchEnum(value, PAYMENT_SERVICE_VALUES) ?? "Logistic";
+}
+
+export function asPaymentMethod(value: string): PaymentMethodValue {
+  return matchEnum(value, PAYMENT_METHOD_VALUES) ?? "Card";
+}
+
+export function asPaymentUpdateStatus(value: string): PaymentUpdateStatusValue {
+  return matchEnum(value, PAYMENT_UPDATE_STATUS_VALUES) ?? "Pending";
+}
+
+export function paymentToFormValues(payment: PaymentRecord): UpdatePaymentFormValues {
+  return {
+    service: asPaymentService(payment.service),
+    method: asPaymentMethod(payment.method),
+    status: asPaymentUpdateStatus(payment.status),
+  };
+}
+
+export function validateUpdatePaymentForm(
+  values: UpdatePaymentFormValues
+): PaymentFieldErrors {
+  const errors: PaymentFieldErrors = {};
+  if (!PAYMENT_SERVICE_VALUES.includes(values.service)) {
+    errors.service = "Choose a service.";
+  }
+  if (!PAYMENT_METHOD_VALUES.includes(values.method)) {
+    errors.method = "Choose a payment method.";
+  }
+  if (!PAYMENT_UPDATE_STATUS_VALUES.includes(values.status)) {
+    errors.status = "Choose a valid payment status.";
+  }
+  return errors;
+}
+
+export function updateFormValuesToPayload(
+  values: UpdatePaymentFormValues
+): UpdatePaymentPayload {
+  return {
+    service: values.service,
+    method: values.method,
+    status: values.status,
+  };
+}
+
+export async function patchPayment(
+  id: number,
+  payload: UpdatePaymentPayload
+): Promise<PaymentRecord> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new PaymentsRequestError("Unauthorized", 401);
+  }
+
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new PaymentsRequestError("The payment ID is invalid.", 400);
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(paymentDetailUrl(id), {
+      method: "PATCH",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    throw new PaymentsRequestError(
+      "Unable to reach the server. Check your connection and try again.",
+      0
+    );
+  }
+
+  const raw: unknown = await response.json().catch(() => null);
+
+  if (response.status === 400) {
+    throw new PaymentsRequestError(
+      readApiMessage(raw, "Unable to save this payment. Check the highlighted fields."),
+      400,
+      parseFieldErrors(raw)
+    );
+  }
+  if (response.status === 401) {
+    throw new PaymentsRequestError("Unauthorized", 401);
+  }
+  if (response.status === 404) {
+    throw new PaymentsRequestError(
+      "This payment could not be found or has been removed.",
+      404
+    );
+  }
+  if (response.status >= 500) {
+    throw new PaymentsRequestError(
+      readApiMessage(raw, "Server error occurred. Could not update payment."),
+      response.status
+    );
+  }
+  if (!response.ok) {
+    throw new PaymentsRequestError(
+      readApiMessage(raw, `Unable to update payment. Server returned ${response.status}.`),
+      response.status
+    );
+  }
+
+  const updated =
+    normalizePayment(raw) ??
+    normalizePayment(asRecord(raw)?.data) ??
+    normalizePayment(asRecord(raw)?.payment);
+
+  if (!updated) {
+    throw new PaymentsRequestError("The server returned an incomplete payment.", 500);
+  }
+
+  invalidatePaymentsCache();
+  return updated;
+}
+
+const DELETE_PAYMENT_SUCCESS = "Payment deleted successfully.";
+
+export async function deletePayment(id: number): Promise<string> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new PaymentsRequestError("Unauthorized", 401);
+  }
+
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new PaymentsRequestError("The payment ID format is invalid.", 400);
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(paymentDetailUrl(id), {
+      method: "DELETE",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch {
+    throw new PaymentsRequestError(
+      "Unable to reach the server. Check your connection and try again.",
+      0
+    );
+  }
+
+  const raw: unknown = await response.json().catch(() => null);
+
+  if (response.status === 400) {
+    throw new PaymentsRequestError(
+      readApiMessage(raw, "The payment ID format is invalid."),
+      400
+    );
+  }
+  if (response.status === 401) {
+    throw new PaymentsRequestError("Unauthorized", 401);
+  }
+  if (response.status === 404) {
+    throw new PaymentsRequestError(
+      "This payment record does not exist or has already been removed.",
+      404
+    );
+  }
+  if (response.status >= 500) {
+    throw new PaymentsRequestError(
+      readApiMessage(raw, "Server error occurred. Could not delete payment."),
+      response.status
+    );
+  }
+  if (response.status !== 200) {
+    throw new PaymentsRequestError(
+      readApiMessage(
+        raw,
+        `Unable to delete this payment record. Server returned ${response.status}.`
+      ),
+      response.status
+    );
+  }
+
+  invalidatePaymentsCache();
+  return readApiMessage(raw, DELETE_PAYMENT_SUCCESS);
 }

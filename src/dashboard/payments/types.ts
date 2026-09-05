@@ -108,9 +108,48 @@ export interface PaymentFormValues {
   method: PaymentMethodValue | "";
 }
 
-export type PaymentFieldErrors = Partial<Record<keyof CreatePaymentPayload, string>>;
+export type PaymentUpdateStatusValue =
+  | "Pending"
+  | "Completed"
+  | "Refunded"
+  | "Failed";
+
+export const PAYMENT_UPDATE_STATUS_VALUES: PaymentUpdateStatusValue[] = [
+  "Pending",
+  "Completed",
+  "Refunded",
+  "Failed",
+];
+
+export const PAYMENT_UPDATE_STATUS_OPTIONS: {
+  label: string;
+  value: PaymentUpdateStatusValue;
+}[] = [
+  { label: "Pending", value: "Pending" },
+  { label: "Completed", value: "Completed" },
+  { label: "Refunded", value: "Refunded" },
+  { label: "Failed", value: "Failed" },
+];
+
+export interface UpdatePaymentFormValues {
+  service: PaymentServiceValue;
+  method: PaymentMethodValue;
+  status: PaymentUpdateStatusValue;
+}
+
+export interface UpdatePaymentPayload {
+  service: PaymentServiceValue;
+  method: PaymentMethodValue;
+  status: PaymentUpdateStatusValue;
+}
+
+export type PaymentFieldErrors = Partial<
+  Record<keyof CreatePaymentPayload | keyof UpdatePaymentPayload, string>
+>;
 
 export const EMPTY_PAYMENT_FORM: PaymentFormValues = {
   service: "",
   method: "",
 };
+
+export type PaymentDeletionPhase = "idle" | "confirming" | "deleting";

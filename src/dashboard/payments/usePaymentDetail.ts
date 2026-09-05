@@ -82,6 +82,7 @@ export function usePaymentDetail(id: string | undefined) {
     loading,
     notFound,
     serverError,
+    applyPayment: setPayment,
     retry: () => setReloadToken((value) => value + 1),
   };
 }

@@ -1,10 +1,14 @@
 import type { ReactNode } from "react";
-import { CreditCard, PackageSearch, Truck, Wallet } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useState } from "react";
+import { CreditCard, PackageSearch, Trash2, Truck, Wallet } from "lucide-react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
+import SideDrawer from "../components/SideDrawer";
 import { ROLE_SLUG } from "../roles";
 import { useDashboard } from "../store";
+import DeletePaymentDialog from "./DeletePaymentDialog";
+import EditPaymentForm from "./EditPaymentForm";
 import {
   formatPaymentStatus,
   isCompletedPaymentStatus,
@@ -109,10 +113,21 @@ export default function PaymentDetailView() {
   const navigate = useNavigate();
   const { role } = useDashboard();
   const listPath = `/${ROLE_SLUG[role]}/payments`;
-  const { payment, loading, notFound, serverError, retry } =
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { payment, loading, notFound, serverError, applyPayment, retry } =
     usePaymentDetail(paymentId);
+  const [editing, setEditing] = useState(searchParams.get("edit") === "1");
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const goBack = () => navigate(listPath);
+  const closeEditor = () => {
+    setEditing(false);
+    if (searchParams.get("edit") === "1") {
+      const next = new URLSearchParams(searchParams);
+      next.delete("edit");
+      setSearchParams(next, { replace: true });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -120,6 +135,19 @@ export default function PaymentDetailView() {
         <ActionButton tone="ghost" onClick={goBack}>
           Back to payments list
         </ActionButton>
+        {payment ? (
+          <div className="flex gap-2">
+            <ActionButton onClick={() => setEditing(true)}>Edit payment</ActionButton>
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 size={16} />
+              Delete
+            </button>
+          </div>
+        ) : null}
       </div>
 
       {loading ? <ReceiptSkeleton /> : null}
@@ -180,6 +208,35 @@ export default function PaymentDetailView() {
           <p className="text-xs text-slate-400">User ID {payment.userId || "—"}</p>
         </div>
       ) : null}
+
+      <SideDrawer
+        open={Boolean(editing && payment)}
+        title={payment ? `Edit payment #${payment.id}` : "Edit payment"}
+        description="Update service, method, and status. Changes are sent with PATCH."
+        onClose={closeEditor}
+      >
+        {payment ? (
+          <EditPaymentForm
+            payment={payment}
+            onCancel={closeEditor}
+            onSaved={(updated) => {
+              applyPayment(updated);
+              closeEditor();
+            }}
+          />
+        ) : null}
+      </SideDrawer>
+
+      <DeletePaymentDialog
+        open={Boolean(confirmDelete && payment)}
+        paymentId={payment?.id ?? null}
+        onClose={() => setConfirmDelete(false)}
+        onDeleted={() => {
+          setConfirmDelete(false);
+          closeEditor();
+          navigate(listPath, { replace: true });
+        }}
+      />
     </div>
   );
 }

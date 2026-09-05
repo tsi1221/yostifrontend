@@ -1,10 +1,15 @@
+import { useState } from "react";
+import { Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
 import { SelectInput, TextInput } from "../components/FormField";
+import SideDrawer from "../components/SideDrawer";
 import StatusBadge from "../components/StatusBadge";
 import { ROLE_SLUG } from "../roles";
 import { useDashboard } from "../store";
+import DeletePaymentDialog from "./DeletePaymentDialog";
+import EditPaymentForm from "./EditPaymentForm";
 import type {
   PaymentMethodFilter,
   PaymentRecord,
@@ -48,6 +53,8 @@ function SkeletonRows() {
 export default function PaymentsTable() {
   const navigate = useNavigate();
   const { role } = useDashboard();
+  const [editing, setEditing] = useState<PaymentRecord | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<PaymentRecord | null>(null);
   const {
     filters,
     setFilter,
@@ -179,15 +186,36 @@ export default function PaymentsTable() {
                       <StatusBadge value={row.status || "—"} />
                     </td>
                     <td className="px-4 py-3">
-                      <ActionButton
-                        tone="ghost"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          navigate(detailPath(row.id));
-                        }}
-                      >
-                        View
-                      </ActionButton>
+                      <div className="flex items-center gap-2">
+                        <ActionButton
+                          tone="ghost"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            navigate(detailPath(row.id));
+                          }}
+                        >
+                          View
+                        </ActionButton>
+                        <ActionButton
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setEditing(row);
+                          }}
+                        >
+                          Edit
+                        </ActionButton>
+                        <button
+                          type="button"
+                          className="rounded-xl bg-red-600 p-2 text-white hover:bg-red-700"
+                          aria-label={`Delete payment record ${row.id}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setPendingDelete(row);
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -228,6 +256,33 @@ export default function PaymentsTable() {
           </div>
         </footer>
       </div>
+
+      <SideDrawer
+        open={Boolean(editing)}
+        title={editing ? `Edit payment #${editing.id}` : "Edit payment"}
+        description="Update service, method, and status. Changes are sent with PATCH."
+        onClose={() => setEditing(null)}
+      >
+        {editing ? (
+          <EditPaymentForm
+            payment={editing}
+            onCancel={() => setEditing(null)}
+            onSaved={() => setEditing(null)}
+          />
+        ) : null}
+      </SideDrawer>
+
+      <DeletePaymentDialog
+        open={Boolean(pendingDelete)}
+        paymentId={pendingDelete?.id ?? null}
+        onClose={() => setPendingDelete(null)}
+        onDeleted={() => {
+          if (editing && pendingDelete && editing.id === pendingDelete.id) {
+            setEditing(null);
+          }
+          setPendingDelete(null);
+        }}
+      />
     </div>
   );
 }
