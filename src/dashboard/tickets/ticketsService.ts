@@ -224,11 +224,11 @@ export const SUPPORTS_INVALIDATE_EVENT = "yosti:supports-invalidate";
 
 export function invalidateTicketsCache() {
   window.dispatchEvent(new CustomEvent(TICKETS_INVALIDATE_EVENT));
-  window.dispatchEvent(new CustomEvent(SUPPORTS_INVALIDATE_EVENT));
 }
 
 export function invalidateSupportsCache() {
-  invalidateTicketsCache();
+  window.dispatchEvent(new CustomEvent(SUPPORTS_INVALIDATE_EVENT));
+  window.dispatchEvent(new CustomEvent(TICKETS_INVALIDATE_EVENT));
 }
 
 export function buildSupportsQueryString(query: SupportsListQuery) {
