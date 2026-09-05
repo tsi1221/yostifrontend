@@ -8,6 +8,8 @@ export {
   INSPECTIONS_URL,
   TRIPS_URL,
   PAYMENTS_URL,
+  TICKETS_URL,
+  SUPPORT_URL,
 } from "./endpoints";
 export { loginWithPassword } from "./loginService";
 export {

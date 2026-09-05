@@ -24,3 +24,9 @@ export const TRIPS_URL = `${AUTH_API_BASE}/trips`;
 
 /** GET paginated payments / POST create / GET :id receipt / PATCH :id { service, method, status } / DELETE :id */
 export const PAYMENTS_URL = `${AUTH_API_BASE}/payments`;
+
+/** POST create support tickets (try first; 201 { id, userId, orderReference, ... }) */
+export const TICKETS_URL = `${AUTH_API_BASE}/tickets`;
+
+/** Fallback create path when POST /tickets is 404 */
+export const SUPPORT_URL = `${AUTH_API_BASE}/support`;

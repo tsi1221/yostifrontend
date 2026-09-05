@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
 import DataTable, { type DataTableColumn } from "../components/DataTable";
 import { Field, SelectInput, TextArea, TextInput } from "../components/FormField";
 import PageHeader from "../components/PageHeader";
 import StatusBadge from "../components/StatusBadge";
+import { ROLE_SLUG } from "../roles";
 import { findUserName, useDashboard, useScopedRecords } from "../store";
 import type { IssueType, SupportRequest, Urgency } from "../types";
 
@@ -14,6 +16,7 @@ const URGENCY: Urgency[] = ["low", "medium", "high"];
 export default function SupportPage() {
   const { snapshot, role, actions } = useDashboard();
   const { support } = useScopedRecords();
+  const navigate = useNavigate();
   const staff = role === "SUPER_ADMIN" || role === "STAFF";
   const canOpen = role === "BUYER" || role === "LOGISTICS_PARTNER";
 
@@ -75,6 +78,11 @@ export default function SupportPage() {
           staff
             ? "Close or resolve buyer issues against order references."
             : "Defect, damage, and missing-item tickets tied to your orders."
+        }
+        actions={
+          <ActionButton onClick={() => navigate(`/${ROLE_SLUG[role]}/supports/new`)}>
+            New ticket
+          </ActionButton>
         }
       />
 
