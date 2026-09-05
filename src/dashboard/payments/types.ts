@@ -67,3 +67,50 @@ export const DEFAULT_PAYMENTS_QUERY: PaymentsListQuery = {
   method: "",
   status: "",
 };
+
+export type PaymentServiceValue = "Logistic" | "Sourcing";
+export type PaymentMethodValue = "Card" | "AliPay";
+export type PaymentCreateStatusValue = "Pending";
+
+export const PAYMENT_SERVICE_VALUES: PaymentServiceValue[] = [
+  "Logistic",
+  "Sourcing",
+];
+
+export const PAYMENT_METHOD_VALUES: PaymentMethodValue[] = ["Card", "AliPay"];
+
+export const PAYMENT_SERVICE_OPTIONS: {
+  label: string;
+  value: PaymentServiceValue;
+  description: string;
+}[] = [
+  { label: "Logistic", value: "Logistic", description: "Cargo and shipping charges" },
+  { label: "Sourcing", value: "Sourcing", description: "Sourcing and supplier requests" },
+];
+
+export const PAYMENT_METHOD_OPTIONS: {
+  label: string;
+  value: PaymentMethodValue;
+  description: string;
+}[] = [
+  { label: "Card", value: "Card", description: "Debit or credit card" },
+  { label: "AliPay", value: "AliPay", description: "AliPay wallet" },
+];
+
+export interface CreatePaymentPayload {
+  service: PaymentServiceValue;
+  method: PaymentMethodValue;
+  status: PaymentCreateStatusValue;
+}
+
+export interface PaymentFormValues {
+  service: PaymentServiceValue | "";
+  method: PaymentMethodValue | "";
+}
+
+export type PaymentFieldErrors = Partial<Record<keyof CreatePaymentPayload, string>>;
+
+export const EMPTY_PAYMENT_FORM: PaymentFormValues = {
+  service: "",
+  method: "",
+};

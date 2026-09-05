@@ -19,6 +19,7 @@ import InspectionsPage from "./views/InspectionsPage";
 import CreateTripForm from "./trips/CreateTripForm";
 import TripDetailView from "./trips/TripDetailView";
 import TripsPage from "./views/TripsPage";
+import CreatePaymentForm from "./payments/CreatePaymentForm";
 import PaymentsPage from "./views/PaymentsPage";
 import SupportPage from "./views/SupportPage";
 
@@ -156,6 +157,14 @@ function DashboardRoutes({ role }: DashboardAppProps) {
         <Route
           path="visa-invitations"
           element={<Navigate to={`/${ROLE_SLUG[role]}/trips`} replace />}
+        />
+        <Route
+          path="payments/new"
+          element={
+            <Guard role={role} page="payments">
+              <CreatePaymentForm />
+            </Guard>
+          }
         />
         <Route
           path="payments"
