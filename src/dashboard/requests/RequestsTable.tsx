@@ -1,11 +1,19 @@
+import { useNavigate } from "react-router-dom";
+
 import ActionButton from "../components/ActionButton";
 import { SelectInput, TextInput } from "../components/FormField";
-import { BADGE_TONE_CLASS, type StatusTone } from "../statusStyles";
+import { ROLE_SLUG } from "../roles";
+import { useDashboard } from "../store";
+import {
+  formatDeadline,
+  formatMoney,
+  requestStatusClass,
+} from "./format";
 import type { SourcingRequestRecord } from "./types";
 import { REQUEST_REGIONS } from "./types";
 import { useRequestsList } from "./useRequestsList";
 
-const COLUMNS = 7;
+const COLUMNS = 8;
 
 function rangeLabel(page: number, limit: number, total: number) {
   if (total === 0) {
@@ -14,42 +22,6 @@ function rangeLabel(page: number, limit: number, total: number) {
   const start = (page - 1) * limit + 1;
   const end = Math.min(page * limit, total);
   return `Showing ${start}-${end} of ${total}`;
-}
-
-function formatMoney(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(value);
-}
-
-function formatDeadline(value: string) {
-  if (!value) {
-    return "—";
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function requestStatusTone(status: string): StatusTone {
-  const normalized = status.toLowerCase();
-  if (normalized === "open" || normalized === "completed") {
-    return "green";
-  }
-  if (normalized === "quoted" || normalized === "pending") {
-    return "yellow";
-  }
-  if (normalized === "closed" || normalized === "rejected" || normalized === "cancelled") {
-    return "red";
-  }
-  return "slate";
 }
 
 function SkeletonRows() {
@@ -69,6 +41,8 @@ function SkeletonRows() {
 }
 
 export default function RequestsTable() {
+  const navigate = useNavigate();
+  const { role } = useDashboard();
   const {
     filters,
     setFilter,
@@ -162,6 +136,7 @@ export default function RequestsTable() {
                 <th className="px-4 py-3">Supplier region</th>
                 <th className="px-4 py-3">Deadline</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3"> </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -177,7 +152,11 @@ export default function RequestsTable() {
 
               {!loading &&
                 requests.map((row: SourcingRequestRecord) => (
-                  <tr key={row.id} className="hover:bg-slate-50/80">
+                  <tr
+                    key={row.id}
+                    className="cursor-pointer hover:bg-slate-50/80"
+                    onClick={() => navigate(`/${ROLE_SLUG[role]}/sourcing/${row.id}`)}
+                  >
                     <td className="px-4 py-3 font-medium text-slate-800">
                       {row.productName}
                     </td>
@@ -198,12 +177,21 @@ export default function RequestsTable() {
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize ${
-                          BADGE_TONE_CLASS[requestStatusTone(row.status)]
-                        }`}
+                        className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize ${requestStatusClass(row.status)}`}
                       >
                         {row.status}
                       </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <ActionButton
+                        tone="ghost"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          navigate(`/${ROLE_SLUG[role]}/sourcing/${row.id}`);
+                        }}
+                      >
+                        View
+                      </ActionButton>
                     </td>
                   </tr>
                 ))}

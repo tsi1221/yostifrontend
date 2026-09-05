@@ -86,7 +86,11 @@ function readApiMessage(raw: unknown, fallback: string) {
   return fallback;
 }
 
-function normalizeRequest(raw: unknown): SourcingRequestRecord | null {
+export function requestDetailUrl(id: string) {
+  return `${REQUESTS_URL}/${encodeURIComponent(id)}`;
+}
+
+export function normalizeRequest(raw: unknown): SourcingRequestRecord | null {
   const record = asRecord(raw);
   if (!record) {
     return null;
@@ -200,4 +204,80 @@ export async function fetchRequestsList(
   }
 
   return normalizeRequestsResponse(raw, query);
+}
+
+export async function fetchRequestById(id: string): Promise<SourcingRequestRecord> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new RequestsRequestError("Unauthorized", 401);
+  }
+
+  const requestId = id.trim();
+  if (!requestId) {
+    throw new RequestsRequestError("The request ID format is invalid.", 400);
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(requestDetailUrl(requestId), {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch {
+    throw new RequestsRequestError(
+      "Unable to reach the server. Check your connection and try again.",
+      0
+    );
+  }
+
+  const raw: unknown = await response.json().catch(() => null);
+
+  if (response.status === 400) {
+    throw new RequestsRequestError(
+      readApiMessage(raw, "The request ID format is invalid."),
+      400
+    );
+  }
+  if (response.status === 401) {
+    throw new RequestsRequestError("Unauthorized", 401);
+  }
+  if (response.status === 403) {
+    throw new RequestsRequestError(
+      "Access Denied: You do not have the required permissions to view this resource.",
+      403
+    );
+  }
+  if (response.status === 404) {
+    throw new RequestsRequestError(
+      "Request not found. It may have been deleted or the ID is incorrect.",
+      404
+    );
+  }
+  if (response.status >= 500) {
+    throw new RequestsRequestError(
+      readApiMessage(raw, "The server could not load this request."),
+      response.status
+    );
+  }
+  if (!response.ok) {
+    throw new RequestsRequestError(
+      readApiMessage(raw, `Unable to load this request. Server returned ${response.status}.`),
+      response.status
+    );
+  }
+
+  const record = asRecord(raw);
+  const payload =
+    normalizeRequest(raw) ??
+    normalizeRequest(record?.data) ??
+    normalizeRequest(record?.request);
+
+  if (!payload) {
+    throw new RequestsRequestError("The server returned an incomplete request.", 500);
+  }
+
+  return payload;
 }

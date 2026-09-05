@@ -9,6 +9,7 @@ import type { UserRole } from "./types";
 import Overview from "./views/Overview";
 import UsersPage from "./views/UsersPage";
 import VerificationsPage from "./views/VerificationsPage";
+import RequestDetailView from "./requests/RequestDetailView";
 import SourcingPage from "./views/SourcingPage";
 import ShipmentsPage from "./views/ShipmentsPage";
 import InspectionsPage from "./views/InspectionsPage";
@@ -64,6 +65,14 @@ function DashboardRoutes({ role }: DashboardAppProps) {
           element={
             <Guard role={role} page="verifications">
               <VerificationsPage />
+            </Guard>
+          }
+        />
+        <Route
+          path="sourcing/:requestId"
+          element={
+            <Guard role={role} page="sourcing">
+              <RequestDetailView />
             </Guard>
           }
         />
