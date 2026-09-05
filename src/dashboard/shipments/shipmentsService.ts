@@ -6,6 +6,8 @@ import type {
   ShipmentFieldErrors,
   ShipmentFormValues,
   ShipmentRecord,
+  ShipmentsListQuery,
+  ShipmentsListResponse,
 } from "./types";
 
 export { isPreviewAccessToken };
@@ -171,7 +173,7 @@ function normalizeShipment(raw: unknown): ShipmentRecord | null {
     record.pickupLocation,
     record.pickup_location
   );
-  if (id === undefined || !pickupLocation) {
+  if (id === undefined) {
     return null;
   }
 
@@ -198,6 +200,105 @@ export const SHIPMENTS_INVALIDATE_EVENT = "yosti:shipments-invalidate";
 
 export function invalidateShipmentsCache() {
   window.dispatchEvent(new CustomEvent(SHIPMENTS_INVALIDATE_EVENT));
+}
+
+export function buildShipmentsQueryString(query: ShipmentsListQuery) {
+  const params = new URLSearchParams();
+  params.set("page", String(query.page || 1));
+  params.set("pageSize", String(query.pageSize || 10));
+  params.set("limit", String(query.pageSize || 10));
+
+  if (query.search.trim()) {
+    params.set("search", query.search.trim());
+  }
+  if (query.method) {
+    params.set("method", query.method);
+  }
+  if (query.destinationCountry.trim()) {
+    params.set("destinationCountry", query.destinationCountry.trim());
+  }
+
+  return params.toString();
+}
+
+function normalizeShipmentsResponse(
+  raw: unknown,
+  query: ShipmentsListQuery
+): ShipmentsListResponse {
+  const record = asRecord(raw);
+  const nested = asRecord(record?.data);
+  const rows = Array.isArray(record?.data)
+    ? record.data
+    : Array.isArray(nested?.data)
+      ? nested.data
+      : Array.isArray(record?.shipments)
+        ? record.shipments
+        : [];
+
+  const data = rows
+    .map((row) => normalizeShipment(row))
+    .filter((row): row is ShipmentRecord => Boolean(row));
+
+  const total = pickNumber(record?.total, nested?.total) ?? data.length;
+  const page = pickNumber(record?.page, nested?.page) ?? query.page;
+  const pageSize =
+    pickNumber(record?.pageSize, record?.limit, nested?.pageSize) ?? query.pageSize;
+  const totalPages =
+    pickNumber(record?.totalPages, record?.total_pages, nested?.totalPages) ??
+    Math.max(1, Math.ceil(total / Math.max(pageSize, 1)));
+
+  return { data, total, page, pageSize, totalPages };
+}
+
+export async function fetchShipmentsList(
+  query: ShipmentsListQuery
+): Promise<ShipmentsListResponse> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new ShipmentsRequestError("Unauthorized", 401);
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(`${SHIPMENTS_URL}?${buildShipmentsQueryString(query)}`, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch {
+    throw new ShipmentsRequestError(
+      "Unable to reach the server. Check your connection and try again.",
+      0
+    );
+  }
+
+  const raw: unknown = await response.json().catch(() => null);
+
+  if (response.status === 400) {
+    throw new ShipmentsRequestError(
+      readApiMessage(raw, "Invalid shipment filters."),
+      400
+    );
+  }
+  if (response.status === 401) {
+    throw new ShipmentsRequestError("Unauthorized", 401);
+  }
+  if (response.status >= 500) {
+    throw new ShipmentsRequestError(
+      readApiMessage(raw, "The server could not load shipments."),
+      response.status
+    );
+  }
+  if (!response.ok) {
+    throw new ShipmentsRequestError(
+      readApiMessage(raw, `Unable to load shipments. Server returned ${response.status}.`),
+      response.status
+    );
+  }
+
+  return normalizeShipmentsResponse(raw, query);
 }
 
 export async function createShipment(
