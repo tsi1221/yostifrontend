@@ -1,27 +1,26 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
 import DataTable from "../components/DataTable";
-import {
-  CheckboxRow,
-  Field,
-  SelectInput,
-  TextInput,
-} from "../components/FormField";
+import { SelectInput, TextInput } from "../components/FormField";
 import PageHeader from "../components/PageHeader";
 import StatusBadge from "../components/StatusBadge";
+import { ROLE_SLUG } from "../roles";
 import { findSupplierName, useDashboard, useScopedRecords } from "../store";
-import type {
-  InspectionStatus,
-  InspectionType,
-  QualityInspection,
-} from "../types";
+import type { InspectionStatus, QualityInspection } from "../types";
 
-const INSPECTION_TYPES: InspectionType[] = [
-  "sample",
-  "pre-shipment",
-  "factory visit",
-];
+function NewInspectionButton() {
+  const navigate = useNavigate();
+  const { role } = useDashboard();
+  return (
+    <ActionButton
+      onClick={() => navigate(`/${ROLE_SLUG[role]}/quality-control/new`)}
+    >
+      New inspection
+    </ActionButton>
+  );
+}
 
 export default function InspectionsPage() {
   const { role } = useDashboard();
@@ -36,92 +35,15 @@ export default function InspectionsPage() {
 }
 
 function BuyerInspectionForm() {
-  const { snapshot, actions } = useDashboard();
   const { inspections } = useScopedRecords();
-  const [form, setForm] = useState({
-    product_type: "",
-    inspection_type: "pre-shipment" as InspectionType,
-    photo_video_required: true,
-    supplier_id: snapshot.suppliers[0]?.supplier_id ?? "",
-    scheduled_date: "2026-09-20",
-  });
 
   return (
     <div className="space-y-8">
       <PageHeader
         title="Request Quality Inspection"
         description="Book sample, pre-shipment, or factory-visit checks."
+        actions={<NewInspectionButton />}
       />
-      <form
-        className="grid grid-cols-1 gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:grid-cols-2"
-        onSubmit={(event) => {
-          event.preventDefault();
-          actions.requestInspection(form);
-          setForm({ ...form, product_type: "" });
-        }}
-      >
-        <Field label="Product type">
-          <TextInput
-            required
-            value={form.product_type}
-            onChange={(event) =>
-              setForm({ ...form, product_type: event.target.value })
-            }
-          />
-        </Field>
-        <Field label="Inspection type">
-          <SelectInput
-            value={form.inspection_type}
-            onChange={(event) =>
-              setForm({
-                ...form,
-                inspection_type: event.target.value as InspectionType,
-              })
-            }
-          >
-            {INSPECTION_TYPES.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </SelectInput>
-        </Field>
-        <Field label="Factory">
-          <SelectInput
-            value={form.supplier_id}
-            onChange={(event) =>
-              setForm({ ...form, supplier_id: event.target.value })
-            }
-          >
-            {snapshot.suppliers.map((factory) => (
-              <option key={factory.supplier_id} value={factory.supplier_id}>
-                {factory.name}
-              </option>
-            ))}
-          </SelectInput>
-        </Field>
-        <Field label="Preferred date">
-          <TextInput
-            type="date"
-            value={form.scheduled_date}
-            onChange={(event) =>
-              setForm({ ...form, scheduled_date: event.target.value })
-            }
-          />
-        </Field>
-        <CheckboxRow
-          label="Photo / video required"
-          checked={form.photo_video_required}
-          onChange={(value) =>
-            setForm({ ...form, photo_video_required: value })
-          }
-        />
-        <div className="md:col-span-2">
-          <ActionButton type="submit" tone="gold">
-            Request inspection
-          </ActionButton>
-        </div>
-      </form>
 
       <DataTable<QualityInspection>
         rows={inspections}
@@ -154,6 +76,7 @@ function SupplierInspectionCalendar() {
       <PageHeader
         title="Assigned Inspections"
         description={`Factory check windows for ${label}.`}
+        actions={<NewInspectionButton />}
       />
       <div className="grid grid-cols-7 gap-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
@@ -220,6 +143,7 @@ function StaffQualityDesk() {
       <PageHeader
         title="Quality reports"
         description="Verify inspection outcomes and attach report URLs."
+        actions={<NewInspectionButton />}
       />
       <DataTable<QualityInspection>
         rows={inspections}

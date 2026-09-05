@@ -5,6 +5,7 @@ export {
   USERS_URL,
   REQUESTS_URL,
   SHIPMENTS_URL,
+  INSPECTIONS_URL,
 } from "./endpoints";
 export { loginWithPassword } from "./loginService";
 export {

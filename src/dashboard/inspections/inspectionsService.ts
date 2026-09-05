@@ -1,0 +1,276 @@
+import { INSPECTIONS_URL } from "../auth/endpoints";
+import { getAccessToken } from "../auth/session";
+import { isPreviewAccessToken } from "../users/usersService";
+import type {
+  CreateInspectionPayload,
+  InspectionFieldErrors,
+  InspectionFormValues,
+  InspectionRecord,
+} from "./types";
+import { INSPECTION_TYPE_VALUES } from "./types";
+
+export { isPreviewAccessToken };
+
+export class InspectionsRequestError extends Error {
+  status: number;
+  fields?: InspectionFieldErrors;
+
+  constructor(message: string, status: number, fields?: InspectionFieldErrors) {
+    super(message);
+    this.name = "InspectionsRequestError";
+    this.status = status;
+    this.fields = fields;
+  }
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+}
+
+function pickString(...values: unknown[]) {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+  return "";
+}
+
+function pickNumber(...values: unknown[]) {
+  for (const value of values) {
+    const number = typeof value === "number" ? value : Number(value);
+    if (Number.isFinite(number)) {
+      return number;
+    }
+  }
+  return undefined;
+}
+
+function pickBoolean(...values: unknown[]) {
+  for (const value of values) {
+    if (typeof value === "boolean") {
+      return value;
+    }
+    if (value === "true" || value === "1" || value === 1) {
+      return true;
+    }
+    if (value === "false" || value === "0" || value === 0) {
+      return false;
+    }
+  }
+  return undefined;
+}
+
+function readApiMessage(raw: unknown, fallback: string) {
+  const record = asRecord(raw);
+  const message = record?.message;
+  if (typeof message === "string" && message.trim()) {
+    return message.trim();
+  }
+  if (Array.isArray(message)) {
+    const text = message.filter((item) => typeof item === "string").join(", ");
+    if (text) {
+      return text;
+    }
+  }
+  return fallback;
+}
+
+const FIELD_KEYS: Array<keyof CreateInspectionPayload> = [
+  "supplierId",
+  "productType",
+  "type",
+  "date",
+  "photoVideoRequired",
+];
+
+function parseFieldErrors(raw: unknown): InspectionFieldErrors {
+  const record = asRecord(raw);
+  const message = record?.message;
+  const fields: InspectionFieldErrors = {};
+  const nested = asRecord(message) ?? asRecord(record?.errors);
+
+  if (nested) {
+    for (const key of FIELD_KEYS) {
+      const value = pickString(nested[key]);
+      if (value) {
+        fields[key] = value;
+      }
+    }
+  }
+
+  const items = Array.isArray(message)
+    ? message.filter((item): item is string => typeof item === "string")
+    : typeof message === "string"
+      ? [message]
+      : [];
+
+  for (const item of items) {
+    const key = FIELD_KEYS.find((field) =>
+      item.toLowerCase().includes(field.toLowerCase())
+    );
+    if (key && !fields[key]) {
+      fields[key] = item;
+    }
+  }
+
+  return fields;
+}
+
+export function parseSupplierId(value: string): number | undefined {
+  const trimmed = value.trim();
+  if (!trimmed || !/^\d+$/.test(trimmed)) {
+    return undefined;
+  }
+  const id = Number.parseInt(trimmed, 10);
+  return Number.isFinite(id) && id > 0 ? id : undefined;
+}
+
+export function localDateTimeToIso(value: string): string {
+  if (!value.trim()) {
+    return "";
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+  return date.toISOString();
+}
+
+export function validateInspectionForm(
+  values: InspectionFormValues
+): InspectionFieldErrors {
+  const errors: InspectionFieldErrors = {};
+  if (parseSupplierId(values.supplierId) === undefined) {
+    errors.supplierId = "Enter a valid numeric supplier ID.";
+  }
+  if (!values.productType.trim()) {
+    errors.productType = "Product type is required.";
+  }
+  if (!INSPECTION_TYPE_VALUES.includes(values.type)) {
+    errors.type = "Choose a valid inspection type.";
+  }
+  if (!localDateTimeToIso(values.date)) {
+    errors.date = "Choose a valid date and time.";
+  }
+  return errors;
+}
+
+export function formValuesToPayload(
+  values: InspectionFormValues
+): CreateInspectionPayload {
+  return {
+    supplierId: parseSupplierId(values.supplierId) ?? 0,
+    productType: values.productType.trim(),
+    type: values.type,
+    date: localDateTimeToIso(values.date),
+    photoVideoRequired: Boolean(values.photoVideoRequired),
+  };
+}
+
+function asInspectionType(value: string): string {
+  const match = INSPECTION_TYPE_VALUES.find((item) => item === value);
+  return match ?? value;
+}
+
+function normalizeInspection(raw: unknown): InspectionRecord | null {
+  const record = asRecord(raw);
+  if (!record) {
+    return null;
+  }
+
+  const id = pickNumber(record.id, record.inspectionId, record.inspection_id);
+  const supplierId = pickNumber(record.supplierId, record.supplier_id);
+  if (id === undefined || supplierId === undefined) {
+    return null;
+  }
+
+  return {
+    id,
+    userId: pickNumber(record.userId, record.user_id) ?? 0,
+    supplierId,
+    productType: pickString(record.productType, record.product_type),
+    type: asInspectionType(pickString(record.type, record.inspectionType, record.inspection_type)),
+    date: pickString(record.date, record.scheduledDate, record.scheduled_date),
+    photoVideoRequired:
+      pickBoolean(
+        record.photoVideoRequired,
+        record.photo_video_required,
+        record.mediaRequired
+      ) ?? false,
+  };
+}
+
+export const INSPECTIONS_INVALIDATE_EVENT = "yosti:inspections-invalidate";
+
+export function invalidateInspectionsCache() {
+  window.dispatchEvent(new CustomEvent(INSPECTIONS_INVALIDATE_EVENT));
+}
+
+export function inspectionsUrl() {
+  return INSPECTIONS_URL;
+}
+
+export async function createInspection(
+  payload: CreateInspectionPayload
+): Promise<InspectionRecord> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new InspectionsRequestError("Unauthorized", 401);
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(INSPECTIONS_URL, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    throw new InspectionsRequestError(
+      "Unable to reach the server. Check your connection and try again.",
+      0
+    );
+  }
+
+  const raw: unknown = await response.json().catch(() => null);
+
+  if (response.status === 400) {
+    throw new InspectionsRequestError(
+      readApiMessage(raw, "Unable to create this inspection. Check the highlighted fields."),
+      400,
+      parseFieldErrors(raw)
+    );
+  }
+  if (response.status === 401) {
+    throw new InspectionsRequestError("Unauthorized", 401);
+  }
+  if (response.status >= 500) {
+    throw new InspectionsRequestError(
+      readApiMessage(raw, "Server error occurred. Could not create inspection."),
+      response.status
+    );
+  }
+  if (response.status !== 200 && response.status !== 201) {
+    throw new InspectionsRequestError(
+      readApiMessage(raw, `Unable to create inspection. Server returned ${response.status}.`),
+      response.status
+    );
+  }
+
+  const created =
+    normalizeInspection(raw) ??
+    normalizeInspection(asRecord(raw)?.data) ??
+    normalizeInspection(asRecord(raw)?.inspection);
+
+  if (!created) {
+    throw new InspectionsRequestError("The server returned an incomplete inspection.", 500);
+  }
+
+  invalidateInspectionsCache();
+  return created;
+}
