@@ -12,3 +12,6 @@ export const USERS_URL = `${AUTH_API_BASE}/users`;
 
 /** GET paginated sourcing requests: page, pageSize, search, supplierRegion, deadline */
 export const REQUESTS_URL = `${AUTH_API_BASE}/requests`;
+
+/** POST create shipment: pickupLocation, destinationCountry, city, destinationDescription, weight, volumeM3, method */
+export const SHIPMENTS_URL = `${AUTH_API_BASE}/shipments`;

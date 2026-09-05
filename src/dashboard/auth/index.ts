@@ -4,6 +4,7 @@ export {
   AUTH_REGISTER_URL,
   USERS_URL,
   REQUESTS_URL,
+  SHIPMENTS_URL,
 } from "./endpoints";
 export { loginWithPassword } from "./loginService";
 export {

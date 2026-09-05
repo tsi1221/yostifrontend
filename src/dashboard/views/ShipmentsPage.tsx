@@ -1,4 +1,7 @@
+import { useNavigate } from "react-router-dom";
+
 import ActionButton from "../components/ActionButton";
+import { ROLE_SLUG } from "../roles";
 import CargoTimeline from "../components/CargoTimeline";
 import DataTable from "../components/DataTable";
 import { Field, SelectInput } from "../components/FormField";
@@ -22,6 +25,17 @@ export default function ShipmentsPage() {
   return <ReadOnlyShipments />;
 }
 
+function NewShipmentButton() {
+  const { role } = useDashboard();
+  const navigate = useNavigate();
+
+  return (
+    <ActionButton onClick={() => navigate(`/${ROLE_SLUG[role]}/logistics/new`)}>
+      New shipment
+    </ActionButton>
+  );
+}
+
 function BuyerTracking() {
   const { shipments } = useScopedRecords();
 
@@ -30,6 +44,7 @@ function BuyerTracking() {
       <PageHeader
         title="Cargo Tracking System"
         description="Visual step-by-step timeline for active shipments."
+        actions={<NewShipmentButton />}
       />
       {shipments.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-sm text-slate-500">
@@ -53,6 +68,7 @@ function LogisticsConsole() {
       <PageHeader
         title="Shipment Bookings"
         description="Incoming buyer cargo. Update status and attach shipping documents."
+        actions={<NewShipmentButton />}
       />
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         {shipments.map((shipment) => (
@@ -158,6 +174,7 @@ function ReadOnlyShipments() {
       <PageHeader
         title="Logistics overview"
         description="Shipments visible to this workspace."
+        actions={<NewShipmentButton />}
       />
       <DataTable<Shipment>
         rows={shipments}

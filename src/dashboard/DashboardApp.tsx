@@ -11,6 +11,7 @@ import UsersPage from "./views/UsersPage";
 import VerificationsPage from "./views/VerificationsPage";
 import RequestDetailView from "./requests/RequestDetailView";
 import SourcingPage from "./views/SourcingPage";
+import CreateShipmentForm from "./shipments/CreateShipmentForm";
 import ShipmentsPage from "./views/ShipmentsPage";
 import InspectionsPage from "./views/InspectionsPage";
 import TripsPage from "./views/TripsPage";
@@ -81,6 +82,14 @@ function DashboardRoutes({ role }: DashboardAppProps) {
           element={
             <Guard role={role} page="sourcing">
               <SourcingPage />
+            </Guard>
+          }
+        />
+        <Route
+          path="logistics/new"
+          element={
+            <Guard role={role} page="logistics">
+              <CreateShipmentForm />
             </Guard>
           }
         />
