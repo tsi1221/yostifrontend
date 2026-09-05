@@ -58,45 +58,15 @@ export default function UsersTable() {
 
   return (
     <div className="space-y-4">
-      <section className="grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-2 xl:grid-cols-5">
-        <label className="block space-y-1.5 xl:col-span-1">
+      <section className="grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-[minmax(0,1fr)_220px]">
+        <label className="block space-y-1.5">
           <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
-            Global search
+            Global name
           </span>
           <TextInput
             value={filters.search}
             onChange={(event) => setFilter("search", event.target.value)}
-            placeholder="Search all fields"
-          />
-        </label>
-        <label className="block space-y-1.5">
-          <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
-            Name
-          </span>
-          <TextInput
-            value={filters.fullname}
-            onChange={(event) => setFilter("fullname", event.target.value)}
-            placeholder="Partial name"
-          />
-        </label>
-        <label className="block space-y-1.5">
-          <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
-            Email
-          </span>
-          <TextInput
-            value={filters.email}
-            onChange={(event) => setFilter("email", event.target.value)}
-            placeholder="user@email.com"
-          />
-        </label>
-        <label className="block space-y-1.5">
-          <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
-            Company
-          </span>
-          <TextInput
-            value={filters.companyName}
-            onChange={(event) => setFilter("companyName", event.target.value)}
-            placeholder="Company name"
+            placeholder="Search by name"
           />
         </label>
         <label className="block space-y-1.5">
