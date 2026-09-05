@@ -6,6 +6,8 @@ import type {
   InspectionFieldErrors,
   InspectionFormValues,
   InspectionRecord,
+  InspectionsListQuery,
+  InspectionsListResponse,
 } from "./types";
 import { INSPECTION_TYPE_VALUES } from "./types";
 
@@ -173,7 +175,146 @@ function asInspectionType(value: string): string {
   return match ?? value;
 }
 
-function normalizeInspection(raw: unknown): InspectionRecord | null {
+export function formatInspectionDate(value: string) {
+  if (!value) {
+    return "—";
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}
+
+export function filterDateToIso(value: string) {
+  if (!value.trim()) {
+    return "";
+  }
+  const date = new Date(`${value.trim()}T23:59:59.999Z`);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+  return date.toISOString();
+}
+
+export function buildInspectionsQueryString(query: InspectionsListQuery) {
+  const params = new URLSearchParams();
+  params.set("page", String(query.page || 1));
+  params.set("pageSize", String(query.pageSize || 10));
+  params.set("limit", String(query.pageSize || 10));
+
+  if (query.search.trim()) {
+    params.set("search", query.search.trim());
+  }
+  if (query.type) {
+    params.set("type", query.type);
+  }
+  if (query.productType.trim()) {
+    params.set("productType", query.productType.trim());
+  }
+  if (query.photoVideoRequired) {
+    params.set("photoVideoRequired", query.photoVideoRequired);
+  }
+  const date = filterDateToIso(query.date);
+  if (date) {
+    params.set("date", date);
+  }
+
+  return params.toString();
+}
+
+function normalizeInspectionsResponse(
+  raw: unknown,
+  query: InspectionsListQuery
+): InspectionsListResponse {
+  const record = asRecord(raw);
+  const nested = asRecord(record?.data);
+  const meta = asRecord(record?.meta) ?? asRecord(nested?.meta);
+  const rows = Array.isArray(record?.data)
+    ? record.data
+    : Array.isArray(nested?.data)
+      ? nested.data
+      : Array.isArray(record?.inspections)
+        ? record.inspections
+        : [];
+
+  const data = rows
+    .map((row) => normalizeInspection(row))
+    .filter((row): row is InspectionRecord => Boolean(row));
+
+  const total = pickNumber(meta?.total, record?.total, nested?.total) ?? data.length;
+  const page = pickNumber(meta?.page, record?.page, nested?.page) ?? query.page;
+  const pageSize =
+    pickNumber(meta?.pageSize, record?.pageSize, record?.limit, nested?.pageSize) ??
+    query.pageSize;
+  const totalPages =
+    pickNumber(meta?.totalPages, record?.totalPages, nested?.totalPages) ??
+    Math.max(1, Math.ceil(total / Math.max(pageSize, 1)));
+
+  return {
+    data,
+    meta: { total, page, pageSize, totalPages },
+  };
+}
+
+export async function fetchInspectionsList(
+  query: InspectionsListQuery
+): Promise<InspectionsListResponse> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new InspectionsRequestError("Unauthorized", 401);
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(`${INSPECTIONS_URL}?${buildInspectionsQueryString(query)}`, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch {
+    throw new InspectionsRequestError(
+      "Unable to reach the server. Check your connection and try again.",
+      0
+    );
+  }
+
+  const raw: unknown = await response.json().catch(() => null);
+
+  if (response.status === 400) {
+    throw new InspectionsRequestError(
+      readApiMessage(raw, "Invalid inspection filters."),
+      400
+    );
+  }
+  if (response.status === 401) {
+    throw new InspectionsRequestError("Unauthorized", 401);
+  }
+  if (response.status >= 500) {
+    throw new InspectionsRequestError(
+      readApiMessage(raw, "The server could not load inspections."),
+      response.status
+    );
+  }
+  if (!response.ok) {
+    throw new InspectionsRequestError(
+      readApiMessage(raw, `Unable to load inspections. Server returned ${response.status}.`),
+      response.status
+    );
+  }
+
+  return normalizeInspectionsResponse(raw, query);
+}
+
+export function normalizeInspection(raw: unknown): InspectionRecord | null {
   const record = asRecord(raw);
   if (!record) {
     return null;

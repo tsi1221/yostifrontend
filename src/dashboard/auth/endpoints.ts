@@ -16,5 +16,5 @@ export const REQUESTS_URL = `${AUTH_API_BASE}/requests`;
 /** GET list / POST create / PATCH :id update / DELETE :id shipments */
 export const SHIPMENTS_URL = `${AUTH_API_BASE}/shipments`;
 
-/** POST create inspection request: supplierId, productType, type, date, photoVideoRequired */
+/** GET list / POST create inspection requests */
 export const INSPECTIONS_URL = `${AUTH_API_BASE}/inspections`;

@@ -42,3 +42,57 @@ export const EMPTY_INSPECTION_FORM: InspectionFormValues = {
   date: "",
   photoVideoRequired: true,
 };
+
+export type InspectionTypeFilter = "Preshipment" | "factory visit";
+
+export const INSPECTION_TYPE_FILTERS: {
+  label: string;
+  value: InspectionTypeFilter | "";
+}[] = [
+  { label: "All Types", value: "" },
+  { label: "Preshipment", value: "Preshipment" },
+  { label: "Factory Visit", value: "factory visit" },
+];
+
+export type InspectionMediaFilter = "" | "true" | "false";
+
+export const INSPECTION_MEDIA_FILTERS: {
+  label: string;
+  value: InspectionMediaFilter;
+}[] = [
+  { label: "All media", value: "" },
+  { label: "Photo / video required", value: "true" },
+  { label: "Standard verification", value: "false" },
+];
+
+export interface InspectionsListQuery {
+  page: number;
+  pageSize: number;
+  search: string;
+  type: InspectionTypeFilter | "";
+  productType: string;
+  photoVideoRequired: InspectionMediaFilter;
+  date: string;
+}
+
+export interface InspectionsListMeta {
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface InspectionsListResponse {
+  data: InspectionRecord[];
+  meta: InspectionsListMeta;
+}
+
+export const DEFAULT_INSPECTIONS_QUERY: InspectionsListQuery = {
+  page: 1,
+  pageSize: 10,
+  search: "",
+  type: "",
+  productType: "",
+  photoVideoRequired: "",
+  date: "",
+};
