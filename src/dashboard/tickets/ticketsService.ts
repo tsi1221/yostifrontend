@@ -453,3 +453,142 @@ export async function createTicket(payload: CreateTicketPayload): Promise<Ticket
   invalidateTicketsCache();
   return created;
 }
+
+export function supportDetailUrl(id: number) {
+  return `${SUPPORTS_URL}/${id}`;
+}
+
+export function parseSupportTicketId(value: string | undefined): number | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) {
+    return undefined;
+  }
+  const id = Number.parseInt(trimmed, 10);
+  return Number.isInteger(id) && id > 0 ? id : undefined;
+}
+
+function ticketStatusKey(value: string) {
+  return value.trim().toLowerCase();
+}
+
+export function formatTicketLabel(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return "—";
+  }
+  return trimmed
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+export function formatTicketStatus(value: string) {
+  return formatTicketLabel(value);
+}
+
+export function formatTicketUrgency(value: string) {
+  return formatTicketLabel(value);
+}
+
+export function isOpenTicketStatus(value: string) {
+  return ticketStatusKey(value) === "open";
+}
+
+export function isResolvedTicketStatus(value: string) {
+  return ticketStatusKey(value) === "resolved";
+}
+
+export function isClosedTicketStatus(value: string) {
+  const key = ticketStatusKey(value);
+  return key === "close" || key === "closed";
+}
+
+export function isHighTicketUrgency(value: string) {
+  return ticketStatusKey(value) === "high";
+}
+
+export function isMediumTicketUrgency(value: string) {
+  return ticketStatusKey(value) === "medium";
+}
+
+export function isLowTicketUrgency(value: string) {
+  return ticketStatusKey(value) === "low";
+}
+
+export async function fetchSupportTicket(id: number): Promise<TicketRecord> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new TicketsRequestError("Unauthorized", 401);
+  }
+
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new TicketsRequestError(
+      "This support ticket could not be found or has been removed.",
+      404
+    );
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(supportDetailUrl(id), {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch {
+    throw new TicketsRequestError(
+      "Unable to reach the server. Check your connection and try again.",
+      0
+    );
+  }
+
+  const raw: unknown = await response.json().catch(() => null);
+
+  if (response.status === 400) {
+    throw new TicketsRequestError(
+      readApiMessage(raw, "The support ticket ID format is invalid."),
+      400
+    );
+  }
+  if (response.status === 401) {
+    throw new TicketsRequestError("Unauthorized", 401);
+  }
+  if (response.status === 404) {
+    throw new TicketsRequestError(
+      "This support ticket could not be found or has been removed.",
+      404
+    );
+  }
+  if (response.status >= 500) {
+    throw new TicketsRequestError(
+      readApiMessage(raw, "The server could not load this support ticket."),
+      response.status
+    );
+  }
+  if (!response.ok) {
+    throw new TicketsRequestError(
+      readApiMessage(
+        raw,
+        `Unable to load this support ticket. Server returned ${response.status}.`
+      ),
+      response.status
+    );
+  }
+
+  const record = asRecord(raw);
+  const payload =
+    normalizeTicket(raw) ??
+    normalizeTicket(record?.data) ??
+    normalizeTicket(record?.ticket) ??
+    normalizeTicket(record?.support);
+
+  if (!payload) {
+    throw new TicketsRequestError("The server returned an incomplete support ticket.", 500);
+  }
+
+  return payload;
+}

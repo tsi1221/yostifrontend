@@ -23,6 +23,7 @@ import CreatePaymentForm from "./payments/CreatePaymentForm";
 import PaymentDetailView from "./payments/PaymentDetailView";
 import PaymentsPage from "./views/PaymentsPage";
 import CreateTicketForm from "./tickets/CreateTicketForm";
+import SupportTicketDetailView from "./tickets/SupportTicketDetailView";
 import SupportPage from "./views/SupportPage";
 
 interface DashboardAppProps {
@@ -196,7 +197,7 @@ function DashboardRoutes({ role }: DashboardAppProps) {
           path="supports/:ticketId"
           element={
             <Guard role={role} page="supports">
-              <SupportPage />
+              <SupportTicketDetailView />
             </Guard>
           }
         />

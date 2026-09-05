@@ -1,6 +1,10 @@
+import { useNavigate } from "react-router-dom";
+
 import ActionButton from "../components/ActionButton";
 import { SelectInput, TextInput } from "../components/FormField";
 import StatusBadge from "../components/StatusBadge";
+import { ROLE_SLUG } from "../roles";
+import { useDashboard } from "../store";
 import type {
   TicketIssuesTypeFilter,
   TicketRecord,
@@ -16,7 +20,7 @@ import {
 } from "./types";
 import { useSupportsList } from "./useSupportsList";
 
-const COLUMNS = 7;
+const COLUMNS = 8;
 
 function rangeLabel(page: number, pageSize: number, total: number) {
   if (total === 0) {
@@ -44,6 +48,8 @@ function SkeletonRows() {
 }
 
 export default function SupportsTable() {
+  const navigate = useNavigate();
+  const { role } = useDashboard();
   const {
     filters,
     setFilter,
@@ -55,6 +61,8 @@ export default function SupportsTable() {
     serverError,
     retry,
   } = useSupportsList();
+
+  const detailPath = (id: number | string) => `/${ROLE_SLUG[role]}/supports/${id}`;
 
   return (
     <div className="space-y-4">
@@ -171,6 +179,7 @@ export default function SupportsTable() {
                 <th className="px-4 py-3">Resolution</th>
                 <th className="px-4 py-3">Urgency</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -191,7 +200,11 @@ export default function SupportsTable() {
 
               {!loading &&
                 tickets.map((row: TicketRecord) => (
-                  <tr key={row.id} className="hover:bg-slate-50/80">
+                  <tr
+                    key={row.id}
+                    className="cursor-pointer hover:bg-slate-50/80"
+                    onClick={() => navigate(detailPath(row.id))}
+                  >
                     <td className="px-4 py-3 font-medium text-slate-800">{row.id}</td>
                     <td className="px-4 py-3 text-slate-700">
                       {row.orderReference || "—"}
@@ -204,6 +217,17 @@ export default function SupportsTable() {
                     <td className="px-4 py-3 text-slate-700">{row.urgency || "—"}</td>
                     <td className="px-4 py-3">
                       <StatusBadge value={row.status || "—"} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <ActionButton
+                        tone="ghost"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          navigate(detailPath(row.id));
+                        }}
+                      >
+                        View
+                      </ActionButton>
                     </td>
                   </tr>
                 ))}
