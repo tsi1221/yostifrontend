@@ -11,6 +11,7 @@ import ForgotPassword from "./shared/Auth/ForgotPassword";
 import TwoFA from "./shared/Auth/TwoFA";
 
 import SuperAdminRouting from "./Superadmin/Content/Routing/SuperAdminRouting";
+import DashboardApp from "./dashboard/DashboardApp";
 
 import Navbar from "./pages/Home/Navbar";
 import Footer from "./pages/Home/Footer";
@@ -370,16 +371,11 @@ export default function App() {
         }
       />
 
-      {/* =================================================
-          FUTURE STAFF
-      ================================================= */}
-
-      {/*
       <Route
         path="/staff/*"
         element={
           role === "STAFF" ? (
-            <AdminRouting />
+            <DashboardApp role="STAFF" />
           ) : (
             <Navigate
               to="/login"
@@ -388,18 +384,12 @@ export default function App() {
           )
         }
       />
-      */}
 
-      {/* =================================================
-          FUTURE BUYER
-      ================================================= */}
-
-      {/*
       <Route
         path="/buyer/*"
         element={
           role === "BUYER" ? (
-            <BuyerRouting />
+            <DashboardApp role="BUYER" />
           ) : (
             <Navigate
               to="/login"
@@ -408,18 +398,12 @@ export default function App() {
           )
         }
       />
-      */}
 
-      {/* =================================================
-          FUTURE SUPPLIER
-      ================================================= */}
-
-      {/*
       <Route
         path="/supplier/*"
         element={
           role === "SUPPLIER" ? (
-            <SupplierRouting />
+            <DashboardApp role="SUPPLIER" />
           ) : (
             <Navigate
               to="/login"
@@ -428,18 +412,12 @@ export default function App() {
           )
         }
       />
-      */}
 
-      {/* =================================================
-          FUTURE LOGISTICS
-      ================================================= */}
-
-      {/*
       <Route
         path="/logistics/*"
         element={
           role === "LOGISTICS_PARTNER" ? (
-            <LogisticsRouting />
+            <DashboardApp role="LOGISTICS_PARTNER" />
           ) : (
             <Navigate
               to="/login"
@@ -448,7 +426,6 @@ export default function App() {
           )
         }
       />
-      */}
 
       {/* =================================================
           GLOBAL FALLBACK
