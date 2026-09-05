@@ -23,15 +23,23 @@ export function getStoredAuthUser(): AuthUser | null {
 
   try {
     const parsed = JSON.parse(raw) as Partial<AuthUser>;
+    const id = Number(parsed.id);
+    const roleId = Number(parsed.roleId);
     if (
-      typeof parsed.id !== "number" ||
+      !Number.isFinite(id) ||
       typeof parsed.fullname !== "string" ||
       typeof parsed.email !== "string" ||
-      typeof parsed.roleId !== "number"
+      !Number.isFinite(roleId)
     ) {
       return null;
     }
-    return parsed as AuthUser;
+    return {
+      id,
+      fullname: parsed.fullname,
+      email: parsed.email,
+      roleId,
+      role: typeof parsed.role === "string" ? parsed.role : undefined,
+    };
   } catch {
     return null;
   }

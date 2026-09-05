@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { message } from "antd";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import {
   getAuthUserDashboardPath,
+  getStoredAuthUser,
+  hasValidAccessToken,
   loginWithPassword,
   persistAuthSession,
   roleFromAuthUser,
@@ -19,7 +21,28 @@ interface LoginProps {
 
 export default function Login({ setRole, setEmail }: LoginProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
+  const registeredEmail =
+    typeof location.state === "object" &&
+    location.state &&
+    "email" in location.state &&
+    typeof location.state.email === "string"
+      ? location.state.email
+      : undefined;
+
+  useEffect(() => {
+    if (!hasValidAccessToken()) {
+      return;
+    }
+    const user = getStoredAuthUser();
+    if (!user) {
+      return;
+    }
+    setRole(roleFromAuthUser(user));
+    setEmail(user.email);
+    navigate(getAuthUserDashboardPath(user), { replace: true });
+  }, [navigate, setEmail, setRole]);
 
   const handleLogin = async (values: LoginFormValues) => {
     setLoading(true);
@@ -53,6 +76,7 @@ export default function Login({ setRole, setEmail }: LoginProps) {
     <main className="flex min-h-screen w-full items-center justify-center bg-slate-50 px-4 py-6">
       <LoginForm
         loading={loading}
+        initialEmail={registeredEmail}
         onFinish={handleLogin}
         onForgotPassword={() => navigate("/forgot-password")}
         onRegister={() => navigate("/register")}

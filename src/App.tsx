@@ -365,11 +365,7 @@ export default function App() {
         path="/staff/*"
         element={
           <RequireAuth allow={["STAFF", "SUPER_ADMIN"]}>
-            <DashboardApp
-              role={
-                getStoredAuthUser()?.roleId === 5 ? "STAFF" : "SUPER_ADMIN"
-              }
-            />
+            <DashboardApp role="STAFF" />
           </RequireAuth>
         }
       />
@@ -377,7 +373,7 @@ export default function App() {
       <Route
         path="/buyer/*"
         element={
-          <RequireAuth allow="BUYER">
+          <RequireAuth allow={["BUYER", "SUPER_ADMIN"]}>
             <DashboardApp role="BUYER" />
           </RequireAuth>
         }
@@ -386,7 +382,7 @@ export default function App() {
       <Route
         path="/supplier/*"
         element={
-          <RequireAuth allow="SUPPLIER">
+          <RequireAuth allow={["SUPPLIER", "SUPER_ADMIN"]}>
             <DashboardApp role="SUPPLIER" />
           </RequireAuth>
         }
@@ -395,7 +391,7 @@ export default function App() {
       <Route
         path="/logistics/*"
         element={
-          <RequireAuth allow="LOGISTICS_PARTNER">
+          <RequireAuth allow={["LOGISTICS_PARTNER", "SUPER_ADMIN"]}>
             <DashboardApp role="LOGISTICS_PARTNER" />
           </RequireAuth>
         }

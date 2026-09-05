@@ -18,8 +18,9 @@ export {
 export {
   getAuthUserDashboardPath,
   getRoleDashboardPath,
-  isAdminRoleId,
+  isAdminRole,
   roleFromAuthUser,
   roleFromRoleId,
+  roleFromRoleName,
 } from "./roleRouting";
 export { default as RequireAuth } from "./RequireAuth";

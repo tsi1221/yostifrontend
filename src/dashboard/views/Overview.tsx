@@ -534,6 +534,44 @@ function BusinessIntelligenceHub() {
         />
       </div>
 
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 className="mb-4 text-sm font-semibold text-[#0F3952]">
+          All role dashboards
+        </h2>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+          <ActionCard
+            to="/superadmin/dashboard"
+            icon={Users}
+            title="System Admin"
+            description="Business intelligence and master controls."
+          />
+          <ActionCard
+            to="/staff/dashboard"
+            icon={FileCheck}
+            title="Yosti Staff"
+            description="Verification, sourcing, and operations."
+          />
+          <ActionCard
+            to="/buyer/dashboard"
+            icon={Package}
+            title="Buyer"
+            description="Sourcing, cargo, inspections, and payments."
+          />
+          <ActionCard
+            to="/supplier/dashboard"
+            icon={FileText}
+            title="Supplier"
+            description="Onboarding, RFQs, and inspections."
+          />
+          <ActionCard
+            to="/logistics/dashboard"
+            icon={Truck}
+            title="Logistics"
+            description="Bookings, status updates, and documents."
+          />
+        </div>
+      </section>
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         <ActionCard
           to={`/${slug}/users`}

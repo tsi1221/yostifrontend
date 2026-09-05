@@ -11,8 +11,8 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { clearAuthSession } from "../auth";
-import { ROLE_LABEL, getNavigation } from "../roles";
+import { clearAuthSession, getStoredAuthUser, roleFromAuthUser } from "../auth";
+import { ROLE_LABEL, ROLE_SLUG, getNavigation } from "../roles";
 import { useDashboard } from "../store";
 import type { UserRole } from "../types";
 
@@ -64,6 +64,10 @@ function TopBar({
   onMenu: () => void;
 }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const sessionUser = getStoredAuthUser();
+  const sessionRole = sessionUser ? roleFromAuthUser(sessionUser) : role;
+  const currentSlug = location.pathname.split("/")[1] ?? ROLE_SLUG[role];
 
   const logout = () => {
     clearAuthSession();
@@ -82,6 +86,20 @@ function TopBar({
       </button>
 
       <div className="ml-auto flex items-center gap-3">
+        {sessionRole === "SUPER_ADMIN" ? (
+          <select
+            value={currentSlug}
+            onChange={(event) => navigate(`/${event.target.value}/dashboard`)}
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-[#0F3952]"
+            aria-label="Open role dashboard"
+          >
+            <option value="superadmin">System Admin</option>
+            <option value="staff">Staff</option>
+            <option value="buyer">Buyer</option>
+            <option value="supplier">Supplier</option>
+            <option value="logistics">Logistics</option>
+          </select>
+        ) : null}
         <span className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600">
           <Bell size={18} />
           {alerts > 0 ? (

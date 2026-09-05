@@ -12,6 +12,7 @@ export interface LoginFormValues {
 
 interface LoginFormProps {
   loading: boolean;
+  initialEmail?: string;
   onFinish: (values: LoginFormValues) => void;
   onForgotPassword: () => void;
   onRegister: () => void;
@@ -19,6 +20,7 @@ interface LoginFormProps {
 
 export default function LoginForm({
   loading,
+  initialEmail,
   onFinish,
   onForgotPassword,
   onRegister,
@@ -38,6 +40,7 @@ export default function LoginForm({
           onFinish={onFinish}
           requiredMark={false}
           size="large"
+          initialValues={{ email: initialEmail }}
         >
           <Form.Item
             name="email"
@@ -62,7 +65,7 @@ export default function LoginForm({
             className="!mb-4"
             rules={[
               { required: true, message: "Please enter your password." },
-              { min: 8, message: "Password must be at least 8 characters." },
+              { min: 6, message: "Password must be at least 6 characters." },
             ]}
           >
             <Input.Password

@@ -3,6 +3,7 @@ export interface AuthUser {
   fullname: string;
   email: string;
   roleId: number;
+  role?: string;
 }
 
 export interface AuthLoginResponse {

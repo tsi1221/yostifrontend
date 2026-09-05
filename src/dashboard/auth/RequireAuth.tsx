@@ -23,7 +23,7 @@ export default function RequireAuth({ allow, children }: RequireAuthProps) {
   const role = roleFromAuthUser(user);
   const allowed = Array.isArray(allow) ? allow : [allow];
 
-  if (user.roleId === 2 && (allowed.includes("SUPER_ADMIN") || allowed.includes("STAFF"))) {
+  if (role === "SUPER_ADMIN") {
     return children;
   }
 
