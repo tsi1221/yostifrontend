@@ -328,3 +328,124 @@ export function invalidatePaymentsCache() {
 export function paymentsUrl() {
   return PAYMENTS_URL;
 }
+
+export function paymentDetailUrl(id: number) {
+  return `${PAYMENTS_URL}/${id}`;
+}
+
+export function parsePaymentId(value: string | undefined): number | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) {
+    return undefined;
+  }
+  const id = Number.parseInt(trimmed, 10);
+  return Number.isInteger(id) && id > 0 ? id : undefined;
+}
+
+function paymentStatusKey(value: string) {
+  return value.trim().toLowerCase();
+}
+
+export function formatPaymentStatus(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return "—";
+  }
+  return trimmed
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+export function isPendingPaymentStatus(value: string) {
+  return paymentStatusKey(value) === "pending";
+}
+
+export function isCompletedPaymentStatus(value: string) {
+  return paymentStatusKey(value) === "completed";
+}
+
+export function isFailedOrRefundedPaymentStatus(value: string) {
+  const key = paymentStatusKey(value);
+  return key === "failed" || key === "refunded";
+}
+
+export async function fetchPayment(id: number): Promise<PaymentRecord> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new PaymentsRequestError("Unauthorized", 401);
+  }
+
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new PaymentsRequestError(
+      "This transaction record could not be found or does not exist,",
+      404
+    );
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(paymentDetailUrl(id), {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch {
+    throw new PaymentsRequestError(
+      "Unable to reach the server. Check your connection and try again.",
+      0
+    );
+  }
+
+  const raw: unknown = await response.json().catch(() => null);
+
+  if (response.status === 400) {
+    throw new PaymentsRequestError(
+      readApiMessage(raw, "The payment ID format is invalid."),
+      400
+    );
+  }
+  if (response.status === 401) {
+    throw new PaymentsRequestError("Unauthorized", 401);
+  }
+  if (response.status === 404) {
+    throw new PaymentsRequestError(
+      "This transaction record could not be found or does not exist,",
+      404
+    );
+  }
+  if (response.status >= 500) {
+    throw new PaymentsRequestError(
+      readApiMessage(raw, "The server could not load this transaction record."),
+      response.status
+    );
+  }
+  if (!response.ok) {
+    throw new PaymentsRequestError(
+      readApiMessage(
+        raw,
+        `Unable to load this transaction record. Server returned ${response.status}.`
+      ),
+      response.status
+    );
+  }
+
+  const record = asRecord(raw);
+  const payload =
+    normalizePayment(raw) ??
+    normalizePayment(record?.data) ??
+    normalizePayment(record?.payment);
+
+  if (!payload) {
+    throw new PaymentsRequestError(
+      "The server returned an incomplete transaction record.",
+      500
+    );
+  }
+
+  return payload;
+}

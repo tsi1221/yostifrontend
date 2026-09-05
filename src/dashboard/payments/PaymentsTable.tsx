@@ -1,6 +1,10 @@
+import { useNavigate } from "react-router-dom";
+
 import ActionButton from "../components/ActionButton";
 import { SelectInput, TextInput } from "../components/FormField";
 import StatusBadge from "../components/StatusBadge";
+import { ROLE_SLUG } from "../roles";
+import { useDashboard } from "../store";
 import type {
   PaymentMethodFilter,
   PaymentRecord,
@@ -14,7 +18,7 @@ import {
 } from "./types";
 import { usePaymentsList } from "./usePaymentsList";
 
-const COLUMNS = 5;
+const COLUMNS = 6;
 
 function rangeLabel(page: number, pageSize: number, total: number) {
   if (total === 0) {
@@ -42,6 +46,8 @@ function SkeletonRows() {
 }
 
 export default function PaymentsTable() {
+  const navigate = useNavigate();
+  const { role } = useDashboard();
   const {
     filters,
     setFilter,
@@ -53,6 +59,8 @@ export default function PaymentsTable() {
     serverError,
     retry,
   } = usePaymentsList();
+
+  const detailPath = (id: number) => `/${ROLE_SLUG[role]}/payments/${id}`;
 
   return (
     <div className="space-y-4">
@@ -137,6 +145,7 @@ export default function PaymentsTable() {
                 <th className="px-4 py-3">Service</th>
                 <th className="px-4 py-3">Method</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -157,13 +166,28 @@ export default function PaymentsTable() {
 
               {!loading &&
                 payments.map((row: PaymentRecord) => (
-                  <tr key={row.id} className="hover:bg-slate-50/80">
+                  <tr
+                    key={row.id}
+                    className="cursor-pointer hover:bg-slate-50/80"
+                    onClick={() => navigate(detailPath(row.id))}
+                  >
                     <td className="px-4 py-3 font-medium text-slate-800">{row.id}</td>
                     <td className="px-4 py-3 text-slate-700">{row.userId || "—"}</td>
                     <td className="px-4 py-3 text-slate-700">{row.service || "—"}</td>
                     <td className="px-4 py-3 text-slate-700">{row.method || "—"}</td>
                     <td className="px-4 py-3">
                       <StatusBadge value={row.status || "—"} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <ActionButton
+                        tone="ghost"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          navigate(detailPath(row.id));
+                        }}
+                      >
+                        View
+                      </ActionButton>
                     </td>
                   </tr>
                 ))}

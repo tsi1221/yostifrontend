@@ -22,5 +22,5 @@ export const INSPECTIONS_URL = `${AUTH_API_BASE}/inspections`;
 /** GET list / POST create / GET :id / PATCH :id / DELETE :id business trips */
 export const TRIPS_URL = `${AUTH_API_BASE}/trips`;
 
-/** GET paginated payments / POST create { service, method, status } */
+/** GET paginated payments / POST create { service, method, status } / GET :id receipt */
 export const PAYMENTS_URL = `${AUTH_API_BASE}/payments`;

@@ -20,6 +20,7 @@ import CreateTripForm from "./trips/CreateTripForm";
 import TripDetailView from "./trips/TripDetailView";
 import TripsPage from "./views/TripsPage";
 import CreatePaymentForm from "./payments/CreatePaymentForm";
+import PaymentDetailView from "./payments/PaymentDetailView";
 import PaymentsPage from "./views/PaymentsPage";
 import SupportPage from "./views/SupportPage";
 
@@ -163,6 +164,14 @@ function DashboardRoutes({ role }: DashboardAppProps) {
           element={
             <Guard role={role} page="payments">
               <CreatePaymentForm />
+            </Guard>
+          }
+        />
+        <Route
+          path="payments/:paymentId"
+          element={
+            <Guard role={role} page="payments">
+              <PaymentDetailView />
             </Guard>
           }
         />
