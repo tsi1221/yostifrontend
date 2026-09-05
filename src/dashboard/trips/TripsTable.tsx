@@ -1,12 +1,16 @@
+import { useNavigate } from "react-router-dom";
+
 import ActionButton from "../components/ActionButton";
 import { SelectInput, TextInput } from "../components/FormField";
 import StatusBadge from "../components/StatusBadge";
+import { ROLE_SLUG } from "../roles";
+import { useDashboard } from "../store";
 import type { TripRecord, TripStatusFilter } from "./types";
 import { TRIP_STATUS_FILTERS } from "./types";
 import { formatTripStatus } from "./tripsService";
 import { useTripsList } from "./useTripsList";
 
-const COLUMNS = 6;
+const COLUMNS = 7;
 
 function rangeLabel(page: number, pageSize: number, total: number) {
   if (total === 0) {
@@ -34,6 +38,8 @@ function SkeletonRows() {
 }
 
 export default function TripsTable() {
+  const navigate = useNavigate();
+  const { role } = useDashboard();
   const {
     filters,
     setFilter,
@@ -45,6 +51,8 @@ export default function TripsTable() {
     serverError,
     retry,
   } = useTripsList();
+
+  const detailPath = (id: number) => `/${ROLE_SLUG[role]}/trips/${id}`;
 
   return (
     <div className="space-y-4">
@@ -106,6 +114,7 @@ export default function TripsTable() {
                 <th className="px-4 py-3">Transport</th>
                 <th className="px-4 py-3">Translator</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -126,7 +135,11 @@ export default function TripsTable() {
 
               {!loading &&
                 trips.map((row: TripRecord) => (
-                  <tr key={row.id} className="hover:bg-slate-50/80">
+                  <tr
+                    key={row.id}
+                    className="cursor-pointer hover:bg-slate-50/80"
+                    onClick={() => navigate(detailPath(row.id))}
+                  >
                     <td className="px-4 py-3">
                       <p className="text-base font-semibold text-[#0F3952]">
                         {row.arrivalCity || "—"}
@@ -138,6 +151,17 @@ export default function TripsTable() {
                     <td className="px-4 py-3 text-slate-700">{row.translator || "—"}</td>
                     <td className="px-4 py-3">
                       <StatusBadge value={formatTripStatus(row.status)} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <ActionButton
+                        tone="ghost"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          navigate(detailPath(row.id));
+                        }}
+                      >
+                        View
+                      </ActionButton>
                     </td>
                   </tr>
                 ))}

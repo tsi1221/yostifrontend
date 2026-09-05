@@ -7,10 +7,13 @@ import type {
   TripFormValues,
   TripRecord,
   TripStatusValue,
+  TripUpdateStatusValue,
   TripsListQuery,
   TripsListResponse,
+  UpdateTripFormValues,
+  UpdateTripPayload,
 } from "./types";
-import { TRIP_STATUS_VALUES } from "./types";
+import { TRIP_STATUS_VALUES, TRIP_UPDATE_STATUS_VALUES } from "./types";
 
 export { isPreviewAccessToken };
 
@@ -85,7 +88,7 @@ function readApiMessage(raw: unknown, fallback: string) {
   return fallback;
 }
 
-const FIELD_KEYS: Array<keyof CreateTripPayload> = [
+const FIELD_KEYS: Array<keyof CreateTripPayload | keyof UpdateTripPayload> = [
   "arrivalCity",
   "duration",
   "hotel",
@@ -167,6 +170,61 @@ export function validateTripForm(values: TripFormValues): TripFieldErrors {
 }
 
 export function formValuesToPayload(values: TripFormValues): CreateTripPayload {
+  return {
+    arrivalCity: values.arrivalCity.trim(),
+    duration: formatDuration(values.duration),
+    hotel: values.hotel.trim(),
+    transport: values.transport.trim(),
+    translator: values.translator.trim(),
+    status: values.status,
+  };
+}
+
+export function asUpdateTripStatus(value: string): TripUpdateStatusValue {
+  const trimmed = value.trim();
+  if (trimmed === "Ongoing" || trimmed.toLowerCase() === "ongoing") {
+    return "Ongoing";
+  }
+  return "planned";
+}
+
+export function tripToFormValues(trip: TripRecord): UpdateTripFormValues {
+  return {
+    arrivalCity: trip.arrivalCity,
+    duration: trip.duration,
+    hotel: trip.hotel,
+    transport: trip.transport,
+    translator: trip.translator,
+    status: asUpdateTripStatus(trip.status),
+  };
+}
+
+export function validateUpdateTripForm(values: UpdateTripFormValues): TripFieldErrors {
+  const errors: TripFieldErrors = {};
+  if (!values.arrivalCity.trim()) {
+    errors.arrivalCity = "Arrival city is required.";
+  }
+  if (!values.duration.trim()) {
+    errors.duration = "Duration is required.";
+  }
+  if (!values.hotel.trim()) {
+    errors.hotel = "Hotel is required.";
+  }
+  if (!values.transport.trim()) {
+    errors.transport = "Transport is required.";
+  }
+  if (!values.translator.trim()) {
+    errors.translator = "Translator is required.";
+  }
+  if (!TRIP_UPDATE_STATUS_VALUES.includes(values.status)) {
+    errors.status = "Choose a valid trip status.";
+  }
+  return errors;
+}
+
+export function updateFormValuesToPayload(
+  values: UpdateTripFormValues
+): UpdateTripPayload {
   return {
     arrivalCity: values.arrivalCity.trim(),
     duration: formatDuration(values.duration),
@@ -335,6 +393,103 @@ export function tripsUrl() {
   return TRIPS_URL;
 }
 
+export function tripDetailUrl(id: number) {
+  return `${TRIPS_URL}/${id}`;
+}
+
+export function parseTripId(value: string | undefined): number | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) {
+    return undefined;
+  }
+  const id = Number.parseInt(trimmed, 10);
+  return Number.isInteger(id) && id > 0 ? id : undefined;
+}
+
+export function formatTripDuration(value: string) {
+  return formatDuration(value) || "—";
+}
+
+export function isOngoingTripStatus(value: string) {
+  return value.trim().toLowerCase() === "ongoing";
+}
+
+export function isPlannedTripStatus(value: string) {
+  return value.trim().toLowerCase() === "planned";
+}
+
+export async function fetchTrip(id: number): Promise<TripRecord> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new TripsRequestError("Unauthorized", 401);
+  }
+
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new TripsRequestError(
+      "This trip itinerary could not be found or has been removed.",
+      404
+    );
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(tripDetailUrl(id), {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch {
+    throw new TripsRequestError(
+      "Unable to reach the server. Check your connection and try again.",
+      0
+    );
+  }
+
+  const raw: unknown = await response.json().catch(() => null);
+
+  if (response.status === 400) {
+    throw new TripsRequestError(readApiMessage(raw, "The trip ID format is invalid."), 400);
+  }
+  if (response.status === 401) {
+    throw new TripsRequestError("Unauthorized", 401);
+  }
+  if (response.status === 404) {
+    throw new TripsRequestError(
+      "This trip itinerary could not be found or has been removed.",
+      404
+    );
+  }
+  if (response.status >= 500) {
+    throw new TripsRequestError(
+      readApiMessage(raw, "The server could not load this trip itinerary."),
+      response.status
+    );
+  }
+  if (!response.ok) {
+    throw new TripsRequestError(
+      readApiMessage(raw, `Unable to load this trip itinerary. Server returned ${response.status}.`),
+      response.status
+    );
+  }
+
+  const record = asRecord(raw);
+  const payload =
+    normalizeTrip(raw) ??
+    normalizeTrip(record?.data) ??
+    normalizeTrip(record?.trip);
+
+  if (!payload) {
+    throw new TripsRequestError("The server returned an incomplete trip itinerary.", 500);
+  }
+
+  return payload;
+}
+
 export async function createTrip(payload: CreateTripPayload): Promise<TripRecord> {
   const token = getAccessToken();
   if (!token) {
@@ -401,4 +556,85 @@ export async function createTrip(payload: CreateTripPayload): Promise<TripRecord
 
   invalidateTripsCache();
   return created;
+}
+
+export async function patchTrip(
+  id: number,
+  payload: UpdateTripPayload
+): Promise<TripRecord> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new TripsRequestError("Unauthorized", 401);
+  }
+
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new TripsRequestError("The trip ID is invalid.", 400);
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(tripDetailUrl(id), {
+      method: "PATCH",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    throw new TripsRequestError(
+      "Unable to reach the server. Check your connection and try again.",
+      0
+    );
+  }
+
+  const raw: unknown = await response.json().catch(() => null);
+
+  if (response.status === 400) {
+    throw new TripsRequestError(
+      readApiMessage(raw, "Unable to save this trip. Check the highlighted fields."),
+      400,
+      parseFieldErrors(raw)
+    );
+  }
+  if (response.status === 401) {
+    throw new TripsRequestError("Unauthorized", 401);
+  }
+  if (response.status === 404) {
+    throw new TripsRequestError(
+      "This trip could not be found or has been removed.",
+      404
+    );
+  }
+  if (response.status === 409) {
+    throw new TripsRequestError(
+      "This update conflicts with an existing trip record matching the same destination and status.",
+      409
+    );
+  }
+  if (response.status >= 500) {
+    throw new TripsRequestError(
+      readApiMessage(raw, "Server error occurred. Could not update trip."),
+      response.status
+    );
+  }
+  if (!response.ok) {
+    throw new TripsRequestError(
+      readApiMessage(raw, `Unable to update trip. Server returned ${response.status}.`),
+      response.status
+    );
+  }
+
+  const updated =
+    normalizeTrip(raw) ??
+    normalizeTrip(asRecord(raw)?.data) ??
+    normalizeTrip(asRecord(raw)?.trip);
+
+  if (!updated) {
+    throw new TripsRequestError("The server returned an incomplete trip.", 500);
+  }
+
+  invalidateTripsCache();
+  return updated;
 }

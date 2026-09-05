@@ -48,7 +48,42 @@ export interface TripFormValues {
   status: TripStatusValue;
 }
 
-export type TripFieldErrors = Partial<Record<keyof CreateTripPayload, string>>;
+export type TripUpdateStatusValue = "planned" | "Ongoing";
+
+export const TRIP_UPDATE_STATUS_VALUES: TripUpdateStatusValue[] = [
+  "planned",
+  "Ongoing",
+];
+
+export const TRIP_UPDATE_STATUS_OPTIONS: {
+  label: string;
+  value: TripUpdateStatusValue;
+}[] = [
+  { label: "Planned", value: "planned" },
+  { label: "Ongoing", value: "Ongoing" },
+];
+
+export interface UpdateTripFormValues {
+  arrivalCity: string;
+  duration: string;
+  hotel: string;
+  transport: string;
+  translator: string;
+  status: TripUpdateStatusValue;
+}
+
+export interface UpdateTripPayload {
+  arrivalCity: string;
+  duration: string;
+  hotel: string;
+  transport: string;
+  translator: string;
+  status: TripUpdateStatusValue;
+}
+
+export type TripFieldErrors = Partial<
+  Record<keyof CreateTripPayload | keyof UpdateTripPayload, string>
+>;
 
 export const EMPTY_TRIP_FORM: TripFormValues = {
   arrivalCity: "",

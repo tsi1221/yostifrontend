@@ -17,6 +17,7 @@ import CreateInspectionForm from "./inspections/CreateInspectionForm";
 import InspectionDetailView from "./inspections/InspectionDetailView";
 import InspectionsPage from "./views/InspectionsPage";
 import CreateTripForm from "./trips/CreateTripForm";
+import TripDetailView from "./trips/TripDetailView";
 import TripsPage from "./views/TripsPage";
 import PaymentsPage from "./views/PaymentsPage";
 import SupportPage from "./views/SupportPage";
@@ -133,6 +134,14 @@ function DashboardRoutes({ role }: DashboardAppProps) {
           element={
             <Guard role={role} page="trips">
               <CreateTripForm />
+            </Guard>
+          }
+        />
+        <Route
+          path="trips/:tripId"
+          element={
+            <Guard role={role} page="trips">
+              <TripDetailView />
             </Guard>
           }
         />

@@ -16,9 +16,9 @@ export const STATUS_TONE: Record<string, StatusTone> = {
   "at port": "yellow",
   customs: "yellow",
   scheduled: "yellow",
-  planned: "yellow",
+  planned: "slate",
   "in progress": "yellow",
-  ongoing: "navy",
+  ongoing: "green",
   booked: "yellow",
 
   medium: "yellow",
