@@ -1,4 +1,9 @@
-export { AUTH_API_BASE, AUTH_LOGIN_URL, AUTH_REGISTER_URL } from "./endpoints";
+export {
+  AUTH_API_BASE,
+  AUTH_LOGIN_URL,
+  AUTH_REGISTER_URL,
+  USERS_URL,
+} from "./endpoints";
 export { loginWithPassword } from "./loginService";
 export {
   AuthRequestError,
