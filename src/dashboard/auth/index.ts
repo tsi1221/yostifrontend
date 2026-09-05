@@ -1,4 +1,11 @@
-export { loginWithPassword, AUTH_LOGIN_URL } from "./loginService";
+export { AUTH_API_BASE, AUTH_LOGIN_URL, AUTH_REGISTER_URL } from "./endpoints";
+export { loginWithPassword } from "./loginService";
+export {
+  AuthRequestError,
+  REGISTER_ROLE_OPTIONS,
+  registerAccount,
+  roleIdForRole,
+} from "./registerService";
 export {
   ACCESS_TOKEN_KEY,
   AUTH_USER_KEY,

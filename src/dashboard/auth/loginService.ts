@@ -1,6 +1,7 @@
 import type { AuthLoginRequest, AuthLoginResponse, AuthUser } from "../types/auth";
+import { AUTH_LOGIN_URL } from "./endpoints";
 
-export const AUTH_LOGIN_URL = "https://yosti.nedhigibe.com/api/auth/login";
+export { AUTH_LOGIN_URL };
 
 function readApiMessage(data: unknown, fallback: string) {
   if (!data || typeof data !== "object") {
