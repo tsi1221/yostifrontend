@@ -1,19 +1,33 @@
 @import "tailwindcss";
 @import "antd/dist/reset.css";
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 
 /* =========================================================
    GLOBAL DESIGN SYSTEM
 ========================================================= */
 
 :root {
-  --font-family: "Inter", sans-serif;
+  --font-latin: "Inter", system-ui, sans-serif;
+  --font-ethiopic: "Noto Sans Ethiopic", "Inter", system-ui, sans-serif;
+  --font-chinese: "Noto Sans SC", "Inter", system-ui, sans-serif;
+  --font-family: "Inter", "Noto Sans Ethiopic", "Noto Sans SC", system-ui, sans-serif;
 
   --brand-primary: #0f3952;
   --brand-accent: #fdc700;
 
   --background: #f8fafc;
   --foreground: #0f172a;
+}
+
+html[lang="am"] {
+  --font-family: var(--font-ethiopic);
+}
+
+html[lang="zh"] {
+  --font-family: var(--font-chinese);
+}
+
+html[lang="en"] {
+  --font-family: var(--font-latin);
 }
 
 /* =========================================================
@@ -30,6 +44,34 @@ body {
   color: var(--foreground);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+html[lang="am"],
+html[lang="zh"] {
+  line-height: 1.7;
+}
+
+html[lang="am"] .tracking-tight,
+html[lang="am"] .tracking-tighter,
+html[lang="am"] .tracking-wide,
+html[lang="am"] .tracking-wider,
+html[lang="am"] .tracking-widest,
+html[lang="zh"] .tracking-tight,
+html[lang="zh"] .tracking-tighter,
+html[lang="zh"] .tracking-wide,
+html[lang="zh"] .tracking-wider,
+html[lang="zh"] .tracking-widest {
+  letter-spacing: 0;
+}
+
+html[lang="am"] .uppercase,
+html[lang="zh"] .uppercase {
+  text-transform: none;
+}
+
+html[lang="am"] .whitespace-nowrap,
+html[lang="zh"] .whitespace-nowrap {
+  white-space: normal;
 }
 
 body {
