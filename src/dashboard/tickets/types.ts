@@ -78,7 +78,82 @@ export interface TicketFormValues {
   attachment: string;
 }
 
-export type TicketFieldErrors = Partial<Record<keyof CreateTicketPayload, string>>;
+export type TicketUpdateIssuesType = "Defect" | "Damage" | "missing" | "other";
+export type TicketUpdateResolutionValue = "refund" | "replacement" | "repairs";
+export type TicketUpdateStatusValue = "open" | "resolved" | "close";
+
+export const TICKET_UPDATE_ISSUES_TYPE_VALUES: TicketUpdateIssuesType[] = [
+  "Defect",
+  "Damage",
+  "missing",
+  "other",
+];
+
+export const TICKET_UPDATE_RESOLUTION_VALUES: TicketUpdateResolutionValue[] = [
+  "refund",
+  "replacement",
+  "repairs",
+];
+
+export const TICKET_UPDATE_STATUS_VALUES: TicketUpdateStatusValue[] = [
+  "open",
+  "resolved",
+  "close",
+];
+
+export const TICKET_UPDATE_ISSUES_TYPE_OPTIONS: {
+  label: string;
+  value: TicketUpdateIssuesType;
+}[] = [
+  { label: "Defect", value: "Defect" },
+  { label: "Damage", value: "Damage" },
+  { label: "missing", value: "missing" },
+  { label: "other", value: "other" },
+];
+
+export const TICKET_UPDATE_RESOLUTION_OPTIONS: {
+  label: string;
+  value: TicketUpdateResolutionValue;
+}[] = [
+  { label: "refund", value: "refund" },
+  { label: "replacement", value: "replacement" },
+  { label: "repairs", value: "repairs" },
+];
+
+export const TICKET_UPDATE_STATUS_OPTIONS: {
+  label: string;
+  value: TicketUpdateStatusValue;
+}[] = [
+  { label: "open", value: "open" },
+  { label: "resolved", value: "resolved" },
+  { label: "close", value: "close" },
+];
+
+export interface UpdateSupportFormValues {
+  orderReference: string;
+  issuesType: TicketUpdateIssuesType;
+  title: string;
+  resolutionToRequest: TicketUpdateResolutionValue;
+  urgency: TicketUrgencyValue;
+  attachment: string;
+  status: TicketUpdateStatusValue;
+}
+
+export interface UpdateSupportPayload {
+  orderReference?: string;
+  issuesType?: TicketUpdateIssuesType;
+  title?: string;
+  resolutionToRequest?: TicketUpdateResolutionValue;
+  urgency?: TicketUrgencyValue;
+  attachment?: string;
+  status?: TicketUpdateStatusValue;
+}
+
+export type UpdateSupportResponse = TicketRecord;
+
+export type TicketFieldErrors = Partial<
+  Record<keyof CreateTicketPayload | keyof UpdateSupportPayload, string>
+>;
 
 export const EMPTY_TICKET_FORM: TicketFormValues = {
   orderReference: "",
@@ -170,3 +245,9 @@ export const DEFAULT_SUPPORTS_QUERY: SupportsListQuery = {
   urgency: "",
   status: "",
 };
+
+export interface DeleteSupportTicketResponse {
+  message: string;
+}
+
+export type TicketDeletionPhase = "idle" | "confirming" | "deleting";

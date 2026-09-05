@@ -3,6 +3,7 @@ import { getAccessToken } from "../auth/session";
 import { isPreviewAccessToken } from "../users/usersService";
 import type {
   CreateTicketPayload,
+  DeleteSupportTicketResponse,
   SupportsListQuery,
   SupportsListResponse,
   TicketFieldErrors,
@@ -10,11 +11,19 @@ import type {
   TicketIssuesType,
   TicketRecord,
   TicketResolutionValue,
+  TicketUpdateIssuesType,
+  TicketUpdateResolutionValue,
+  TicketUpdateStatusValue,
   TicketUrgencyValue,
+  UpdateSupportFormValues,
+  UpdateSupportPayload,
 } from "./types";
 import {
   TICKET_ISSUES_TYPE_VALUES,
   TICKET_RESOLUTION_VALUES,
+  TICKET_UPDATE_ISSUES_TYPE_VALUES,
+  TICKET_UPDATE_RESOLUTION_VALUES,
+  TICKET_UPDATE_STATUS_VALUES,
   TICKET_URGENCY_VALUES,
 } from "./types";
 
@@ -79,7 +88,7 @@ function readApiMessage(raw: unknown, fallback: string) {
   return fallback;
 }
 
-const FIELD_KEYS: Array<keyof CreateTicketPayload> = [
+const FIELD_KEYS: Array<keyof CreateTicketPayload | keyof UpdateSupportPayload> = [
   "orderReference",
   "issuesType",
   "title",
@@ -470,6 +479,280 @@ export function parseSupportTicketId(value: string | undefined): number | undefi
   return Number.isInteger(id) && id > 0 ? id : undefined;
 }
 
+export function asSupportTicketId(id: number | string): number | undefined {
+  if (typeof id === "number") {
+    return Number.isInteger(id) && id > 0 ? id : undefined;
+  }
+  return parseSupportTicketId(id);
+}
+
+function matchEnum<T extends string>(value: string, options: readonly T[]): T | undefined {
+  const key = value.trim().toLowerCase();
+  return options.find((option) => option.toLowerCase() === key);
+}
+
+export function asTicketUpdateIssuesType(value: string): TicketUpdateIssuesType {
+  return matchEnum(value, TICKET_UPDATE_ISSUES_TYPE_VALUES) ?? "Defect";
+}
+
+export function asTicketUpdateResolution(value: string): TicketUpdateResolutionValue {
+  return matchEnum(value, TICKET_UPDATE_RESOLUTION_VALUES) ?? "refund";
+}
+
+export function asTicketUpdateUrgency(value: string): TicketUrgencyValue {
+  return matchEnum(value, TICKET_URGENCY_VALUES) ?? "medium";
+}
+
+export function asTicketUpdateStatus(value: string): TicketUpdateStatusValue {
+  const key = value.trim().toLowerCase();
+  if (key === "closed") {
+    return "close";
+  }
+  return matchEnum(value, TICKET_UPDATE_STATUS_VALUES) ?? "open";
+}
+
+export function ticketToFormValues(ticket: TicketRecord): UpdateSupportFormValues {
+  return {
+    orderReference: ticket.orderReference,
+    issuesType: asTicketUpdateIssuesType(ticket.issuesType),
+    title: ticket.title,
+    resolutionToRequest: asTicketUpdateResolution(ticket.resolutionToRequest),
+    urgency: asTicketUpdateUrgency(ticket.urgency),
+    attachment: ticket.attachment,
+    status: asTicketUpdateStatus(ticket.status),
+  };
+}
+
+export function validateUpdateTicketForm(
+  values: UpdateSupportFormValues
+): TicketFieldErrors {
+  const errors: TicketFieldErrors = {};
+  if (!values.orderReference.trim()) {
+    errors.orderReference = "Order reference is required.";
+  }
+  if (!values.title.trim()) {
+    errors.title = "Title is required.";
+  }
+  if (!TICKET_UPDATE_ISSUES_TYPE_VALUES.includes(values.issuesType)) {
+    errors.issuesType = "Choose a valid issue type.";
+  }
+  if (!TICKET_UPDATE_RESOLUTION_VALUES.includes(values.resolutionToRequest)) {
+    errors.resolutionToRequest = "Choose a resolution to request.";
+  }
+  if (!TICKET_URGENCY_VALUES.includes(values.urgency)) {
+    errors.urgency = "Choose an urgency level.";
+  }
+  if (!TICKET_UPDATE_STATUS_VALUES.includes(values.status)) {
+    errors.status = "Choose a valid ticket status.";
+  }
+  if (values.attachment.trim() && !isHttpUrl(values.attachment.trim())) {
+    errors.attachment = "Enter a valid http(s) attachment URL.";
+  }
+  return errors;
+}
+
+export function updateFormValuesToPayload(
+  values: UpdateSupportFormValues
+): UpdateSupportPayload {
+  return {
+    orderReference: values.orderReference.trim(),
+    issuesType: values.issuesType,
+    title: values.title.trim(),
+    resolutionToRequest: values.resolutionToRequest,
+    urgency: values.urgency,
+    attachment: values.attachment.trim(),
+    status: values.status,
+  };
+}
+
+const TICKET_NOT_FOUND_MESSAGE =
+  "This support ticket could not be found or has been removed.";
+
+async function readResponseBody(response: Response): Promise<unknown> {
+  if (response.status === 204) {
+    return null;
+  }
+  const text = await response.text().catch(() => "");
+  if (!text.trim()) {
+    return null;
+  }
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return null;
+  }
+}
+
+function ticketFromResponse(raw: unknown): TicketRecord | null {
+  return (
+    normalizeTicket(raw) ??
+    normalizeTicket(asRecord(raw)?.data) ??
+    normalizeTicket(asRecord(raw)?.ticket) ??
+    normalizeTicket(asRecord(raw)?.support)
+  );
+}
+
+export async function patchSupport(
+  id: number,
+  payload: UpdateSupportPayload
+): Promise<TicketRecord> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new TicketsRequestError("Unauthorized", 401);
+  }
+
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new TicketsRequestError(TICKET_NOT_FOUND_MESSAGE, 404);
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(supportDetailUrl(id), {
+      method: "PATCH",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    throw new TicketsRequestError(
+      "Unable to reach the server. Check your connection and try again.",
+      0
+    );
+  }
+
+  const raw: unknown = await readResponseBody(response);
+
+  if (response.status === 400) {
+    throw new TicketsRequestError(
+      readApiMessage(raw, "Unable to save this support ticket. Check the highlighted fields."),
+      400,
+      parseFieldErrors(raw)
+    );
+  }
+  if (response.status === 401) {
+    throw new TicketsRequestError("Unauthorized", 401);
+  }
+  if (response.status === 404) {
+    throw new TicketsRequestError(TICKET_NOT_FOUND_MESSAGE, 404);
+  }
+  if (response.status === 409) {
+    throw new TicketsRequestError(
+      readApiMessage(raw, OPEN_TICKET_CONFLICT_MESSAGE),
+      409
+    );
+  }
+  if (response.status >= 500) {
+    throw new TicketsRequestError(
+      readApiMessage(raw, "Server error occurred. Could not update support ticket."),
+      response.status
+    );
+  }
+  if (response.status === 204) {
+    invalidateTicketsCache();
+    invalidateSupportsCache();
+    const synthesized = ticketFromResponse({ id, ...payload });
+    if (synthesized) {
+      return synthesized;
+    }
+    throw new TicketsRequestError("The server returned an incomplete support ticket.", 500);
+  }
+  if (!response.ok) {
+    throw new TicketsRequestError(
+      readApiMessage(
+        raw,
+        `Unable to update this support ticket. Server returned ${response.status}.`
+      ),
+      response.status
+    );
+  }
+
+  const updated = ticketFromResponse(raw);
+  if (!updated) {
+    throw new TicketsRequestError("The server returned an incomplete support ticket.", 500);
+  }
+
+  invalidateTicketsCache();
+  invalidateSupportsCache();
+  return updated;
+}
+
+export const updateSupport = patchSupport;
+
+const DELETE_SUPPORT_TICKET_SUCCESS = "Support ticket deleted successfully.";
+
+export function parseDeleteSupportTicketResponse(
+  raw: unknown
+): DeleteSupportTicketResponse {
+  return {
+    message: readApiMessage(raw, DELETE_SUPPORT_TICKET_SUCCESS),
+  };
+}
+
+export async function deleteSupportTicket(id: number): Promise<string> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new TicketsRequestError("Unauthorized", 401);
+  }
+
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new TicketsRequestError(TICKET_NOT_FOUND_MESSAGE, 404);
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(supportDetailUrl(id), {
+      method: "DELETE",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch {
+    throw new TicketsRequestError(
+      "Unable to reach the server. Check your connection and try again.",
+      0
+    );
+  }
+
+  const raw: unknown = await response.json().catch(() => null);
+
+  if (response.status === 400) {
+    throw new TicketsRequestError(
+      readApiMessage(raw, "Unable to delete this support ticket."),
+      400
+    );
+  }
+  if (response.status === 401) {
+    throw new TicketsRequestError("Unauthorized", 401);
+  }
+  if (response.status === 404) {
+    throw new TicketsRequestError(TICKET_NOT_FOUND_MESSAGE, 404);
+  }
+  if (response.status >= 500) {
+    throw new TicketsRequestError(
+      readApiMessage(raw, "Server error occurred. Could not delete support ticket."),
+      response.status
+    );
+  }
+  if (response.status !== 200) {
+    throw new TicketsRequestError(
+      readApiMessage(
+        raw,
+        `Unable to delete this support ticket. Server returned ${response.status}.`
+      ),
+      response.status
+    );
+  }
+
+  const parsed = parseDeleteSupportTicketResponse(raw);
+  invalidateTicketsCache();
+  invalidateSupportsCache();
+  return parsed.message;
+}
+
 function ticketStatusKey(value: string) {
   return value.trim().toLowerCase();
 }
@@ -524,10 +807,7 @@ export async function fetchSupportTicket(id: number): Promise<TicketRecord> {
   }
 
   if (!Number.isInteger(id) || id <= 0) {
-    throw new TicketsRequestError(
-      "This support ticket could not be found or has been removed.",
-      404
-    );
+    throw new TicketsRequestError(TICKET_NOT_FOUND_MESSAGE, 404);
   }
 
   let response: Response;
@@ -558,10 +838,7 @@ export async function fetchSupportTicket(id: number): Promise<TicketRecord> {
     throw new TicketsRequestError("Unauthorized", 401);
   }
   if (response.status === 404) {
-    throw new TicketsRequestError(
-      "This support ticket could not be found or has been removed.",
-      404
-    );
+    throw new TicketsRequestError(TICKET_NOT_FOUND_MESSAGE, 404);
   }
   if (response.status >= 500) {
     throw new TicketsRequestError(

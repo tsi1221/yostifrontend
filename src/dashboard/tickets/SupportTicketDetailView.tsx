@@ -1,11 +1,16 @@
 import type { ReactNode } from "react";
-import { ExternalLink } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useState } from "react";
+import { ExternalLink, Trash2 } from "lucide-react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
+import SideDrawer from "../components/SideDrawer";
 import { ROLE_SLUG } from "../roles";
 import { useDashboard } from "../store";
+import DeleteSupportTicketDialog from "./DeleteSupportTicketDialog";
+import EditTicketForm from "./EditTicketForm";
 import {
+  asSupportTicketId,
   formatTicketLabel,
   formatTicketStatus,
   formatTicketUrgency,
@@ -128,10 +133,22 @@ export default function SupportTicketDetailView() {
   const navigate = useNavigate();
   const { role } = useDashboard();
   const listPath = `/${ROLE_SLUG[role]}/supports`;
-  const { ticket, loading, notFound, serverError, retry } =
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { ticket, loading, notFound, serverError, applyTicket, retry } =
     useSupportTicketDetail(ticketId);
+  const [editing, setEditing] = useState(searchParams.get("edit") === "1");
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const ticketNumericId = ticket ? asSupportTicketId(ticket.id) ?? null : null;
 
   const goBack = () => navigate(listPath);
+  const closeEditor = () => {
+    setEditing(false);
+    if (searchParams.get("edit") === "1") {
+      const next = new URLSearchParams(searchParams);
+      next.delete("edit");
+      setSearchParams(next, { replace: true });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -139,6 +156,19 @@ export default function SupportTicketDetailView() {
         <ActionButton tone="ghost" onClick={goBack}>
           Back to list
         </ActionButton>
+        {ticket ? (
+          <div className="flex gap-2">
+            <ActionButton onClick={() => setEditing(true)}>Edit ticket</ActionButton>
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 size={16} />
+              Delete
+            </button>
+          </div>
+        ) : null}
       </div>
 
       {loading ? <DetailSkeleton /> : null}
@@ -214,6 +244,35 @@ export default function SupportTicketDetailView() {
           </p>
         </div>
       ) : null}
+
+      <SideDrawer
+        open={Boolean(editing && ticket)}
+        title={ticket ? `Edit ticket #${ticket.id}` : "Edit ticket"}
+        description="Update issue details, resolution, urgency, and status. Changes are sent with PATCH."
+        onClose={closeEditor}
+      >
+        {ticket ? (
+          <EditTicketForm
+            ticket={ticket}
+            onCancel={closeEditor}
+            onSaved={(updated) => {
+              applyTicket(updated);
+              closeEditor();
+            }}
+          />
+        ) : null}
+      </SideDrawer>
+
+      <DeleteSupportTicketDialog
+        open={Boolean(confirmDelete && ticket && ticketNumericId !== null)}
+        ticketId={ticketNumericId}
+        onClose={() => setConfirmDelete(false)}
+        onDeleted={() => {
+          setConfirmDelete(false);
+          closeEditor();
+          navigate(listPath, { replace: true });
+        }}
+      />
     </div>
   );
 }

@@ -31,5 +31,5 @@ export const TICKETS_URL = `${AUTH_API_BASE}/tickets`;
 /** Fallback when POST /tickets is 404 */
 export const SUPPORT_URL = `${AUTH_API_BASE}/support`;
 
-/** GET paginated support tickets / GET :id detail; also used as a create fallback */
+/** GET paginated support tickets / GET :id detail / PATCH :id update / DELETE :id; also used as a create fallback */
 export const SUPPORTS_URL = `${AUTH_API_BASE}/supports`;

@@ -1,10 +1,16 @@
+import { useState } from "react";
+import { Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
 import { SelectInput, TextInput } from "../components/FormField";
+import SideDrawer from "../components/SideDrawer";
 import StatusBadge from "../components/StatusBadge";
 import { ROLE_SLUG } from "../roles";
 import { useDashboard } from "../store";
+import DeleteSupportTicketDialog from "./DeleteSupportTicketDialog";
+import EditTicketForm from "./EditTicketForm";
+import { asSupportTicketId } from "./ticketsService";
 import type {
   TicketIssuesTypeFilter,
   TicketRecord,
@@ -50,6 +56,8 @@ function SkeletonRows() {
 export default function SupportsTable() {
   const navigate = useNavigate();
   const { role } = useDashboard();
+  const [editing, setEditing] = useState<TicketRecord | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<number | null>(null);
   const {
     filters,
     setFilter,
@@ -219,15 +227,40 @@ export default function SupportsTable() {
                       <StatusBadge value={row.status || "—"} />
                     </td>
                     <td className="px-4 py-3">
-                      <ActionButton
-                        tone="ghost"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          navigate(detailPath(row.id));
-                        }}
-                      >
-                        View
-                      </ActionButton>
+                      <div className="flex items-center gap-2">
+                        <ActionButton
+                          tone="ghost"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            navigate(detailPath(row.id));
+                          }}
+                        >
+                          View
+                        </ActionButton>
+                        <ActionButton
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setEditing(row);
+                          }}
+                        >
+                          Edit
+                        </ActionButton>
+                        <button
+                          type="button"
+                          className="rounded-xl bg-red-600 p-2 text-white hover:bg-red-700"
+                          aria-label={`Delete support ticket ${row.id}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            const id = asSupportTicketId(row.id);
+                            if (id === undefined) {
+                              return;
+                            }
+                            setPendingDelete(id);
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -268,6 +301,36 @@ export default function SupportsTable() {
           </div>
         </footer>
       </div>
+
+      <SideDrawer
+        open={Boolean(editing)}
+        title={editing ? `Edit ticket #${editing.id}` : "Edit ticket"}
+        description="Update issue details, resolution, urgency, and status. Changes are sent with PATCH."
+        onClose={() => setEditing(null)}
+      >
+        {editing ? (
+          <EditTicketForm
+            ticket={editing}
+            onCancel={() => setEditing(null)}
+            onSaved={() => setEditing(null)}
+          />
+        ) : null}
+      </SideDrawer>
+
+      <DeleteSupportTicketDialog
+        open={pendingDelete !== null}
+        ticketId={pendingDelete}
+        onClose={() => setPendingDelete(null)}
+        onDeleted={() => {
+          if (editing && pendingDelete !== null) {
+            const editingId = asSupportTicketId(editing.id);
+            if (editingId === pendingDelete) {
+              setEditing(null);
+            }
+          }
+          setPendingDelete(null);
+        }}
+      />
     </div>
   );
 }
