@@ -87,6 +87,7 @@ export const getNavigation = (role: UserRole): NavGroup[] => {
           children: [
             item(slug, "verifications", "Supplier Verifications"),
             item(slug, "sourcing", "Requests Management"),
+            item(slug, "logistics", "Shipments"),
             item(slug, "quality-control", "Quality Reports"),
             item(slug, "trips", "Visa Parameters"),
             item(slug, "supports", "Support Tickets"),
