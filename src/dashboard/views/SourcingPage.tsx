@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import ActionButton from "../components/ActionButton";
 import DataTable from "../components/DataTable";
+import RequestsTable from "../requests/RequestsTable";
 import {
   Field,
   SelectInput,
@@ -30,7 +31,22 @@ export default function SourcingPage() {
   if (role === "SUPPLIER") {
     return <SupplierRfqs />;
   }
+  if (role === "SUPER_ADMIN") {
+    return <AdminRequestsBoard />;
+  }
   return <StaffAssignmentBoard />;
+}
+
+function AdminRequestsBoard() {
+  return (
+    <div>
+      <PageHeader
+        title="Requests Management"
+        description="Search, filter, and page through live sourcing requests from the Yosti API."
+      />
+      <RequestsTable />
+    </div>
+  );
 }
 
 function BuyerSourcing() {

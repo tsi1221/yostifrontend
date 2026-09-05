@@ -3,6 +3,7 @@ export {
   AUTH_LOGIN_URL,
   AUTH_REGISTER_URL,
   USERS_URL,
+  REQUESTS_URL,
 } from "./endpoints";
 export { loginWithPassword } from "./loginService";
 export {

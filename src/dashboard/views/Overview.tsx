@@ -588,8 +588,8 @@ function BusinessIntelligenceHub() {
         <ActionCard
           to={`/${slug}/sourcing`}
           icon={FileText}
-          title="Sourcing Assignment Board"
-          description="Dispatch open RFQs to qualified factories."
+          title="Requests Management"
+          description="Search and page live sourcing requests by region and deadline."
         />
         <ActionCard
           to={`/${slug}/quality-control`}

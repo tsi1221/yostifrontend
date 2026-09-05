@@ -86,7 +86,7 @@ export const getNavigation = (role: UserRole): NavGroup[] => {
           icon: BriefcaseBusiness,
           children: [
             item(slug, "verifications", "Supplier Verifications"),
-            item(slug, "sourcing", "Sourcing Assignment"),
+            item(slug, "sourcing", "Requests Management"),
             item(slug, "quality-control", "Quality Reports"),
             item(slug, "trips", "Visa Parameters"),
             item(slug, "supports", "Support Tickets"),
