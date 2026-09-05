@@ -20,12 +20,14 @@ export default function ActionButton({
   tone = "navy",
   className = "",
   children,
+  style,
   ...props
 }: ActionButtonProps) {
   return (
     <button
       type="button"
-      className={`inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 ${TONE_CLASS[tone]} ${className}`}
+      className={`inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold !text-white disabled:cursor-not-allowed disabled:opacity-50 [&]:!text-white [&_*]:!text-white ${TONE_CLASS[tone]} ${className}`}
+      style={{ color: "#ffffff", ...style }}
       {...props}
     >
       {children}

@@ -93,11 +93,10 @@ export default function UsersPage() {
               <button
                 type="button"
                 onClick={() => actions.toggleUserActive(row.id)}
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                  row.active
-                    ? "bg-[#0F3952] text-white"
-                    : "bg-slate-100 text-slate-500"
+                className={`rounded-full px-3 py-1 text-xs font-semibold !text-white ${
+                  row.active ? "bg-[#0F3952]" : "bg-slate-400"
                 }`}
+                style={{ color: "#ffffff" }}
               >
                 {row.active ? "Active" : "Disabled"}
               </button>
