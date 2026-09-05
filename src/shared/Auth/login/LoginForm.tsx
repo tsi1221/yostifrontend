@@ -62,7 +62,7 @@ export default function LoginForm({
             className="!mb-4"
             rules={[
               { required: true, message: "Please enter your password." },
-              { min: 6, message: "Password must be at least 6 characters." },
+              { min: 8, message: "Password must be at least 8 characters." },
             ]}
           >
             <Input.Password
