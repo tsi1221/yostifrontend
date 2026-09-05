@@ -14,7 +14,7 @@ import {
 
 import heroImg from "../../../public/assets/downloaded-image (3).png";
 import tradeImg1 from "../../../public/assets/cf520a97bd96593db79388b276303191.jpeg";
-import founderImg from "../../../public/assets/mulu.png";
+const founderImg = "/assets/mulu.png";
 
 /* =========================================================
    ANIMATIONS

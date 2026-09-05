@@ -1,4 +1,4 @@
-import  { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactElement } from "react";
 import {
   UserSwitchOutlined,
   ClusterOutlined,
@@ -9,84 +9,35 @@ import {
   BarChartOutlined,
 } from "@ant-design/icons";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 interface IService {
-  icon: React.ReactElement;
+  icon: ReactElement;
   title: string;
   desc: string[];
 }
 
-const servicesData: IService[] = [
-  {
-    icon: <UserSwitchOutlined />,
-    title: "End-to-End Client Handling",
-    desc: [
-      "Register and onboard clients remotely",
-      "Issue visa invitation letters for Chinese visa applications",
-      "Gather detailed requirements via consultations",
-    ],
-  },
-  {
-    icon: <ClusterOutlined />,
-    title: "Supplier & Factory Coordination",
-    desc: [
-      "Research and shortlist manufacturers",
-      "Verify supplier licenses and reputation",
-      "Arrange market tours & factory appointments",
-      "Accompany clients for onsite inspections",
-    ],
-  },
-  {
-    icon: <GlobalOutlined />,
-    title: "Travel & Hospitality Support",
-    desc: [
-      "Book flights, pickups, and domestic travel",
-      "Arrange hotels by budget and preference",
-      "Provide meal plans and guides",
-      "Assist with cultural orientation",
-    ],
-  },
-  {
-    icon: <DollarCircleOutlined />,
-    title: "Business Negotiation & Transactions",
-    desc: [
-      "Negotiate price, MOQ, packaging",
-      "Process payments through secure channels",
-      "Draft and translate purchase contracts",
-    ],
-  },
-  {
-    icon: <SafetyCertificateOutlined />,
-    title: "Inspection & Quality Control",
-    desc: [
-      "Conduct pre-shipment inspections",
-      "Provide photos, videos, documents",
-      "Visit factories to validate production",
-    ],
-  },
-  {
-    icon: <RocketOutlined />,
-    title: "Logistics, Paperwork & Customs",
-    desc: [
-      "Prepare invoices, packing lists, HS codes",
-      "Arrange sea/air/express shipping",
-      "Track cargo and update clients",
-      "Advise on tariffs and import laws",
-    ],
-  },
-  {
-    icon: <BarChartOutlined />,
-    title: "After-Sales Service & Consulting",
-    desc: [
-      "Handle complaints and replacements",
-      "Communicate with suppliers",
-      "Provide market trend reports",
-      "Arrange virtual factory tours",
-    ],
-  },
+const serviceIcons = [
+  <UserSwitchOutlined />,
+  <ClusterOutlined />,
+  <GlobalOutlined />,
+  <DollarCircleOutlined />,
+  <SafetyCertificateOutlined />,
+  <RocketOutlined />,
+  <BarChartOutlined />,
 ];
 
 const ServicesSection: React.FC = () => {
+  const { t } = useTranslation();
+  const translatedItems = t("services.items", {
+    returnObjects: true,
+  }) as Array<{ title: string; desc: string[] }>;
+
+  const servicesData: IService[] = translatedItems.map((item, index) => ({
+    icon: serviceIcons[index],
+    title: item.title,
+    desc: item.desc,
+  }));
   const cardRefs = useRef<HTMLDivElement[]>([]);
   const [visibleCards, setVisibleCards] = useState<boolean[]>(
     Array(servicesData.length).fill(false)
@@ -126,7 +77,7 @@ const ServicesSection: React.FC = () => {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
-          Our Services
+          {t("services.title")}
         </motion.h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 lg:gap-12">

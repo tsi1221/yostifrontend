@@ -12,22 +12,22 @@ import TwoFA from "./shared/Auth/TwoFA";
 
 import SuperAdminRouting from "./Superadmin/Content/Routing/SuperAdminRouting";
 
-import Navbar from "./Pages/Home/Navbar";
-import Footer from "./Pages/Home/Footer";
+import Navbar from "./pages/Home/Navbar";
+import Footer from "./pages/Home/Footer";
 
-import HeroSection from "./Pages/Home/HeroSection";
-import AboutSection from "./Pages/Home/AboutSection";
-import ServicesSection from "./Pages/Home/ServicesSection";
-import ContactSection from "./Pages/Home/ContactSection";
-import Blog from "./Pages/Home/Blog";
-import WhyChoose from "./Pages/Home/Whychoose";
-import OurProject from "./Pages/Home/Ourproject";
-import Statics from "./Pages/Home/Statics";
-import TestimonialsPage from "./Pages/Home/TestimonialsSection";
-import ProductsSection from "./Pages/Home/ExportProductsSection";
-import Staff from "./Pages/Home/Staff";
+import HeroSection from "./pages/Home/HeroSection";
+import AboutSection from "./pages/Home/AboutSection";
+import ServicesSection from "./pages/Home/ServicesSection";
+import ContactSection from "./pages/Home/ContactSection";
+import Blog from "./pages/Home/Blog";
+import WhyChoose from "./pages/Home/Whychoose";
+import OurProject from "./pages/Home/Ourproject";
+import Statics from "./pages/Home/Statics";
+import TestimonialsPage from "./pages/Home/TestimonialsSection";
+import ProductsSection from "./pages/Home/ExportProductsSection";
+import Staff from "./pages/Home/Staff";
 
-import ProductPage from "./Pages/Home/product";
+import ProductPage from "./pages/Home/product";
 
 import type { UserRole } from "./shared/layout/Sidebar";
 
@@ -150,33 +150,30 @@ function PublicLayout({
    APP
 ========================================================= */
 
+const readStoredRole = (): UserRole | null =>
+  normalizeRole(
+    localStorage.getItem("role") ??
+      sessionStorage.getItem("role")
+  );
+
+const readStoredEmail = (): string | null =>
+  localStorage.getItem("email") ??
+  sessionStorage.getItem("email");
+
 export default function App() {
   const [role, setRole] =
-    useState<UserRole | null>(null);
+    useState<UserRole | null>(readStoredRole);
 
   const [, setEmail] =
-    useState<string | null>(null);
+    useState<string | null>(readStoredEmail);
 
   /* =======================================================
      LOAD AUTH
   ======================================================= */
 
   useEffect(() => {
-    const storedRole =
-      localStorage.getItem("role") ??
-      sessionStorage.getItem("role");
-
-    const storedEmail =
-      localStorage.getItem("email") ??
-      sessionStorage.getItem("email");
-
-    setRole(
-      normalizeRole(storedRole)
-    );
-
-    setEmail(
-      storedEmail ?? null
-    );
+    setRole(readStoredRole());
+    setEmail(readStoredEmail());
   }, []);
 
   return (
