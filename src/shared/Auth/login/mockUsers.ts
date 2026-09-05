@@ -46,14 +46,6 @@ export const MOCK_USERS: MockUser[] = [
   },
 ];
 
-export const DEMO_ACCOUNTS = [
-  { label: "System Admin", email: "admin@example.com" },
-  { label: "Staff", email: "staff@example.com" },
-  { label: "Buyer", email: "buyer@example.com" },
-  { label: "Supplier", email: "supplier@example.com" },
-  { label: "Logistics", email: "logistics@example.com" },
-] as const;
-
 const VALID_ROLES: UserRole[] = [
   "SUPER_ADMIN",
   "STAFF",
