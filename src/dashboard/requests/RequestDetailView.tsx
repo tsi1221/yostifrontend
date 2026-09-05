@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { Trash2 } from "lucide-react";
 import { Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
 import SideDrawer from "../components/SideDrawer";
 import { ROLE_SLUG } from "../roles";
 import { useDashboard } from "../store";
+import DeleteRequestDialog from "./DeleteRequestDialog";
 import EditRequestForm from "./EditRequestForm";
 import {
   formatDeadline,
@@ -36,6 +38,7 @@ export default function RequestDetailView() {
   const { request, loading, notFound, serverError, applyRequest, retry } =
     useRequestDetail(requestId);
   const [editing, setEditing] = useState(searchParams.get("edit") === "1");
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (role !== "SUPER_ADMIN") {
     return <Navigate to={listPath} replace />;
@@ -58,7 +61,17 @@ export default function RequestDetailView() {
           Back to Requests List
         </ActionButton>
         {request ? (
-          <ActionButton onClick={() => setEditing(true)}>Edit request</ActionButton>
+          <div className="flex gap-2">
+            <ActionButton onClick={() => setEditing(true)}>Edit request</ActionButton>
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 size={16} />
+              Delete
+            </button>
+          </div>
         ) : null}
       </div>
 
@@ -182,6 +195,17 @@ export default function RequestDetailView() {
           />
         ) : null}
       </SideDrawer>
+
+      <DeleteRequestDialog
+        open={Boolean(confirmDelete && request)}
+        requestId={request?.id ?? ""}
+        productName={request?.productName ?? "this request"}
+        onClose={() => setConfirmDelete(false)}
+        onDeleted={() => {
+          setConfirmDelete(false);
+          navigate(listPath, { replace: true });
+        }}
+      />
     </div>
   );
 }

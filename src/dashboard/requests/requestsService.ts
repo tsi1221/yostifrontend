@@ -417,3 +417,64 @@ export async function patchRequest(
   invalidateRequestsCache();
   return updated;
 }
+
+export async function deleteRequest(id: string): Promise<SourcingRequestRecord | null> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new RequestsRequestError("Unauthorized", 401);
+  }
+
+  const requestId = id.trim();
+  if (!requestId) {
+    throw new RequestsRequestError("The request ID format is invalid.", 400);
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(requestDetailUrl(requestId), {
+      method: "DELETE",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch {
+    throw new RequestsRequestError(
+      "Unable to reach the server. Check your connection and try again.",
+      0
+    );
+  }
+
+  const raw: unknown = await response.json().catch(() => null);
+
+  if (response.status === 400) {
+    throw new RequestsRequestError(
+      readApiMessage(raw, "The request ID format is invalid."),
+      400
+    );
+  }
+  if (response.status === 401) {
+    throw new RequestsRequestError("Unauthorized", 401);
+  }
+  if (response.status === 404) {
+    throw new RequestsRequestError(
+      "This request has already been deleted or does not exist.",
+      404
+    );
+  }
+  if (response.status >= 500) {
+    throw new RequestsRequestError(
+      "Server error occurred. Could not delete request.",
+      response.status
+    );
+  }
+  if (!response.ok) {
+    throw new RequestsRequestError(
+      readApiMessage(raw, `Unable to delete this request. Server returned ${response.status}.`),
+      response.status
+    );
+  }
+
+  invalidateRequestsCache();
+  return normalizeRequest(raw) ?? normalizeRequest(asRecord(raw)?.data) ?? null;
+}

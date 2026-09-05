@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Trash2 } from "lucide-react";
 
 import ActionButton from "../components/ActionButton";
+import DeleteRequestDialog from "./DeleteRequestDialog";
 import { SelectInput, TextInput } from "../components/FormField";
 import { ROLE_SLUG } from "../roles";
 import { useDashboard } from "../store";
@@ -43,6 +46,7 @@ function SkeletonRows() {
 export default function RequestsTable() {
   const navigate = useNavigate();
   const { role } = useDashboard();
+  const [pendingDelete, setPendingDelete] = useState<SourcingRequestRecord | null>(null);
   const {
     filters,
     setFilter,
@@ -201,6 +205,17 @@ export default function RequestsTable() {
                         >
                           Edit
                         </ActionButton>
+                        <button
+                          type="button"
+                          className="rounded-xl bg-red-600 p-2 text-white hover:bg-red-700"
+                          aria-label={`Delete ${row.productName}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setPendingDelete(row);
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -243,6 +258,17 @@ export default function RequestsTable() {
         </footer>
       </div>
       )}
+
+      <DeleteRequestDialog
+        open={Boolean(pendingDelete)}
+        requestId={pendingDelete?.id ?? ""}
+        productName={pendingDelete?.productName ?? "this request"}
+        onClose={() => setPendingDelete(null)}
+        onDeleted={() => {
+          setPendingDelete(null);
+          retry();
+        }}
+      />
     </div>
   );
 }
