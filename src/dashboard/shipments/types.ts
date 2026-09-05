@@ -1,4 +1,16 @@
 export type ShipmentMethod = "Air" | "Sea";
+export type ShipmentMethodValue = "sea" | "Air" | "Express";
+
+export const SHIPMENT_METHOD_VALUES: ShipmentMethodValue[] = ["sea", "Air", "Express"];
+
+export const SHIPMENT_METHOD_OPTIONS: {
+  label: string;
+  value: ShipmentMethodValue;
+}[] = [
+  { label: "Sea", value: "sea" },
+  { label: "Air", value: "Air" },
+  { label: "Express", value: "Express" },
+];
 
 export interface ShipmentRecord {
   id: number;
@@ -32,7 +44,19 @@ export interface ShipmentFormValues {
   method: ShipmentMethod;
 }
 
-export type ShipmentFieldErrors = Partial<Record<keyof CreateShipmentPayload, string>>;
+export interface UpdateShipmentFormValues {
+  pickupLocation: string;
+  destinationCountry: string;
+  city: string;
+  destinationDescription: string;
+  weight: string;
+  volumeM3: string;
+  method: ShipmentMethodValue;
+}
+
+export type UpdateShipmentPayload = UpdateShipmentFormValues;
+
+export type ShipmentFieldErrors = Partial<Record<keyof UpdateShipmentPayload, string>>;
 
 export const SHIPMENT_METHODS: ShipmentMethod[] = ["Air", "Sea"];
 

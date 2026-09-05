@@ -5,10 +5,14 @@ import type {
   CreateShipmentPayload,
   ShipmentFieldErrors,
   ShipmentFormValues,
+  ShipmentMethodValue,
   ShipmentRecord,
   ShipmentsListQuery,
   ShipmentsListResponse,
+  UpdateShipmentFormValues,
+  UpdateShipmentPayload,
 } from "./types";
+import { SHIPMENT_METHOD_VALUES } from "./types";
 
 export { isPreviewAccessToken };
 
@@ -122,6 +126,79 @@ export function formatVolume(value: string) {
     return "";
   }
   return String(number);
+}
+
+export function shipmentDetailUrl(id: number) {
+  return `${SHIPMENTS_URL}/${id}`;
+}
+
+function asShipmentMethodValue(value: string): ShipmentMethodValue {
+  const exact = SHIPMENT_METHOD_VALUES.find((item) => item === value);
+  if (exact) {
+    return exact;
+  }
+  const lowered = value.trim().toLowerCase();
+  if (lowered === "sea") {
+    return "sea";
+  }
+  if (lowered === "express") {
+    return "Express";
+  }
+  return "Air";
+}
+
+export function shipmentToFormValues(shipment: ShipmentRecord): UpdateShipmentFormValues {
+  return {
+    pickupLocation: shipment.pickupLocation,
+    destinationCountry: shipment.destinationCountry,
+    city: shipment.city,
+    destinationDescription: shipment.destinationDescription,
+    weight: formatWeight(shipment.weight),
+    volumeM3: formatVolume(String(shipment.volumeM3)),
+    method: asShipmentMethodValue(shipment.method),
+  };
+}
+
+export function validateUpdateShipmentForm(
+  values: UpdateShipmentFormValues
+): ShipmentFieldErrors {
+  const errors: ShipmentFieldErrors = {};
+  if (!values.pickupLocation.trim()) {
+    errors.pickupLocation = "Pickup location is required.";
+  }
+  if (!values.destinationCountry.trim()) {
+    errors.destinationCountry = "Destination country is required.";
+  }
+  if (!values.city.trim()) {
+    errors.city = "City is required.";
+  }
+  if (!values.destinationDescription.trim()) {
+    errors.destinationDescription = "Destination notes are required.";
+  }
+  if (!values.weight.trim()) {
+    errors.weight = "Weight is required.";
+  }
+  if (!values.volumeM3.trim() || !Number.isFinite(Number(values.volumeM3))) {
+    errors.volumeM3 = "Enter volume in cubic meters.";
+  }
+  if (!SHIPMENT_METHOD_VALUES.includes(values.method)) {
+    errors.method = "Choose sea, Air, or Express.";
+  }
+  return errors;
+}
+
+export function updateFormValuesToPayload(
+  values: UpdateShipmentFormValues
+): UpdateShipmentPayload {
+  return {
+    pickupLocation: values.pickupLocation.trim(),
+    destinationCountry: values.destinationCountry.trim(),
+    city: values.city.trim(),
+    destinationDescription: values.destinationDescription.trim(),
+    weight: formatWeight(values.weight),
+    volumeM3: formatVolume(values.volumeM3),
+    method: values.method,
+  };
 }
 
 export function validateShipmentForm(values: ShipmentFormValues): ShipmentFieldErrors {
@@ -369,4 +446,79 @@ export async function createShipment(
 
   invalidateShipmentsCache();
   return created;
+}
+
+export async function patchShipment(
+  id: number,
+  payload: UpdateShipmentPayload
+): Promise<ShipmentRecord> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new ShipmentsRequestError("Unauthorized", 401);
+  }
+
+  if (!Number.isFinite(id) || id <= 0) {
+    throw new ShipmentsRequestError("The shipment ID is invalid.", 400);
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(shipmentDetailUrl(id), {
+      method: "PATCH",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    throw new ShipmentsRequestError(
+      "Unable to reach the server. Check your connection and try again.",
+      0
+    );
+  }
+
+  const raw: unknown = await response.json().catch(() => null);
+
+  if (response.status === 400) {
+    throw new ShipmentsRequestError(
+      readApiMessage(raw, "Unable to save this shipment. Check the highlighted fields."),
+      400,
+      parseFieldErrors(raw)
+    );
+  }
+  if (response.status === 401) {
+    throw new ShipmentsRequestError("Unauthorized", 401);
+  }
+  if (response.status === 404) {
+    throw new ShipmentsRequestError(
+      "This shipment could not be found or has been removed.",
+      404
+    );
+  }
+  if (response.status >= 500) {
+    throw new ShipmentsRequestError(
+      readApiMessage(raw, "Server error occurred. Could not update shipment."),
+      response.status
+    );
+  }
+  if (!response.ok) {
+    throw new ShipmentsRequestError(
+      readApiMessage(raw, `Unable to update shipment. Server returned ${response.status}.`),
+      response.status
+    );
+  }
+
+  const updated =
+    normalizeShipment(raw) ??
+    normalizeShipment(asRecord(raw)?.data) ??
+    normalizeShipment(asRecord(raw)?.shipment);
+
+  if (!updated) {
+    throw new ShipmentsRequestError("The server returned an incomplete shipment.", 500);
+  }
+
+  invalidateShipmentsCache();
+  return updated;
 }

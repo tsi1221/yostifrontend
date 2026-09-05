@@ -1,11 +1,15 @@
+import { useState } from "react";
+
 import ActionButton from "../components/ActionButton";
 import { SelectInput, TextInput } from "../components/FormField";
+import SideDrawer from "../components/SideDrawer";
 import { BADGE_TONE_CLASS, getStatusTone } from "../statusStyles";
+import EditShipmentForm from "./EditShipmentForm";
 import type { ShipmentMethodFilter, ShipmentRecord } from "./types";
 import { SHIPMENT_METHOD_FILTERS } from "./types";
 import { useShipmentsList } from "./useShipmentsList";
 
-const COLUMNS = 5;
+const COLUMNS = 6;
 
 function rangeLabel(page: number, pageSize: number, total: number) {
   if (total === 0) {
@@ -44,6 +48,7 @@ function SkeletonRows() {
 }
 
 export default function ShipmentsTable() {
+  const [editing, setEditing] = useState<ShipmentRecord | null>(null);
   const {
     filters,
     setFilter,
@@ -119,6 +124,7 @@ export default function ShipmentsTable() {
                   <th className="px-4 py-3">Route</th>
                   <th className="px-4 py-3">Weight</th>
                   <th className="px-4 py-3">Volume</th>
+                  <th className="px-4 py-3">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -155,6 +161,11 @@ export default function ShipmentsTable() {
                       </td>
                       <td className="px-4 py-3 text-slate-700">
                         {row.volumeM3} m³
+                      </td>
+                      <td className="px-4 py-3">
+                        <ActionButton onClick={() => setEditing(row)}>
+                          Edit
+                        </ActionButton>
                       </td>
                     </tr>
                   ))}
@@ -196,6 +207,21 @@ export default function ShipmentsTable() {
           </footer>
         </div>
       )}
+
+      <SideDrawer
+        open={Boolean(editing)}
+        title={editing ? `Edit shipment #${editing.id}` : "Edit shipment"}
+        description="Update cargo details and save. Changes are sent with PATCH."
+        onClose={() => setEditing(null)}
+      >
+        {editing ? (
+          <EditShipmentForm
+            shipment={editing}
+            onCancel={() => setEditing(null)}
+            onSaved={() => setEditing(null)}
+          />
+        ) : null}
+      </SideDrawer>
     </div>
   );
 }
