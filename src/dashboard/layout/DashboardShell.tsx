@@ -23,7 +23,10 @@ interface DashboardShellProps {
 export default function DashboardShell({ role, children }: DashboardShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { user } = useDashboard();
+  const { user, snapshot } = useDashboard();
+  const alerts =
+    snapshot.support_requests.filter((row) => row.status === "open").length +
+    snapshot.verifications.filter((row) => row.status === "pending").length;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -39,6 +42,7 @@ export default function DashboardShell({ role, children }: DashboardShellProps) 
         <TopBar
           role={role}
           userName={user.full_name}
+          alerts={alerts}
           onMenu={() => setMobileOpen(true)}
         />
         <main className="flex-1 p-6 md:p-8">{children}</main>
@@ -50,10 +54,12 @@ export default function DashboardShell({ role, children }: DashboardShellProps) 
 function TopBar({
   role,
   userName,
+  alerts,
   onMenu,
 }: {
   role: UserRole;
   userName: string;
+  alerts: number;
   onMenu: () => void;
 }) {
   const navigate = useNavigate();
@@ -82,7 +88,9 @@ function TopBar({
       <div className="ml-auto flex items-center gap-3">
         <span className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600">
           <Bell size={18} />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#FDC700]" />
+          {alerts > 0 ? (
+            <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-[#FDC700]" />
+          ) : null}
         </span>
         <div className="hidden text-right sm:block">
           <p className="text-sm font-semibold text-slate-900">{userName}</p>

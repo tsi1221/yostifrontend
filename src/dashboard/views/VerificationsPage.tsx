@@ -13,6 +13,7 @@ export default function VerificationsPage() {
   const { snapshot, role, user, actions } = useDashboard();
   const ownSupplier = snapshot.suppliers.find((row) => row.account_id === user.id);
   const [selected, setSelected] = useState<SupplierVerification | null>(null);
+  const [concerns, setConcerns] = useState("");
 
   if (role === "SUPPLIER") {
     return <SupplierOnboarding supplier={ownSupplier} />;
@@ -47,7 +48,13 @@ export default function VerificationsPage() {
             header: "Actions",
             render: (row) => (
               <div className="flex flex-wrap gap-2">
-                <ActionButton tone="ghost" onClick={() => setSelected(row)}>
+                <ActionButton
+                  tone="ghost"
+                  onClick={() => {
+                    setConcerns(row.concerns);
+                    setSelected(row);
+                  }}
+                >
                   Review
                 </ActionButton>
                 <ActionButton
@@ -60,9 +67,10 @@ export default function VerificationsPage() {
                 </ActionButton>
                 <ActionButton
                   tone="gold"
-                  onClick={() =>
-                    actions.updateVerification(row.verification_id, "rejected")
-                  }
+                  onClick={() => {
+                    setConcerns(row.concerns);
+                    setSelected(row);
+                  }}
                 >
                   Reject
                 </ActionButton>
@@ -92,11 +100,20 @@ export default function VerificationsPage() {
               <span className="font-semibold text-[#0F3952]">Verified:</span>{" "}
               {profile.verified ? "Yes" : "No"}
             </p>
-            <p>{selected.concerns}</p>
+            <Field label="Review notes">
+              <TextArea
+                value={concerns}
+                onChange={(event) => setConcerns(event.target.value)}
+              />
+            </Field>
             <div className="flex gap-2 pt-4">
               <ActionButton
                 onClick={() => {
-                  actions.updateVerification(selected.verification_id, "approved");
+                  actions.updateVerification(
+                    selected.verification_id,
+                    "approved",
+                    concerns
+                  );
                   setSelected(null);
                 }}
               >
@@ -105,7 +122,11 @@ export default function VerificationsPage() {
               <ActionButton
                 tone="gold"
                 onClick={() => {
-                  actions.updateVerification(selected.verification_id, "rejected");
+                  actions.updateVerification(
+                    selected.verification_id,
+                    "rejected",
+                    concerns || "Rejected after profile review."
+                  );
                   setSelected(null);
                 }}
               >

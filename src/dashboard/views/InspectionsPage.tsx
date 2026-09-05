@@ -144,13 +144,16 @@ function BuyerInspectionForm() {
 
 function SupplierInspectionCalendar() {
   const { inspections } = useScopedRecords();
-  const days = useMemo(() => buildSeptemberGrid(2026), []);
+  const { year, month, label, days } = useMemo(
+    () => buildCalendarMonth(inspections.map((row) => row.scheduled_date)),
+    [inspections]
+  );
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Assigned Inspections"
-        description="Factory check windows for September 2026."
+        description={`Factory check windows for ${label}.`}
       />
       <div className="grid grid-cols-7 gap-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
@@ -162,7 +165,9 @@ function SupplierInspectionCalendar() {
           </p>
         ))}
         {days.map((day, index) => {
-          const iso = day ? `2026-09-${String(day).padStart(2, "0")}` : "";
+          const iso = day
+            ? `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+            : "";
           const hits = inspections.filter((row) => row.scheduled_date === iso);
           return (
             <div
@@ -276,16 +281,32 @@ function StaffQualityDesk() {
   );
 }
 
-function buildSeptemberGrid(year: number) {
-  const first = new Date(Date.UTC(year, 8, 1));
+function buildCalendarMonth(dates: string[]) {
+  const counts = new Map<string, number>();
+  dates.forEach((iso) => {
+    const key = iso.slice(0, 7);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  });
+  const pivot =
+    [...counts.entries()].sort((left, right) => right[1] - left[1])[0]?.[0] ??
+    "2026-09";
+  const [yearText, monthText] = pivot.split("-");
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const first = new Date(Date.UTC(year, month - 1, 1));
   const weekday = (first.getUTCDay() + 6) % 7;
-  const daysInMonth = 30;
-  const cells: Array<number | null> = Array.from({ length: weekday }, () => null);
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const days: Array<number | null> = Array.from({ length: weekday }, () => null);
   for (let day = 1; day <= daysInMonth; day += 1) {
-    cells.push(day);
+    days.push(day);
   }
-  while (cells.length % 7 !== 0) {
-    cells.push(null);
+  while (days.length % 7 !== 0) {
+    days.push(null);
   }
-  return cells;
+  const label = first.toLocaleString("en-US", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+  return { year, month, label, days };
 }

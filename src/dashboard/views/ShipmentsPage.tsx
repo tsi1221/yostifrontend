@@ -54,7 +54,7 @@ function LogisticsConsole() {
         title="Shipment Bookings"
         description="Incoming buyer cargo. Update status and attach shipping documents."
       />
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         {shipments.map((shipment) => (
           <article
             key={shipment.shipment_id}

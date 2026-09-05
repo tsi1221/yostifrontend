@@ -45,23 +45,27 @@ export default function PaymentsPage() {
       header: "Status",
       render: (row) => <StatusBadge value={row.status} />,
     },
-    {
-      header: "Pay",
-      render: (row) =>
-        row.status === "pending" ? (
-          <ActionButton
-            tone="gold"
-            onClick={() => {
-              setMethod(row.payment_method);
-              setPaying(row);
-            }}
-          >
-            Pay Now
-          </ActionButton>
-        ) : (
-          <span className="text-xs text-slate-400">—</span>
-        ),
-    }
+    ...(role === "BUYER"
+      ? [
+          {
+            header: "Pay",
+            render: (row: Payment) =>
+              row.status === "pending" || row.status === "failed" ? (
+                <ActionButton
+                  tone="gold"
+                  onClick={() => {
+                    setMethod(row.payment_method);
+                    setPaying(row);
+                  }}
+                >
+                  Pay Now
+                </ActionButton>
+              ) : (
+                <span className="text-xs text-slate-400">—</span>
+              ),
+          } satisfies DataTableColumn<Payment>,
+        ]
+      : [])
   );
 
   return (

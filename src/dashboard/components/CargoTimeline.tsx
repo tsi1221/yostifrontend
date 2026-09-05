@@ -23,7 +23,8 @@ export default function CargoTimeline({ shipment }: { shipment: Shipment }) {
             {shipment.goods_description}
           </h3>
           <p className="text-sm text-slate-500">
-            {shipment.pickup_location} → {shipment.destination_country}
+            {shipment.pickup_location} → {shipment.destination_country} ·{" "}
+            {shipment.shipping_method} · {shipment.weight}kg / {shipment.volume} m³
           </p>
         </div>
         <p className="text-sm text-slate-500">
@@ -31,12 +32,23 @@ export default function CargoTimeline({ shipment }: { shipment: Shipment }) {
         </p>
       </div>
 
-      <ol className="mt-6 grid grid-cols-5 gap-2">
+      <ol className="relative mt-6 grid grid-cols-5 gap-2">
+        <span
+          className="pointer-events-none absolute left-[10%] right-[10%] top-4 h-0.5 bg-slate-200"
+          aria-hidden
+        />
+        <span
+          className="pointer-events-none absolute left-[10%] top-4 h-0.5 bg-[#0F3952]"
+          style={{
+            width: `${(current / (SHIPMENT_PIPELINE.length - 1)) * 80}%`,
+          }}
+          aria-hidden
+        />
         {SHIPMENT_PIPELINE.map((step, index) => {
           const done = index <= current;
           const active = index === current;
           return (
-            <li key={step} className="flex flex-col items-center text-center">
+            <li key={step} className="relative z-10 flex flex-col items-center text-center">
               <span
                 className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
                   active
@@ -55,9 +67,6 @@ export default function CargoTimeline({ shipment }: { shipment: Shipment }) {
               >
                 {STEP_LABEL[step]}
               </span>
-              {index < SHIPMENT_PIPELINE.length - 1 ? (
-                <span className="sr-only">then</span>
-              ) : null}
             </li>
           );
         })}

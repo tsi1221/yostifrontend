@@ -66,8 +66,10 @@ export default function UsersPage() {
           { header: "Name", render: (row) => row.full_name },
           { header: "Company", render: (row) => row.company_name },
           { header: "Email", render: (row) => row.email },
+          { header: "Phone", render: (row) => row.phone },
           { header: "Country", render: (row) => row.country },
           { header: "Account", render: (row) => row.account_type },
+          { header: "Language", render: (row) => row.language_preference },
           {
             header: "Role",
             render: (row) => (

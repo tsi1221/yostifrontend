@@ -366,20 +366,24 @@ function StaffAssignmentBoard() {
             </div>
             <p className="mt-3 text-sm text-slate-600">{request.description}</p>
             <div className="mt-4 space-y-2">
-              {snapshot.suppliers
-                .filter((factory) => factory.verified)
-                .map((factory) => (
+              {snapshot.suppliers.map((factory) => {
+                const assigned = selected(
+                  request.request_id,
+                  request.assigned_supplier_ids
+                ).includes(factory.supplier_id);
+                const locked = !factory.verified && !assigned;
+                return (
                   <label
                     key={factory.supplier_id}
-                    className="flex items-center gap-2 text-sm text-slate-700"
+                    className={`flex items-center gap-2 text-sm ${
+                      locked ? "text-slate-400" : "text-slate-700"
+                    }`}
                   >
                     <input
                       type="checkbox"
                       className="accent-[#0F3952]"
-                      checked={selected(
-                        request.request_id,
-                        request.assigned_supplier_ids
-                      ).includes(factory.supplier_id)}
+                      disabled={locked}
+                      checked={assigned}
                       onChange={() =>
                         toggle(
                           request.request_id,
@@ -389,8 +393,10 @@ function StaffAssignmentBoard() {
                       }
                     />
                     {factory.name} ({factory.location_city})
+                    {factory.verified ? "" : " — unverified"}
                   </label>
-                ))}
+                );
+              })}
             </div>
             <div className="mt-4">
               <ActionButton

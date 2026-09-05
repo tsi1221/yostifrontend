@@ -16,10 +16,12 @@ import type {
   InspectionType,
   PaymentMethod,
   ShipmentStatus,
+  IssueType,
   SourcingRequest,
   SupplierFactory,
   SupplierRegion,
   SupportStatus,
+  Urgency,
   UserAccount,
   UserRole,
   VerificationStatus,
@@ -105,11 +107,19 @@ interface TripInput {
   translator: boolean;
 }
 
+interface SupportInput {
+  order_reference: string;
+  issue_type: IssueType;
+  urgency: Urgency;
+  notes: string;
+}
+
 type Action =
   | { type: "SUBMIT_SOURCING"; actorId: string; input: SourcingInput }
   | { type: "SUBMIT_QUOTE"; actorId: string; input: QuoteInput }
   | { type: "REQUEST_INSPECTION"; actorId: string; input: InspectionInput }
   | { type: "SUBMIT_TRIP"; actorId: string; input: TripInput }
+  | { type: "SUBMIT_SUPPORT"; actorId: string; input: SupportInput }
   | {
       type: "PAY_INVOICE";
       actorId: string;
@@ -249,6 +259,24 @@ function reducer(state: DashboardSnapshot, action: Action): DashboardSnapshot {
         `Submitted visa / business trip ${trip.trip_id} to ${trip.arrival_city}`,
         "trips",
         trip.trip_id
+      );
+    }
+    case "SUBMIT_SUPPORT": {
+      const ticket = {
+        support_id: nextId("SUP"),
+        ...action.input,
+        status: "open" as const,
+        user_id: action.actorId,
+      };
+      return log(
+        {
+          ...state,
+          support_requests: [ticket, ...state.support_requests],
+        },
+        action.actorId,
+        `Opened support ${ticket.support_id} for ${ticket.order_reference}`,
+        "support_requests",
+        ticket.support_id
       );
     }
     case "PAY_INVOICE": {
@@ -500,6 +528,7 @@ export interface DashboardActions {
   submitQuote: (input: QuoteInput) => void;
   requestInspection: (input: InspectionInput) => void;
   submitTrip: (input: TripInput) => void;
+  submitSupport: (input: SupportInput) => void;
   payInvoice: (paymentId: string, method: PaymentMethod) => void;
   updateVerification: (
     verificationId: string,
@@ -564,6 +593,8 @@ export function DashboardProvider({
         dispatch({ type: "REQUEST_INSPECTION", actorId: actor, input }),
       submitTrip: (input) =>
         dispatch({ type: "SUBMIT_TRIP", actorId: actor, input }),
+      submitSupport: (input) =>
+        dispatch({ type: "SUBMIT_SUPPORT", actorId: actor, input }),
       payInvoice: (paymentId, method) =>
         dispatch({ type: "PAY_INVOICE", actorId: actor, paymentId, method }),
       updateVerification: (verificationId, status, concerns) =>
