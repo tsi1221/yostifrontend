@@ -96,6 +96,8 @@ export const DEFAULT_SHIPMENTS_QUERY: ShipmentsListQuery = {
   destinationCountry: "",
 };
 
+export type ShipmentDeletionPhase = "idle" | "confirming" | "deleting";
+
 export const EMPTY_SHIPMENT_FORM: ShipmentFormValues = {
   pickupLocation: "",
   destinationCountry: "",

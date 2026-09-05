@@ -13,5 +13,5 @@ export const USERS_URL = `${AUTH_API_BASE}/users`;
 /** GET paginated sourcing requests: page, pageSize, search, supplierRegion, deadline */
 export const REQUESTS_URL = `${AUTH_API_BASE}/requests`;
 
-/** GET list / POST create / PATCH :id update shipments */
+/** GET list / POST create / PATCH :id update / DELETE :id shipments */
 export const SHIPMENTS_URL = `${AUTH_API_BASE}/shipments`;

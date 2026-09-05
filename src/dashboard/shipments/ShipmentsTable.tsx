@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { Trash2 } from "lucide-react";
 
 import ActionButton from "../components/ActionButton";
 import { SelectInput, TextInput } from "../components/FormField";
 import SideDrawer from "../components/SideDrawer";
 import { BADGE_TONE_CLASS, getStatusTone } from "../statusStyles";
+import DeleteShipmentDialog from "./DeleteShipmentDialog";
 import EditShipmentForm from "./EditShipmentForm";
 import type { ShipmentMethodFilter, ShipmentRecord } from "./types";
 import { SHIPMENT_METHOD_FILTERS } from "./types";
@@ -49,6 +51,7 @@ function SkeletonRows() {
 
 export default function ShipmentsTable() {
   const [editing, setEditing] = useState<ShipmentRecord | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<ShipmentRecord | null>(null);
   const {
     filters,
     setFilter,
@@ -163,9 +166,19 @@ export default function ShipmentsTable() {
                         {row.volumeM3} m³
                       </td>
                       <td className="px-4 py-3">
-                        <ActionButton onClick={() => setEditing(row)}>
-                          Edit
-                        </ActionButton>
+                        <div className="flex items-center gap-2">
+                          <ActionButton onClick={() => setEditing(row)}>
+                            Edit
+                          </ActionButton>
+                          <button
+                            type="button"
+                            className="rounded-xl bg-red-600 p-2 text-white hover:bg-red-700"
+                            aria-label={`Delete shipment ${row.id}`}
+                            onClick={() => setPendingDelete(row)}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -222,6 +235,18 @@ export default function ShipmentsTable() {
           />
         ) : null}
       </SideDrawer>
+
+      <DeleteShipmentDialog
+        open={Boolean(pendingDelete)}
+        shipmentId={pendingDelete?.id ?? null}
+        onClose={() => setPendingDelete(null)}
+        onDeleted={() => {
+          if (editing && pendingDelete && editing.id === pendingDelete.id) {
+            setEditing(null);
+          }
+          setPendingDelete(null);
+        }}
+      />
     </div>
   );
 }

@@ -522,3 +522,67 @@ export async function patchShipment(
   invalidateShipmentsCache();
   return updated;
 }
+
+export async function deleteShipment(id: number): Promise<void> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new ShipmentsRequestError("Unauthorized", 401);
+  }
+
+  if (!Number.isFinite(id) || id <= 0) {
+    throw new ShipmentsRequestError("The target Shipment ID format is invalid.", 400);
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(shipmentDetailUrl(id), {
+      method: "DELETE",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch {
+    throw new ShipmentsRequestError(
+      "Unable to reach the server. Check your connection and try again.",
+      0
+    );
+  }
+
+  if (response.status === 204) {
+    invalidateShipmentsCache();
+    return;
+  }
+
+  const raw: unknown = await response.json().catch(() => null);
+
+  if (response.status === 400) {
+    throw new ShipmentsRequestError(
+      readApiMessage(raw, "The target Shipment ID format is invalid."),
+      400
+    );
+  }
+  if (response.status === 401) {
+    throw new ShipmentsRequestError("Unauthorized", 401);
+  }
+  if (response.status === 404) {
+    throw new ShipmentsRequestError(
+      "This shipment does not exist or has already been removed.",
+      404
+    );
+  }
+  if (response.status >= 500) {
+    throw new ShipmentsRequestError(
+      readApiMessage(raw, "Server error occurred. Could not delete shipment."),
+      response.status
+    );
+  }
+  if (!response.ok) {
+    throw new ShipmentsRequestError(
+      readApiMessage(raw, `Unable to delete shipment. Server returned ${response.status}.`),
+      response.status
+    );
+  }
+
+  invalidateShipmentsCache();
+}
