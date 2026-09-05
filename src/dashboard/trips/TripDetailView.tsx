@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { Trash2 } from "lucide-react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
 import SideDrawer from "../components/SideDrawer";
 import { ROLE_SLUG } from "../roles";
 import { useDashboard } from "../store";
+import DeleteTripDialog from "./DeleteTripDialog";
 import EditTripForm from "./EditTripForm";
 import {
   formatTripDuration,
@@ -93,6 +95,7 @@ export default function TripDetailView() {
   const { trip, loading, notFound, serverError, applyTrip, retry } =
     useTripDetail(tripId);
   const [editing, setEditing] = useState(searchParams.get("edit") === "1");
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const goBack = () => navigate(listPath);
   const closeEditor = () => {
@@ -111,7 +114,17 @@ export default function TripDetailView() {
           Back to List
         </ActionButton>
         {trip ? (
-          <ActionButton onClick={() => setEditing(true)}>Edit itinerary</ActionButton>
+          <div className="flex gap-2">
+            <ActionButton onClick={() => setEditing(true)}>Edit itinerary</ActionButton>
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 size={16} />
+              Delete
+            </button>
+          </div>
         ) : null}
       </div>
 
@@ -189,6 +202,17 @@ export default function TripDetailView() {
           />
         ) : null}
       </SideDrawer>
+
+      <DeleteTripDialog
+        open={Boolean(confirmDelete && trip)}
+        tripId={trip?.id ?? null}
+        onClose={() => setConfirmDelete(false)}
+        onDeleted={() => {
+          setConfirmDelete(false);
+          closeEditor();
+          navigate(listPath, { replace: true });
+        }}
+      />
     </div>
   );
 }

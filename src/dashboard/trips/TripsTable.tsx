@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
@@ -7,6 +8,7 @@ import SideDrawer from "../components/SideDrawer";
 import StatusBadge from "../components/StatusBadge";
 import { ROLE_SLUG } from "../roles";
 import { useDashboard } from "../store";
+import DeleteTripDialog from "./DeleteTripDialog";
 import EditTripForm from "./EditTripForm";
 import type { TripRecord, TripStatusFilter } from "./types";
 import { TRIP_STATUS_FILTERS } from "./types";
@@ -44,6 +46,7 @@ export default function TripsTable() {
   const navigate = useNavigate();
   const { role } = useDashboard();
   const [editing, setEditing] = useState<TripRecord | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<TripRecord | null>(null);
   const {
     filters,
     setFilter,
@@ -175,6 +178,17 @@ export default function TripsTable() {
                         >
                           Edit
                         </ActionButton>
+                        <button
+                          type="button"
+                          className="rounded-xl bg-red-600 p-2 text-white hover:bg-red-700"
+                          aria-label={`Delete trip itinerary ${row.id}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setPendingDelete(row);
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -231,6 +245,18 @@ export default function TripsTable() {
           />
         ) : null}
       </SideDrawer>
+
+      <DeleteTripDialog
+        open={Boolean(pendingDelete)}
+        tripId={pendingDelete?.id ?? null}
+        onClose={() => setPendingDelete(null)}
+        onDeleted={() => {
+          if (editing && pendingDelete && editing.id === pendingDelete.id) {
+            setEditing(null);
+          }
+          setPendingDelete(null);
+        }}
+      />
     </div>
   );
 }

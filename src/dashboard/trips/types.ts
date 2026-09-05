@@ -121,3 +121,5 @@ export const DEFAULT_TRIPS_QUERY: TripsListQuery = {
   arrivalCity: "",
   status: "",
 };
+
+export type TripDeletionPhase = "idle" | "confirming" | "deleting";

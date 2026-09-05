@@ -638,3 +638,68 @@ export async function patchTrip(
   invalidateTripsCache();
   return updated;
 }
+
+const DELETE_TRIP_SUCCESS = "Trip deleted successfully.";
+
+export async function deleteTrip(id: number): Promise<string> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new TripsRequestError("Unauthorized", 401);
+  }
+
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new TripsRequestError("The trip ID format is invalid.", 400);
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(tripDetailUrl(id), {
+      method: "DELETE",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch {
+    throw new TripsRequestError(
+      "Unable to reach the server. Check your connection and try again.",
+      0
+    );
+  }
+
+  const raw: unknown = await response.json().catch(() => null);
+
+  if (response.status === 400) {
+    throw new TripsRequestError(
+      readApiMessage(raw, "The trip ID format is invalid."),
+      400
+    );
+  }
+  if (response.status === 401) {
+    throw new TripsRequestError("Unauthorized", 401);
+  }
+  if (response.status === 404) {
+    throw new TripsRequestError(
+      "This trip record does not exist or has already been removed.",
+      404
+    );
+  }
+  if (response.status >= 500) {
+    throw new TripsRequestError(
+      readApiMessage(raw, "Server error occurred. Could not delete trip."),
+      response.status
+    );
+  }
+  if (response.status !== 200) {
+    throw new TripsRequestError(
+      readApiMessage(
+        raw,
+        `Unable to delete this trip itinerary. Server returned ${response.status}.`
+      ),
+      response.status
+    );
+  }
+
+  invalidateTripsCache();
+  return readApiMessage(raw, DELETE_TRIP_SUCCESS);
+}
