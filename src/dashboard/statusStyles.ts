@@ -16,8 +16,11 @@ export const STATUS_TONE: Record<string, StatusTone> = {
   "at port": "yellow",
   customs: "yellow",
   scheduled: "yellow",
+  planned: "yellow",
   "in progress": "yellow",
+  ongoing: "navy",
   booked: "yellow",
+
   medium: "yellow",
   rejected: "red",
   reject: "red",
