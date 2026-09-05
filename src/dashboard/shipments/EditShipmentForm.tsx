@@ -37,6 +37,7 @@ export default function EditShipmentForm({
   return (
     <form
       className="space-y-4"
+      noValidate
       onSubmit={async (event) => {
         event.preventDefault();
         const updated = await updateShipment(values);
@@ -48,7 +49,6 @@ export default function EditShipmentForm({
       <fieldset disabled={saving} className="space-y-4">
         <Field label="Pickup location" error={fieldErrors.pickupLocation}>
           <TextArea
-            required
             placeholder="Building 4, Yiwu International Trade City, Zhejiang"
             value={values.pickupLocation}
             onChange={(event) => setField("pickupLocation", event.target.value)}
@@ -56,7 +56,6 @@ export default function EditShipmentForm({
         </Field>
         <Field label="Destination notes" error={fieldErrors.destinationDescription}>
           <TextArea
-            required
             placeholder="Deliver to Warehouse B, Door 3. Contact store manager on arrival."
             value={values.destinationDescription}
             onChange={(event) => setField("destinationDescription", event.target.value)}
@@ -65,7 +64,6 @@ export default function EditShipmentForm({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label="Destination country" error={fieldErrors.destinationCountry}>
             <TextInput
-              required
               placeholder="Germany"
               value={values.destinationCountry}
               onChange={(event) => setField("destinationCountry", event.target.value)}
@@ -73,7 +71,6 @@ export default function EditShipmentForm({
           </Field>
           <Field label="City" error={fieldErrors.city}>
             <TextInput
-              required
               placeholder="Berlin"
               value={values.city}
               onChange={(event) => setField("city", event.target.value)}
@@ -83,7 +80,6 @@ export default function EditShipmentForm({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label="Weight" error={fieldErrors.weight}>
             <TextInput
-              required
               placeholder="250 kg"
               value={values.weight}
               onChange={(event) => setField("weight", event.target.value)}
@@ -94,7 +90,6 @@ export default function EditShipmentForm({
           </Field>
           <Field label="Volume (m³)" error={fieldErrors.volumeM3}>
             <TextInput
-              required
               placeholder="4.5"
               value={values.volumeM3}
               onChange={(event) => setField("volumeM3", event.target.value)}
