@@ -150,33 +150,30 @@ function PublicLayout({
    APP
 ========================================================= */
 
+const readStoredRole = (): UserRole | null =>
+  normalizeRole(
+    localStorage.getItem("role") ??
+      sessionStorage.getItem("role")
+  );
+
+const readStoredEmail = (): string | null =>
+  localStorage.getItem("email") ??
+  sessionStorage.getItem("email");
+
 export default function App() {
   const [role, setRole] =
-    useState<UserRole | null>(null);
+    useState<UserRole | null>(readStoredRole);
 
   const [, setEmail] =
-    useState<string | null>(null);
+    useState<string | null>(readStoredEmail);
 
   /* =======================================================
      LOAD AUTH
   ======================================================= */
 
   useEffect(() => {
-    const storedRole =
-      localStorage.getItem("role") ??
-      sessionStorage.getItem("role");
-
-    const storedEmail =
-      localStorage.getItem("email") ??
-      sessionStorage.getItem("email");
-
-    setRole(
-      normalizeRole(storedRole)
-    );
-
-    setEmail(
-      storedEmail ?? null
-    );
+    setRole(readStoredRole());
+    setEmail(readStoredEmail());
   }, []);
 
   return (
