@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
 import DataTable from "../components/DataTable";
@@ -10,8 +11,20 @@ import {
 } from "../components/FormField";
 import PageHeader from "../components/PageHeader";
 import StatusBadge from "../components/StatusBadge";
+import { ROLE_SLUG } from "../roles";
 import { findUserName, useDashboard, useScopedRecords } from "../store";
 import type { BusinessTrip, VisaStatus } from "../types";
+
+function NewTripButton() {
+  const { role } = useDashboard();
+  const navigate = useNavigate();
+
+  return (
+    <ActionButton onClick={() => navigate(`/${ROLE_SLUG[role]}/trips/new`)}>
+      New trip
+    </ActionButton>
+  );
+}
 
 export default function TripsPage() {
   const { role } = useDashboard();
@@ -35,6 +48,7 @@ function BuyerTripForm() {
       <PageHeader
         title="Submit Visa / Business Trip Form"
         description="Arrival city, duration, passport, nationality, hotel, and translator."
+        actions={<NewTripButton />}
       />
       <form
         className="grid grid-cols-1 gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:grid-cols-2"
@@ -126,6 +140,7 @@ function StaffVisaDesk() {
       <PageHeader
         title="Visa parameters"
         description="Review business-trip files and update visa status."
+        actions={<NewTripButton />}
       />
       <DataTable<BusinessTrip>
         rows={trips}

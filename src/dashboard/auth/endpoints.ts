@@ -18,3 +18,6 @@ export const SHIPMENTS_URL = `${AUTH_API_BASE}/shipments`;
 
 /** GET list / POST create / GET :id / PATCH :id / DELETE :id inspection requests */
 export const INSPECTIONS_URL = `${AUTH_API_BASE}/inspections`;
+
+/** GET list / POST create trips */
+export const TRIPS_URL = `${AUTH_API_BASE}/trips`;

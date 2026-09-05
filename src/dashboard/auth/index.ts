@@ -6,6 +6,7 @@ export {
   REQUESTS_URL,
   SHIPMENTS_URL,
   INSPECTIONS_URL,
+  TRIPS_URL,
 } from "./endpoints";
 export { loginWithPassword } from "./loginService";
 export {
