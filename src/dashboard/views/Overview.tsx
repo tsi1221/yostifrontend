@@ -88,7 +88,7 @@ export default function Overview({ role }: { role: UserRole }) {
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
         <ChartCard title="Shipment pipeline">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={240} minWidth={1} minHeight={1}>
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
               <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 12 }} />
