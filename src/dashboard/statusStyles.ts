@@ -3,6 +3,7 @@ export type StatusTone = "green" | "yellow" | "red" | "navy" | "slate";
 export const STATUS_TONE: Record<string, StatusTone> = {
   approved: "green",
   completed: "green",
+  refunded: "navy",
   delivered: "green",
   resolved: "green",
   verified: "green",

@@ -7,6 +7,7 @@ export {
   SHIPMENTS_URL,
   INSPECTIONS_URL,
   TRIPS_URL,
+  PAYMENTS_URL,
 } from "./endpoints";
 export { loginWithPassword } from "./loginService";
 export {
