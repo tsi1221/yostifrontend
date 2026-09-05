@@ -12,6 +12,13 @@ import TwoFA from "./shared/Auth/TwoFA";
 
 import SuperAdminRouting from "./Superadmin/Content/Routing/SuperAdminRouting";
 import DashboardApp from "./dashboard/DashboardApp";
+import {
+  RequireAuth,
+  getRoleDashboardPath,
+  getStoredAuthUser,
+  hasValidAccessToken,
+  roleFromAuthUser,
+} from "./dashboard/auth";
 
 import Navbar from "./pages/Home/Navbar";
 import Footer from "./pages/Home/Footer";
@@ -103,29 +110,8 @@ const normalizeRole = (
    ROLE HOME
 ========================================================= */
 
-const getRoleHome = (
-  role: UserRole | null
-) => {
-  switch (role) {
-    case "SUPER_ADMIN":
-      return "/superadmin/dashboard";
-
-    case "STAFF":
-      return "/staff/dashboard";
-
-    case "BUYER":
-      return "/buyer/dashboard";
-
-    case "SUPPLIER":
-      return "/supplier/dashboard";
-
-    case "LOGISTICS_PARTNER":
-      return "/logistics/dashboard";
-
-    default:
-      return "/";
-  }
-};
+const getRoleHome = (role: UserRole | null) =>
+  role ? getRoleDashboardPath(role) : "/";
 
 /* =========================================================
    PUBLIC LAYOUT
@@ -151,11 +137,20 @@ function PublicLayout({
    APP
 ========================================================= */
 
-const readStoredRole = (): UserRole | null =>
-  normalizeRole(
-    localStorage.getItem("role") ??
-      sessionStorage.getItem("role")
+const readStoredRole = (): UserRole | null => {
+  if (!hasValidAccessToken()) {
+    return null;
+  }
+
+  const authUser = getStoredAuthUser();
+  if (authUser) {
+    return roleFromAuthUser(authUser);
+  }
+
+  return normalizeRole(
+    localStorage.getItem("role") ?? sessionStorage.getItem("role")
   );
+};
 
 const readStoredEmail = (): string | null =>
   localStorage.getItem("email") ??
@@ -360,70 +355,49 @@ export default function App() {
       <Route
         path="/superadmin/*"
         element={
-          role === "SUPER_ADMIN" ? (
+          <RequireAuth allow={["SUPER_ADMIN", "STAFF"]}>
             <SuperAdminRouting />
-          ) : (
-            <Navigate
-              to="/login"
-              replace
-            />
-          )
+          </RequireAuth>
         }
       />
 
       <Route
         path="/staff/*"
         element={
-          role === "STAFF" ? (
-            <DashboardApp role="STAFF" />
-          ) : (
-            <Navigate
-              to="/login"
-              replace
+          <RequireAuth allow={["STAFF", "SUPER_ADMIN"]}>
+            <DashboardApp
+              role={
+                getStoredAuthUser()?.roleId === 5 ? "STAFF" : "SUPER_ADMIN"
+              }
             />
-          )
+          </RequireAuth>
         }
       />
 
       <Route
         path="/buyer/*"
         element={
-          role === "BUYER" ? (
+          <RequireAuth allow="BUYER">
             <DashboardApp role="BUYER" />
-          ) : (
-            <Navigate
-              to="/login"
-              replace
-            />
-          )
+          </RequireAuth>
         }
       />
 
       <Route
         path="/supplier/*"
         element={
-          role === "SUPPLIER" ? (
+          <RequireAuth allow="SUPPLIER">
             <DashboardApp role="SUPPLIER" />
-          ) : (
-            <Navigate
-              to="/login"
-              replace
-            />
-          )
+          </RequireAuth>
         }
       />
 
       <Route
         path="/logistics/*"
         element={
-          role === "LOGISTICS_PARTNER" ? (
+          <RequireAuth allow="LOGISTICS_PARTNER">
             <DashboardApp role="LOGISTICS_PARTNER" />
-          ) : (
-            <Navigate
-              to="/login"
-              replace
-            />
-          )
+          </RequireAuth>
         }
       />
 

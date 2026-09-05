@@ -8,6 +8,7 @@ import {
 
 /* eslint-disable react-refresh/only-export-components -- session store exports selectors with the provider */
 
+import { getStoredAuthUser } from "./auth/session";
 import { initialSnapshot } from "./mocks/data";
 import type {
   AccountType,
@@ -577,9 +578,19 @@ export function DashboardProvider({
   children: ReactNode;
 }) {
   const [snapshot, dispatch] = useReducer(reducer, undefined, cloneSnapshot);
-  const user =
-    snapshot.users.find((item) => item.id === SESSION_USERS[role]) ??
-    snapshot.users[0];
+  const user = useMemo(() => {
+    const sessionUser =
+      snapshot.users.find((item) => item.id === SESSION_USERS[role]) ??
+      snapshot.users[0];
+    const authUser = getStoredAuthUser();
+    return authUser
+      ? {
+          ...sessionUser,
+          full_name: authUser.fullname,
+          email: authUser.email,
+        }
+      : sessionUser;
+  }, [role, snapshot.users]);
 
   const actor = user.id;
 

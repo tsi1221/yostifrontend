@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { clearAuthSession } from "../auth";
 import { ROLE_LABEL, getNavigation } from "../roles";
 import { useDashboard } from "../store";
 import type { UserRole } from "../types";
@@ -65,12 +66,7 @@ function TopBar({
   const navigate = useNavigate();
 
   const logout = () => {
-    localStorage.removeItem("role");
-    localStorage.removeItem("email");
-    localStorage.removeItem("token");
-    sessionStorage.removeItem("role");
-    sessionStorage.removeItem("email");
-    sessionStorage.removeItem("token");
+    clearAuthSession();
     navigate("/login", { replace: true });
   };
 

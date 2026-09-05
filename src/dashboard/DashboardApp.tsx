@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import type { ReactNode } from "react";
 
+import { hasValidAccessToken } from "./auth/session";
 import DashboardShell from "./layout/DashboardShell";
 import { ROLE_SLUG, roleCanAccess, type DashboardPageKey } from "./roles";
 import { DashboardProvider } from "./store";
@@ -125,6 +126,10 @@ function DashboardRoutes({ role }: DashboardAppProps) {
 }
 
 export default function DashboardApp({ role }: DashboardAppProps) {
+  if (!hasValidAccessToken()) {
+    return <Navigate to="/login" replace />;
+  }
+
   return (
     <DashboardProvider role={role}>
       <DashboardRoutes role={role} />
