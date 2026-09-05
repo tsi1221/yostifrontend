@@ -111,7 +111,7 @@ export default function UsersPage() {
                   Edit
                 </ActionButton>
                 <ActionButton
-                  tone="ghost"
+                  tone="danger"
                   onClick={() => actions.deleteUser(row.id)}
                 >
                   Remove

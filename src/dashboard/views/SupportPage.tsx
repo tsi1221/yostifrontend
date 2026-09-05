@@ -51,12 +51,13 @@ export default function SupportPage() {
         ) : (
           <div className="flex gap-2">
             <ActionButton
-              tone="ghost"
+              tone="success"
               onClick={() => actions.closeSupport(row.support_id, "resolved")}
             >
               Resolve
             </ActionButton>
             <ActionButton
+              tone="danger"
               onClick={() => actions.closeSupport(row.support_id, "closed")}
             >
               Close

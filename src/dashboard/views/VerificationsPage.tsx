@@ -58,7 +58,7 @@ export default function VerificationsPage() {
                   Review
                 </ActionButton>
                 <ActionButton
-                  tone="navy"
+                  tone="success"
                   onClick={() =>
                     actions.updateVerification(row.verification_id, "approved")
                   }
@@ -66,7 +66,7 @@ export default function VerificationsPage() {
                   Approve
                 </ActionButton>
                 <ActionButton
-                  tone="gold"
+                  tone="danger"
                   onClick={() => {
                     setConcerns(row.concerns);
                     setSelected(row);
@@ -108,6 +108,7 @@ export default function VerificationsPage() {
             </Field>
             <div className="flex gap-2 pt-4">
               <ActionButton
+                tone="success"
                 onClick={() => {
                   actions.updateVerification(
                     selected.verification_id,
@@ -120,7 +121,7 @@ export default function VerificationsPage() {
                 Approve
               </ActionButton>
               <ActionButton
-                tone="gold"
+                tone="danger"
                 onClick={() => {
                   actions.updateVerification(
                     selected.verification_id,

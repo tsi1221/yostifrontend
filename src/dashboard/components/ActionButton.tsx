@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
-type Tone = "navy" | "gold" | "ghost";
+type Tone = "navy" | "gold" | "ghost" | "success" | "danger";
 
 interface ActionButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   tone?: Tone;
@@ -12,6 +12,8 @@ const TONE_CLASS: Record<Tone, string> = {
   gold: "bg-[#0F3952] text-white hover:bg-[#0F3952]/90",
   ghost:
     "border border-[#0F3952] bg-[#0F3952] text-white hover:bg-[#0F3952]/90",
+  success: "bg-green-600 text-white hover:bg-green-700",
+  danger: "bg-red-600 text-white hover:bg-red-700",
 };
 
 export default function ActionButton({
