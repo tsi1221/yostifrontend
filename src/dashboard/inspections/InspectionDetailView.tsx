@@ -1,9 +1,14 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useState } from "react";
+import { Trash2 } from "lucide-react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
+import SideDrawer from "../components/SideDrawer";
 import { BADGE_TONE_CLASS, getStatusTone } from "../statusStyles";
 import { ROLE_SLUG } from "../roles";
 import { useDashboard } from "../store";
+import DeleteInspectionDialog from "./DeleteInspectionDialog";
+import EditInspectionForm from "./EditInspectionForm";
 import { formatInspectionDate, formatInspectionType } from "./inspectionsService";
 import { useInspectionDetail } from "./useInspectionDetail";
 
@@ -36,10 +41,21 @@ export default function InspectionDetailView() {
   const navigate = useNavigate();
   const { role } = useDashboard();
   const listPath = `/${ROLE_SLUG[role]}/quality-control`;
-  const { inspection, loading, notFound, serverError, retry } =
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { inspection, loading, notFound, serverError, applyInspection, retry } =
     useInspectionDetail(inspectionId);
+  const [editing, setEditing] = useState(searchParams.get("edit") === "1");
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const goBack = () => navigate(listPath);
+  const closeEditor = () => {
+    setEditing(false);
+    if (searchParams.get("edit") === "1") {
+      const next = new URLSearchParams(searchParams);
+      next.delete("edit");
+      setSearchParams(next, { replace: true });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -47,6 +63,19 @@ export default function InspectionDetailView() {
         <ActionButton tone="ghost" onClick={goBack}>
           Back to List
         </ActionButton>
+        {inspection ? (
+          <div className="flex gap-2">
+            <ActionButton onClick={() => setEditing(true)}>Edit inspection</ActionButton>
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 size={16} />
+              Delete
+            </button>
+          </div>
+        ) : null}
       </div>
 
       {loading ? <DetailSkeleton /> : null}
@@ -158,6 +187,35 @@ export default function InspectionDetailView() {
           </section>
         </div>
       ) : null}
+
+      <SideDrawer
+        open={Boolean(editing && inspection)}
+        title="Edit inspection"
+        description="Update booking details and save. Changes are sent with PATCH."
+        onClose={closeEditor}
+      >
+        {inspection ? (
+          <EditInspectionForm
+            inspection={inspection}
+            onCancel={closeEditor}
+            onSaved={(updated) => {
+              applyInspection(updated);
+              closeEditor();
+            }}
+          />
+        ) : null}
+      </SideDrawer>
+
+      <DeleteInspectionDialog
+        open={Boolean(confirmDelete && inspection)}
+        inspectionId={inspection?.id ?? null}
+        onClose={() => setConfirmDelete(false)}
+        onDeleted={() => {
+          setConfirmDelete(false);
+          closeEditor();
+          navigate(listPath, { replace: true });
+        }}
+      />
     </div>
   );
 }

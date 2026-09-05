@@ -8,8 +8,11 @@ import type {
   InspectionRecord,
   InspectionsListQuery,
   InspectionsListResponse,
+  InspectionUpdateTypeValue,
+  UpdateInspectionFormValues,
+  UpdateInspectionPayload,
 } from "./types";
-import { INSPECTION_TYPE_VALUES } from "./types";
+import { INSPECTION_TYPE_VALUES, INSPECTION_UPDATE_TYPE_VALUES } from "./types";
 
 export { isPreviewAccessToken };
 
@@ -163,6 +166,67 @@ export function formValuesToPayload(
 ): CreateInspectionPayload {
   return {
     supplierId: parseSupplierId(values.supplierId) ?? 0,
+    productType: values.productType.trim(),
+    type: values.type,
+    date: localDateTimeToIso(values.date),
+    photoVideoRequired: Boolean(values.photoVideoRequired),
+  };
+}
+
+export function isoToLocalDateTime(value: string): string {
+  if (!value.trim()) {
+    return "";
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+  const pad = (part: number) => String(part).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+export function asUpdateInspectionType(value: string): InspectionUpdateTypeValue {
+  return value.trim().toLowerCase() === "factory visit"
+    ? "factory visit"
+    : "Preshipment";
+}
+
+export function inspectionToFormValues(
+  inspection: InspectionRecord
+): UpdateInspectionFormValues {
+  return {
+    supplierId: String(inspection.supplierId),
+    productType: inspection.productType,
+    type: asUpdateInspectionType(inspection.type),
+    date: isoToLocalDateTime(inspection.date),
+    photoVideoRequired: Boolean(inspection.photoVideoRequired),
+  };
+}
+
+export function validateUpdateInspectionForm(
+  values: UpdateInspectionFormValues
+): InspectionFieldErrors {
+  const errors: InspectionFieldErrors = {};
+  if (parseSupplierId(values.supplierId) === undefined) {
+    errors.supplierId = "Enter a valid numeric supplier ID.";
+  }
+  if (!values.productType.trim()) {
+    errors.productType = "Product type is required.";
+  }
+  if (!INSPECTION_UPDATE_TYPE_VALUES.includes(values.type)) {
+    errors.type = "Choose Preshipment or factory visit.";
+  }
+  if (!localDateTimeToIso(values.date)) {
+    errors.date = "Choose a valid date and time.";
+  }
+  return errors;
+}
+
+export function updateFormValuesToPayload(
+  values: UpdateInspectionFormValues
+): UpdateInspectionPayload {
+  return {
+    supplierId: parseSupplierId(values.supplierId) ?? Number.parseInt(values.supplierId, 10),
     productType: values.productType.trim(),
     type: values.type,
     date: localDateTimeToIso(values.date),
@@ -526,4 +590,148 @@ export async function createInspection(
 
   invalidateInspectionsCache();
   return created;
+}
+
+export async function patchInspection(
+  id: number,
+  payload: UpdateInspectionPayload
+): Promise<InspectionRecord> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new InspectionsRequestError("Unauthorized", 401);
+  }
+
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new InspectionsRequestError("The inspection ID is invalid.", 400);
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(inspectionDetailUrl(id), {
+      method: "PATCH",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    throw new InspectionsRequestError(
+      "Unable to reach the server. Check your connection and try again.",
+      0
+    );
+  }
+
+  const raw: unknown = await response.json().catch(() => null);
+
+  if (response.status === 400) {
+    throw new InspectionsRequestError(
+      readApiMessage(raw, "Unable to save this inspection. Check the highlighted fields."),
+      400,
+      parseFieldErrors(raw)
+    );
+  }
+  if (response.status === 401) {
+    throw new InspectionsRequestError("Unauthorized", 401);
+  }
+  if (response.status === 404) {
+    throw new InspectionsRequestError(
+      "This inspection could not be found or has been removed.",
+      404
+    );
+  }
+  if (response.status >= 500) {
+    throw new InspectionsRequestError(
+      readApiMessage(raw, "Server error occurred. Could not update inspection."),
+      response.status
+    );
+  }
+  if (!response.ok) {
+    throw new InspectionsRequestError(
+      readApiMessage(raw, `Unable to update inspection. Server returned ${response.status}.`),
+      response.status
+    );
+  }
+
+  const updated =
+    normalizeInspection(raw) ??
+    normalizeInspection(asRecord(raw)?.data) ??
+    normalizeInspection(asRecord(raw)?.inspection);
+
+  if (!updated) {
+    throw new InspectionsRequestError("The server returned an incomplete inspection.", 500);
+  }
+
+  invalidateInspectionsCache();
+  return updated;
+}
+
+const DELETE_INSPECTION_SUCCESS =
+  "Inspection request deleted successfully.";
+
+export async function deleteInspection(id: number): Promise<string> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new InspectionsRequestError("Unauthorized", 401);
+  }
+
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new InspectionsRequestError(
+      "The inspection ID format is invalid.",
+      400
+    );
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(inspectionDetailUrl(id), {
+      method: "DELETE",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch {
+    throw new InspectionsRequestError(
+      "Unable to reach the server. Check your connection and try again.",
+      0
+    );
+  }
+
+  const raw: unknown = await response.json().catch(() => null);
+
+  if (response.status === 400) {
+    throw new InspectionsRequestError(
+      readApiMessage(raw, "The inspection ID format is invalid."),
+      400
+    );
+  }
+  if (response.status === 401) {
+    throw new InspectionsRequestError("Unauthorized", 401);
+  }
+  if (response.status === 404) {
+    throw new InspectionsRequestError(
+      "This inspection request does not exist or has already been removed.",
+      404
+    );
+  }
+  if (response.status >= 500) {
+    throw new InspectionsRequestError(
+      readApiMessage(raw, "Server error occurred. Could not delete inspection."),
+      response.status
+    );
+  }
+  if (response.status !== 200) {
+    throw new InspectionsRequestError(
+      readApiMessage(
+        raw,
+        `Unable to delete this inspection request. Server returned ${response.status}.`
+      ),
+      response.status
+    );
+  }
+
+  invalidateInspectionsCache();
+  return readApiMessage(raw, DELETE_INSPECTION_SUCCESS);
 }

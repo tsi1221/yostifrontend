@@ -31,8 +31,39 @@ export interface InspectionFormValues {
   photoVideoRequired: boolean;
 }
 
+export type InspectionUpdateTypeValue = "Preshipment" | "factory visit";
+
+export const INSPECTION_UPDATE_TYPE_VALUES: InspectionUpdateTypeValue[] = [
+  "Preshipment",
+  "factory visit",
+];
+
+export const INSPECTION_UPDATE_TYPE_OPTIONS: {
+  label: string;
+  value: InspectionUpdateTypeValue;
+}[] = [
+  { label: "Preshipment", value: "Preshipment" },
+  { label: "Factory Visit", value: "factory visit" },
+];
+
+export interface UpdateInspectionFormValues {
+  supplierId: string;
+  productType: string;
+  type: InspectionUpdateTypeValue;
+  date: string;
+  photoVideoRequired: boolean;
+}
+
+export interface UpdateInspectionPayload {
+  supplierId: number;
+  productType: string;
+  type: InspectionUpdateTypeValue;
+  date: string;
+  photoVideoRequired: boolean;
+}
+
 export type InspectionFieldErrors = Partial<
-  Record<keyof CreateInspectionPayload, string>
+  Record<keyof CreateInspectionPayload | keyof UpdateInspectionPayload, string>
 >;
 
 export const EMPTY_INSPECTION_FORM: InspectionFormValues = {
@@ -96,3 +127,5 @@ export const DEFAULT_INSPECTIONS_QUERY: InspectionsListQuery = {
   photoVideoRequired: "",
   date: "",
 };
+
+export type InspectionDeletionPhase = "idle" | "confirming" | "deleting";

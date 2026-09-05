@@ -1,11 +1,15 @@
-import { Check, X } from "lucide-react";
+import { useState } from "react";
+import { Check, Trash2, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
 import { SelectInput, TextInput } from "../components/FormField";
+import SideDrawer from "../components/SideDrawer";
 import { ROLE_SLUG } from "../roles";
 import { BADGE_TONE_CLASS, getStatusTone } from "../statusStyles";
 import { useDashboard } from "../store";
+import DeleteInspectionDialog from "./DeleteInspectionDialog";
+import EditInspectionForm from "./EditInspectionForm";
 import { formatInspectionDate, formatInspectionType } from "./inspectionsService";
 import type {
   InspectionMediaFilter,
@@ -73,6 +77,8 @@ function SkeletonRows() {
 export default function InspectionsTable() {
   const navigate = useNavigate();
   const { role } = useDashboard();
+  const [editing, setEditing] = useState<InspectionRecord | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<InspectionRecord | null>(null);
   const {
     filters,
     setFilter,
@@ -180,7 +186,7 @@ export default function InspectionsTable() {
                   <th className="px-4 py-3">Type</th>
                   <th className="px-4 py-3">Scheduled date</th>
                   <th className="px-4 py-3">Media</th>
-                  <th className="px-4 py-3"> </th>
+                  <th className="px-4 py-3">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -218,15 +224,36 @@ export default function InspectionsTable() {
                         <MediaBadge required={row.photoVideoRequired} />
                       </td>
                       <td className="px-4 py-3">
-                        <ActionButton
-                          tone="ghost"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            navigate(detailPath(row.id));
-                          }}
-                        >
-                          View
-                        </ActionButton>
+                        <div className="flex items-center gap-2">
+                          <ActionButton
+                            tone="ghost"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              navigate(detailPath(row.id));
+                            }}
+                          >
+                            View
+                          </ActionButton>
+                          <ActionButton
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setEditing(row);
+                            }}
+                          >
+                            Edit
+                          </ActionButton>
+                          <button
+                            type="button"
+                            className="rounded-xl bg-red-600 p-2 text-white hover:bg-red-700"
+                            aria-label={`Delete inspection request ${row.id}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setPendingDelete(row);
+                            }}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -268,6 +295,33 @@ export default function InspectionsTable() {
           </footer>
         </div>
       )}
+
+      <SideDrawer
+        open={Boolean(editing)}
+        title={editing ? `Edit inspection #${editing.id}` : "Edit inspection"}
+        description="Update booking details and save. Changes are sent with PATCH."
+        onClose={() => setEditing(null)}
+      >
+        {editing ? (
+          <EditInspectionForm
+            inspection={editing}
+            onCancel={() => setEditing(null)}
+            onSaved={() => setEditing(null)}
+          />
+        ) : null}
+      </SideDrawer>
+
+      <DeleteInspectionDialog
+        open={Boolean(pendingDelete)}
+        inspectionId={pendingDelete?.id ?? null}
+        onClose={() => setPendingDelete(null)}
+        onDeleted={() => {
+          if (editing && pendingDelete && editing.id === pendingDelete.id) {
+            setEditing(null);
+          }
+          setPendingDelete(null);
+        }}
+      />
     </div>
   );
 }
