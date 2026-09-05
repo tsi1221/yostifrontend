@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Rate } from "antd";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 // Define TypeScript type for a testimonial
 interface Testimonial {
@@ -14,16 +15,14 @@ interface Testimonial {
 }
 
 // Array of testimonials
-const clientTestimonials: Testimonial[] = [
+const clientTestimonials = [
   {
     name: "Dawit G.",
     country: "Ethiopia",
     flag: "🇪🇹",
     photo:
       "https://img.freepik.com/premium-photo/professional-photo-linkedin-profile-picture-beautiful-looking-woman-light-color_1078199-10840.jpg?w=2000",
-    position: "Business Owner",
     rating: 5,
-    text: "Yosti helped me source high-quality machinery at a much better price. They handled everything efficiently and professionally.",
   },
   {
     name: "Samuel K.",
@@ -31,9 +30,7 @@ const clientTestimonials: Testimonial[] = [
     flag: "🇸🇸",
     photo:
       "https://www.bing.com/th/id/OIP.O-72BrZHTK1UNjhCIgxhPQHaHa?w=216&h=211&c=8&rs=1&qlt=90&o=6&cb=ucfimg1&dpr=1.5&pid=3.1&rm=2&ucfimg=1",
-    position: "Entrepreneur",
     rating: 5,
-    text: "Thanks to Yosti’s planning, I visited reliable suppliers and finalized deals quickly. The support was excellent.",
   },
   {
     name: "Mulu B.",
@@ -41,9 +38,7 @@ const clientTestimonials: Testimonial[] = [
     flag: "🇪🇹",
     photo:
       "https://img.freepik.com/premium-photo/professional-photo-linkedin-profile-picture-beautiful-looking-woman-light-color_1078199-10840.jpg?w=2000",
-    position: "Importer",
     rating: 5,
-    text: "I’ve used other agents before, but Yosti provided full transparency, video inspections, and timely updates.",
   },
   {
     name: "Jane D.",
@@ -51,9 +46,7 @@ const clientTestimonials: Testimonial[] = [
     flag: "🇰🇪",
     photo:
       "https://www.bing.com/th/id/OIP.O-72BrZHTK1UNjhCIgxhPQHaHa?w=216&h=211&c=8&rs=1&qlt=90&o=6&cb=ucfimg1&dpr=1.5&pid=3.1&rm=2&ucfimg=1",
-    position: "Retail Manager",
     rating: 4,
-    text: "Professional service and excellent communication. Made my sourcing process so much easier.",
   },
   {
     name: "Ahmed R.",
@@ -61,9 +54,7 @@ const clientTestimonials: Testimonial[] = [
     flag: "🇪🇬",
     photo:
       "https://img.freepik.com/premium-photo/professional-photo-linkedin-profile-picture-beautiful-looking-woman-light-color_1078199-10840.jpg?w=2000",
-    position: "Distributor",
     rating: 5,
-    text: "Reliable, fast, and transparent. I highly recommend their team for international sourcing.",
   },
 ];
 
@@ -109,11 +100,22 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({ testimonial, isCenter
 
 // Testimonials Page
 const TestimonialsPage: React.FC = () => {
+  const { t } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const visibleCount = 3;
-  const total = clientTestimonials.length;
+  const translatedItems = t("testimonials.items", {
+    returnObjects: true,
+  }) as Array<{ position: string; text: string }>;
+
+  const testimonials: Testimonial[] = clientTestimonials.map((item, index) => ({
+    ...item,
+    position: translatedItems[index]?.position ?? "",
+    text: translatedItems[index]?.text ?? "",
+  }));
+
+  const total = testimonials.length;
   const indices = Array.from({ length: visibleCount }, (_, i) => (currentIndex + i) % total);
-  const visibleTestimonials = indices.map((i) => clientTestimonials[i]);
+  const visibleTestimonials = indices.map((i) => testimonials[i]);
   const [direction, setDirection] = useState<number>(0);
 
   const handleNext = () => {
@@ -137,7 +139,7 @@ const TestimonialsPage: React.FC = () => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            What clients say
+            {t("testimonials.title")}
           </motion.h2>
         </div>
 

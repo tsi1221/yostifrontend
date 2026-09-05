@@ -6,6 +6,7 @@ import {
   LeftOutlined,
   RightOutlined,
 } from "@ant-design/icons";
+import { useTranslation } from "react-i18next";
 
 /* =========================================================
    HERO IMAGES
@@ -40,6 +41,7 @@ const slides = [
 
 const HeroSection: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [current, setCurrent] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -224,21 +226,16 @@ const HeroSection: React.FC = () => {
             className="
               text-4xl
               font-extrabold
-              leading-[1.05]
+              leading-[1.15]
               tracking-tight
               text-amber-400
+              text-balance
               sm:text-5xl
               md:text-6xl
               lg:text-7xl
           "
           >
-            <span className="block whitespace-nowrap">
-              YOUR BRIDGE TO GLOBAL
-            </span>
-
-            <span className="mt-1 block">
-              MARKETS
-            </span>
+            {t("hero.title")}
           </motion.h1>
 
           {/* =================================================
@@ -271,13 +268,7 @@ const HeroSection: React.FC = () => {
               lg:leading-9
             "
           >
-            <span className="block">
-              Yosti Import & Export Trading Co., Ltd. provides seamless sourcing
-            </span>
-
-            <span className="block">
-              and logistics solutions for clients worldwide.
-            </span>
+            {t("hero.description")}
           </motion.p>
 
           {/* =================================================
@@ -327,7 +318,7 @@ const HeroSection: React.FC = () => {
                 hover:shadow-xl
               "
             >
-              Start Now
+              {t("hero.startNow")}
             </button>
 
             {/* Contact Us */}
@@ -355,7 +346,7 @@ const HeroSection: React.FC = () => {
                 hover:shadow-xl
               "
             >
-              Contact Us
+              {t("hero.contactUs")}
             </button>
           </motion.div>
         </div>
@@ -383,7 +374,7 @@ const HeroSection: React.FC = () => {
             key={slide.id}
             type="button"
             onClick={() => setCurrent(index)}
-            aria-label={`Go to slide ${index + 1}`}
+            aria-label={t("hero.goToSlide", { number: index + 1 })}
             className={`
               h-1.5
               rounded-full
@@ -420,7 +411,7 @@ const HeroSection: React.FC = () => {
         <button
           type="button"
           onClick={prevSlide}
-          aria-label="Previous slide"
+          aria-label={t("hero.prevSlide")}
           className="
             flex
             h-10
@@ -449,7 +440,7 @@ const HeroSection: React.FC = () => {
         <button
           type="button"
           onClick={nextSlide}
-          aria-label="Next slide"
+          aria-label={t("hero.nextSlide")}
           className="
             flex
             h-10

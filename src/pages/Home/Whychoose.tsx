@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { PlusOutlined, MinusOutlined, CheckCircleFilled } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 const PRIMARY_BLUE = '#0F3952';
 const ACCENT_YELLOW = '#FFC300';
@@ -11,18 +12,17 @@ interface Feature {
   description: string;
 }
 
-const features: Feature[] = [
-  { id: 1, title: 'End-to-End Support', description: 'From visa invitations to final delivery, we handle every step of the trade process, eliminating your logistical headaches and saving you time.' },
-  { id: 2, title: '75+ Trusted Factories', description: 'We partner exclusively with a verified network of reliable manufacturers, ensuring you receive superior quality products and highly competitive ex-factory pricing.' },
-  { id: 3, title: 'Licensed & Transparent', description: 'As a fully registered and legally compliant entity in China, all our operations are transparent, giving you peace of mind and security.' },
-  { id: 4, title: 'African-Owned Insight', description: 'Being an African-owned business operating in China, we offer unique cultural understanding and business perspective, tailored to your specific market needs.' },
-  { id: 5, title: 'Multilingual Team', description: 'Our team is fluent in English, Amharic, and Chinese, ensuring flawless communication and negotiation without reliance on third-party interpreters.' },
-  { id: 6, title: 'On-the-Ground Experts', description: 'With two active offices (Shanghai & Yiwu), we provide local presence for quality control, factory visits, and immediate issue resolution.' },
-  { id: 7, title: 'Secure Payment Handling', description: 'All payments are handled securely through verified company bank accounts, protecting your investment from fraudulent risks.' },
-  { id: 8, title: 'After-Sales Commitment', description: 'Our commitment doesn\'t end at shipping; our team supports you with documentation and troubleshooting until your order is successfully delivered.' },
-];
-
 const WhyChoose: React.FC = () => {
+  const { t } = useTranslation();
+  const features: Feature[] = (
+    t("whyChoose.items", { returnObjects: true }) as Array<{
+      title: string;
+      description: string;
+    }>
+  ).map((feature, index) => ({
+    id: index + 1,
+    ...feature,
+  }));
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const toggleAccordion = (id: number) =>
     setExpandedId(expandedId === id ? null : id);
@@ -70,14 +70,14 @@ const WhyChoose: React.FC = () => {
             className="font-extrabold text-2xl sm:text-4xl lg:text-5xl"
             style={{ color: ACCENT_YELLOW }}
           >
-            Why Choose Us?
+            {t("whyChoose.title")}
           </h2>
 
           <p
             className="mt-3 sm:mt-5 text-sm sm:text-lg lg:text-xl leading-relaxed px-2"
             style={{ color: ACCENT_YELLOW }}
           >
-            Trusted factories, hands-on support, and seamless coordination from start to finish.
+            {t("whyChoose.subtitle")}
           </p>
         </motion.div>
 

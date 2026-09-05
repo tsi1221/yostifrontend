@@ -8,6 +8,7 @@ import {
   RightOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 // ===================== IMPORT IMAGES =====================
 import AsphaltMixing from "../../../public/assets/aspaltmix plant/Asphalt-Batch-Mix-Plant-Operation-and-Components.jpg";
@@ -309,6 +310,7 @@ const INVENTORY: ProductItem[] = [
 // ===================== COMPONENT =====================
 const ProductsSection: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [selected, setSelected] = useState<ProductItem | null>(null);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
@@ -378,7 +380,7 @@ const ProductsSection: React.FC = () => {
           <aside className="lg:col-span-3 space-y-8">
             <section>
               <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-500 mb-4">
-                Inventory Categories
+                {t("inventory.categoriesTitle")}
               </h3>
 
               <div className="space-y-1 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
@@ -400,7 +402,11 @@ const ProductsSection: React.FC = () => {
                       className="w-4 h-4 accent-yellow-500"
                     />
 
-                    <span className="text-[13px]">{category}</span>
+                    <span className="text-[13px]">
+                      {t(`inventory.categories.${category}`, {
+                        defaultValue: category,
+                      })}
+                    </span>
                   </label>
                 ))}
               </div>
@@ -413,7 +419,7 @@ const ProductsSection: React.FC = () => {
                   }}
                   className="mt-2 text-[10px] text-yellow-500 hover:text-white"
                 >
-                  Clear All
+                  {t("inventory.clearAll")}
                 </button>
               )}
             </section>
@@ -422,19 +428,18 @@ const ProductsSection: React.FC = () => {
               <QuestionCircleOutlined className="text-yellow-500 text-xl mb-4" />
 
               <h4 className="text-sm font-bold mb-2">
-                Can't find a specific model?
+                {t("inventory.helpTitle")}
               </h4>
 
               <p className="text-[12px] text-gray-400 mb-5">
-                Our agents can locate any machinery or trailer from China
-                within 48 hours.
+                {t("inventory.helpBody")}
               </p>
 
               <button
                 onClick={() => navigate("/login")}
                 className="w-full py-3 bg-yellow-500 text-black text-[11px] font-black uppercase rounded-xl"
               >
-                Request Sourcing
+                {t("inventory.requestSourcing")}
               </button>
             </section>
           </aside>
@@ -443,12 +448,12 @@ const ProductsSection: React.FC = () => {
           <main className="lg:col-span-9">
             <div className="flex justify-between items-end mb-10">
               <div>
-                <h1 className="text-4xl font-black tracking-tighter">
-                  Live Inventory
+                <h1 className="text-4xl font-black tracking-tighter text-balance">
+                  {t("inventory.title")}
                 </h1>
 
                 <p className="text-gray-500 text-sm">
-                  Direct export pricing from logistics hubs in China.
+                  {t("inventory.subtitle")}
                 </p>
               </div>
 
@@ -456,7 +461,7 @@ const ProductsSection: React.FC = () => {
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
 
                 <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-                  {filteredList.length} Units
+                  {t("inventory.units", { count: filteredList.length })}
                 </span>
               </div>
             </div>
@@ -490,7 +495,7 @@ const ProductsSection: React.FC = () => {
                           color="gold"
                           className="absolute top-2 left-2 border-0 font-bold px-2 py-0.5"
                         >
-                          {item.condition}
+                          {t(`inventory.condition.${item.condition}`)}
                         </Tag>
 
                         <Tag
@@ -507,11 +512,11 @@ const ProductsSection: React.FC = () => {
                         </h2>
 
                         <p className="text-xs text-gray-400 mb-2">
-                          {item.year} Model
+                          {t("inventory.modelYear", { year: item.year })}
                         </p>
 
                         <button className="px-3 py-1 bg-yellow-500 text-black text-[11px] font-black rounded-lg">
-                          View
+                          {t("inventory.view")}
                         </button>
                       </div>
                     </div>
@@ -598,11 +603,12 @@ const ProductsSection: React.FC = () => {
                   </p>
 
                   <p className="text-sm text-gray-500">
-                    Location: {selected.location}
+                    {t("inventory.location")}: {selected.location}
                   </p>
 
                   <p className="text-sm text-gray-500">
-                    Status: {selected.status}
+                    {t("inventory.status")}:{" "}
+                    {t(`inventory.statusLabel.${selected.status}`)}
                   </p>
                 </div>
               </div>
@@ -612,14 +618,14 @@ const ProductsSection: React.FC = () => {
                   onClick={() => navigate("/login")}
                   className="w-full py-3 bg-yellow-500 text-black font-black uppercase rounded-xl"
                 >
-                  Request Quote
+                  {t("inventory.requestQuote")}
                 </button>
 
                 <button
                   onClick={() => navigate("/contact")}
                   className="w-full py-3 bg-[#1C1C1F] text-white font-black uppercase rounded-xl border border-white/5"
                 >
-                  Chat With Agent
+                  {t("inventory.chatWithAgent")}
                 </button>
               </div>
             </div>

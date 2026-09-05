@@ -4,19 +4,16 @@ import {
   Button,
   ConfigProvider,
   Drawer,
-  Dropdown,
   Menu,
-  Space,
 } from "antd";
 import {
-  DownOutlined,
-  FlagOutlined,
-  GlobalOutlined,
   LoginOutlined,
   MenuOutlined,
 } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
-import type { MenuProps } from "antd";
+import { useTranslation } from "react-i18next";
+
+import LanguageSwitcher from "../../i18n/LanguageSwitcher";
 
 const BRAND_COLOR = "#0F3952";
 const DRAWER_BG_COLOR = "#274C63";
@@ -24,9 +21,9 @@ const DRAWER_BG_COLOR = "#274C63";
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
 
   const [drawerVisible, setDrawerVisible] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState("EN");
 
   const currentPath = location.pathname;
 
@@ -43,163 +40,24 @@ const Navbar: React.FC = () => {
     setDrawerVisible(false);
   };
 
-  const handleLanguageSelect: MenuProps["onClick"] = ({ key }) => {
-    setSelectedLanguage(String(key));
-  };
+  const linkClass = (path: string) =>
+    isActive(path)
+      ? "font-bold text-yellow-400"
+      : "text-yellow-500 hover:text-yellow-400";
 
-  const menuItems: MenuProps["items"] = [
-    {
-      key: "/",
-      label: (
-        <span
-          className={
-            isActive("/")
-              ? "font-bold text-yellow-400"
-              : "text-yellow-500 hover:text-yellow-400"
-          }
-        >
-          Home
-        </span>
-      ),
-    },
-    {
-      key: "/about",
-      label: (
-        <span
-          className={
-            isActive("/about")
-              ? "font-bold text-yellow-400"
-              : "text-yellow-500 hover:text-yellow-400"
-          }
-        >
-          About Us
-        </span>
-      ),
-    },
-    {
-      key: "/industries",
-      label: (
-        <span
-          className={
-            isActive("/industries")
-              ? "font-bold text-yellow-400"
-              : "text-yellow-500 hover:text-yellow-400"
-          }
-        >
-          Industries
-        </span>
-      ),
-    },
-    {
-      key: "/services",
-      label: (
-        <span
-          className={
-            isActive("/services")
-              ? "font-bold text-yellow-400"
-              : "text-yellow-500 hover:text-yellow-400"
-          }
-        >
-          Services
-        </span>
-      ),
-    },
-    {
-      key: "/ourproject",
-      label: (
-        <span
-          className={
-            isActive("/ourproject")
-              ? "font-bold text-yellow-400"
-              : "text-yellow-500 hover:text-yellow-400"
-          }
-        >
-          Our Projects
-        </span>
-      ),
-    },
-    {
-      key: "/staffs",
-      label: (
-        <span
-          className={
-            isActive("/staffs")
-              ? "font-bold text-yellow-400"
-              : "text-yellow-500 hover:text-yellow-400"
-          }
-        >
-          Staff
-        </span>
-      ),
-    },
-    {
-      key: "/blog/news",
-      label: (
-        <span
-          className={
-            isActive("/blog/news")
-              ? "font-bold text-yellow-400"
-              : "text-yellow-500 hover:text-yellow-400"
-          }
-        >
-          Blog
-        </span>
-      ),
-    },
-    {
-      key: "/contact",
-      label: (
-        <span
-          className={
-            isActive("/contact")
-              ? "font-bold text-yellow-400"
-              : "text-yellow-500 hover:text-yellow-400"
-          }
-        >
-          Contact Us
-        </span>
-      ),
-    },
-  ];
-
-  const languageMenuItems: MenuProps["items"] = [
-    {
-      key: "EN",
-      label: (
-        <Space>
-          <FlagOutlined />
-          English
-        </Space>
-      ),
-    },
-    {
-      key: "AM",
-      label: (
-        <Space>
-          <FlagOutlined />
-          Amharic
-        </Space>
-      ),
-    },
-    {
-      key: "CN",
-      label: (
-        <Space>
-          <FlagOutlined />
-          Chinese
-        </Space>
-      ),
-    },
-    {
-      key: "OR",
-      label: (
-        <Space>
-          <FlagOutlined />
-          Oromiffa
-        </Space>
-      ),
-    },
-  ];
+  const menuItems = [
+    { key: "/", label: t("nav.home") },
+    { key: "/about", label: t("nav.about") },
+    { key: "/industries", label: t("nav.industries") },
+    { key: "/services", label: t("nav.services") },
+    { key: "/ourproject", label: t("nav.projects") },
+    { key: "/staffs", label: t("nav.staff") },
+    { key: "/blog/news", label: t("nav.blog") },
+    { key: "/contact", label: t("nav.contact") },
+  ].map((item) => ({
+    key: item.key,
+    label: <span className={linkClass(item.key)}>{item.label}</span>,
+  }));
 
   return (
     <ConfigProvider
@@ -230,11 +88,11 @@ const Navbar: React.FC = () => {
             type="button"
             onClick={() => handleNavigation("/")}
             className="flex items-center border-none bg-transparent p-0"
-            aria-label="Go to homepage"
+            aria-label={t("nav.goHome")}
           >
             <img
               src="/assets/yostilogo.png"
-              alt="Yosti Logo"
+              alt={t("nav.brand")}
               className="h-10 w-auto"
             />
 
@@ -255,23 +113,7 @@ const Navbar: React.FC = () => {
             />
 
             <div className="ml-4 flex items-center gap-2">
-              <Dropdown
-                menu={{
-                  items: languageMenuItems,
-                  onClick: handleLanguageSelect,
-                }}
-                placement="bottomRight"
-                trigger={["click"]}
-              >
-                <Button
-                  type="text"
-                  className="flex items-center !text-yellow-500 hover:!text-yellow-400"
-                >
-                  <GlobalOutlined />
-                  <DownOutlined className="ml-1" />
-                  <span className="ml-1">{selectedLanguage}</span>
-                </Button>
-              </Dropdown>
+              <LanguageSwitcher />
 
               <Button
                 icon={<LoginOutlined />}
@@ -289,7 +131,7 @@ const Navbar: React.FC = () => {
                   hover:!text-yellow-400
                 "
               >
-                Login
+                {t("nav.login")}
               </Button>
             </div>
           </div>
@@ -304,7 +146,7 @@ const Navbar: React.FC = () => {
                 !text-yellow-400
                 hover:!text-yellow-300
               "
-              aria-label="Open navigation menu"
+              aria-label={t("nav.openMenu")}
             />
           </div>
         </div>
@@ -319,7 +161,7 @@ const Navbar: React.FC = () => {
           >
             <img
               src="/assets/yostilogo.png"
-              alt="Yosti Logo"
+              alt={t("nav.brand")}
               className="h-8 w-auto"
             />
 
@@ -352,17 +194,7 @@ const Navbar: React.FC = () => {
         />
 
         <div className="mt-6 px-4">
-          <div className="mb-2 text-sm font-semibold text-yellow-500">
-            Select Language
-          </div>
-
-          <Menu
-            mode="inline"
-            items={languageMenuItems}
-            onClick={handleLanguageSelect}
-            selectedKeys={[selectedLanguage]}
-            className="!border-none !bg-transparent"
-          />
+          <LanguageSwitcher variant="drawer" />
         </div>
 
         <div className="mt-5 px-4">
@@ -382,7 +214,7 @@ const Navbar: React.FC = () => {
               hover:!text-yellow-400
             "
           >
-            Login
+            {t("nav.login")}
           </Button>
         </div>
       </Drawer>
