@@ -5,6 +5,8 @@ import type {
   TextareaHTMLAttributes,
 } from "react";
 
+import { SELECT_TONE_CLASS, getStatusTone } from "../statusStyles";
+
 interface FieldProps {
   label: string;
   children: ReactNode;
@@ -33,7 +35,17 @@ export function TextArea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
 }
 
 export function SelectInput(props: SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select className={controlClass} {...props} />;
+  const { className = "", value, ...rest } = props;
+  const tone = typeof value === "string" ? getStatusTone(value) : null;
+  const statusClass = tone ? SELECT_TONE_CLASS[tone] : "";
+
+  return (
+    <select
+      className={`${controlClass} font-semibold ${statusClass} ${className}`}
+      value={value}
+      {...rest}
+    />
+  );
 }
 
 export function CheckboxRow({
