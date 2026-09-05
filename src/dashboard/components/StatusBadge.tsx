@@ -5,41 +5,36 @@ const TONES: Record<string, string> = {
 };
 
 const STATUS_TONE: Record<string, keyof typeof TONES> = {
-  ACTIVE: "navy",
-  PAID: "navy",
-  PASSED: "navy",
-  COMPLETED: "navy",
-  DELIVERED: "navy",
-  ISSUED: "navy",
-  PUBLISHED: "navy",
-  AWARDED: "navy",
-  ACCEPTED: "navy",
-  RESOLVED: "navy",
-  PENDING: "gold",
-  OPEN: "gold",
-  QUOTED: "gold",
-  SUBMITTED: "gold",
-  IN_TRANSIT: "gold",
-  IN_PROGRESS: "gold",
-  PROCESSING: "gold",
-  CUSTOMS: "gold",
-  PLANNED: "gold",
-  DRAFT: "slate",
-  INACTIVE: "slate",
-  FAILED: "slate",
-  REJECTED: "slate",
-  CANCELLED: "slate",
-  DELAYED: "slate",
-  CLOSED: "slate",
-  NEW: "gold",
-  REVIEWED: "navy",
-  HIGH: "gold",
-  URGENT: "gold",
-  MEDIUM: "navy",
-  LOW: "slate",
-  SEA: "navy",
-  AIR: "gold",
-  ROAD: "slate",
+  approved: "navy",
+  completed: "navy",
+  delivered: "navy",
+  resolved: "navy",
+  verified: "navy",
+  active: "navy",
+  pending: "gold",
+  open: "gold",
+  quoted: "gold",
+  "in transit": "gold",
+  "at port": "gold",
+  customs: "gold",
+  scheduled: "gold",
+  "in progress": "gold",
+  booked: "gold",
+  high: "gold",
+  medium: "navy",
+  rejected: "slate",
+  failed: "slate",
+  closed: "slate",
+  inactive: "slate",
+  low: "slate",
+  sea: "navy",
+  air: "gold",
+  express: "slate",
+  SUPER_ADMIN: "navy",
+  STAFF: "navy",
+  BUYER: "gold",
+  SUPPLIER: "gold",
+  LOGISTICS_PARTNER: "slate",
 };
 
 interface StatusBadgeProps {
@@ -47,10 +42,12 @@ interface StatusBadgeProps {
 }
 
 export default function StatusBadge({ value }: StatusBadgeProps) {
-  const tone = STATUS_TONE[value] ?? "slate";
+  const tone = STATUS_TONE[value] ?? STATUS_TONE[value.toLowerCase()] ?? "slate";
 
   return (
-    <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${TONES[tone]}`}>
+    <span
+      className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize ${TONES[tone]}`}
+    >
       {value.replace(/_/g, " ")}
     </span>
   );

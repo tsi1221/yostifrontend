@@ -33,8 +33,8 @@ export default function DataTable<T>({
         <table className="min-w-full text-left text-sm">
           <thead className="bg-slate-50 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
             <tr>
-              {columns.map((column) => (
-                <th key={column.header} className={`px-4 py-3 ${column.className ?? ""}`}>
+              {columns.map((column, index) => (
+                <th key={`${column.header}-${index}`} className={`px-4 py-3 ${column.className ?? ""}`}>
                   {column.header}
                 </th>
               ))}
@@ -43,8 +43,8 @@ export default function DataTable<T>({
           <tbody className="divide-y divide-slate-100">
             {rows.map((row) => (
               <tr key={rowKey(row)} className="hover:bg-slate-50/80">
-                {columns.map((column) => (
-                  <td key={column.header} className={`px-4 py-3 text-slate-700 ${column.className ?? ""}`}>
+                {columns.map((column, index) => (
+                  <td key={`${column.header}-${index}`} className={`px-4 py-3 text-slate-700 ${column.className ?? ""}`}>
                     {column.render(row)}
                   </td>
                 ))}

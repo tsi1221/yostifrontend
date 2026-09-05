@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -9,9 +9,10 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import type { ReactNode } from "react";
 
-import { getSessionUser } from "../data";
 import { ROLE_LABEL, getNavigation } from "../roles";
+import { useDashboard } from "../store";
 import type { UserRole } from "../types";
 
 interface DashboardShellProps {
@@ -22,7 +23,7 @@ interface DashboardShellProps {
 export default function DashboardShell({ role, children }: DashboardShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const user = getSessionUser(role);
+  const { user } = useDashboard();
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -37,7 +38,7 @@ export default function DashboardShell({ role, children }: DashboardShellProps) 
       <div className={`flex min-h-screen flex-col ${collapsed ? "lg:pl-20" : "lg:pl-[280px]"}`}>
         <TopBar
           role={role}
-          userName={user.fullName}
+          userName={user.full_name}
           onMenu={() => setMobileOpen(true)}
         />
         <main className="flex-1 p-6 md:p-8">{children}</main>

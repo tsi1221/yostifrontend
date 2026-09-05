@@ -3,18 +3,17 @@ import type { ReactNode } from "react";
 
 import DashboardShell from "./layout/DashboardShell";
 import { ROLE_SLUG, roleCanAccess, type DashboardPageKey } from "./roles";
+import { DashboardProvider } from "./store";
 import type { UserRole } from "./types";
 import Overview from "./views/Overview";
 import UsersPage from "./views/UsersPage";
+import VerificationsPage from "./views/VerificationsPage";
 import SourcingPage from "./views/SourcingPage";
 import ShipmentsPage from "./views/ShipmentsPage";
 import InspectionsPage from "./views/InspectionsPage";
 import TripsPage from "./views/TripsPage";
 import PaymentsPage from "./views/PaymentsPage";
-import VisasPage from "./views/VisasPage";
-import ServicesPage from "./views/ServicesPage";
-import { BlogsPage, ProjectsPage } from "./views/ContentPages";
-import { ContactsPage, FilesPage, SupportPage } from "./views/AdminPages";
+import SupportPage from "./views/SupportPage";
 
 interface DashboardAppProps {
   role: UserRole;
@@ -36,7 +35,7 @@ function Guard({
   return children;
 }
 
-export default function DashboardApp({ role }: DashboardAppProps) {
+function DashboardRoutes({ role }: DashboardAppProps) {
   const home = `/${ROLE_SLUG[role]}/dashboard`;
 
   return (
@@ -47,7 +46,7 @@ export default function DashboardApp({ role }: DashboardAppProps) {
           path="dashboard"
           element={
             <Guard role={role} page="dashboard">
-              <Overview role={role} />
+              <Overview />
             </Guard>
           }
         />
@@ -55,7 +54,15 @@ export default function DashboardApp({ role }: DashboardAppProps) {
           path="users"
           element={
             <Guard role={role} page="users">
-              <UsersPage role={role} />
+              <UsersPage />
+            </Guard>
+          }
+        />
+        <Route
+          path="verifications"
+          element={
+            <Guard role={role} page="verifications">
+              <VerificationsPage />
             </Guard>
           }
         />
@@ -63,7 +70,7 @@ export default function DashboardApp({ role }: DashboardAppProps) {
           path="sourcing"
           element={
             <Guard role={role} page="sourcing">
-              <SourcingPage role={role} />
+              <SourcingPage />
             </Guard>
           }
         />
@@ -71,7 +78,7 @@ export default function DashboardApp({ role }: DashboardAppProps) {
           path="logistics"
           element={
             <Guard role={role} page="logistics">
-              <ShipmentsPage role={role} />
+              <ShipmentsPage />
             </Guard>
           }
         />
@@ -79,7 +86,7 @@ export default function DashboardApp({ role }: DashboardAppProps) {
           path="quality-control"
           element={
             <Guard role={role} page="quality-control">
-              <InspectionsPage role={role} />
+              <InspectionsPage />
             </Guard>
           }
         />
@@ -87,63 +94,19 @@ export default function DashboardApp({ role }: DashboardAppProps) {
           path="trips"
           element={
             <Guard role={role} page="trips">
-              <TripsPage role={role} />
+              <TripsPage />
             </Guard>
           }
         />
         <Route
           path="visa-invitations"
-          element={
-            <Guard role={role} page="visa-invitations">
-              <VisasPage role={role} />
-            </Guard>
-          }
+          element={<Navigate to={`/${ROLE_SLUG[role]}/trips`} replace />}
         />
         <Route
           path="payments"
           element={
             <Guard role={role} page="payments">
-              <PaymentsPage role={role} />
-            </Guard>
-          }
-        />
-        <Route
-          path="services"
-          element={
-            <Guard role={role} page="services">
-              <ServicesPage />
-            </Guard>
-          }
-        />
-        <Route
-          path="blogs"
-          element={
-            <Guard role={role} page="blogs">
-              <BlogsPage />
-            </Guard>
-          }
-        />
-        <Route
-          path="projects"
-          element={
-            <Guard role={role} page="projects">
-              <ProjectsPage />
-            </Guard>
-          }
-        />
-        <Route
-          path="contacts"
-          element={
-            <Guard role={role} page="contacts">
-              <ContactsPage />
-            </Guard>
-          }
-        />
-        <Route
-          path="files"
-          element={
-            <Guard role={role} page="files">
-              <FilesPage />
+              <PaymentsPage />
             </Guard>
           }
         />
@@ -151,12 +114,20 @@ export default function DashboardApp({ role }: DashboardAppProps) {
           path="supports"
           element={
             <Guard role={role} page="supports">
-              <SupportPage role={role} />
+              <SupportPage />
             </Guard>
           }
         />
         <Route path="*" element={<Navigate to={home} replace />} />
       </Routes>
     </DashboardShell>
+  );
+}
+
+export default function DashboardApp({ role }: DashboardAppProps) {
+  return (
+    <DashboardProvider role={role}>
+      <DashboardRoutes role={role} />
+    </DashboardProvider>
   );
 }

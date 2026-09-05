@@ -1,9 +1,10 @@
 import {
   BriefcaseBusiness,
+  ClipboardCheck,
+  FileCheck,
   FileText,
   LayoutDashboard,
   LifeBuoy,
-  Newspaper,
   Package,
   Truck,
   Users,
@@ -21,27 +22,22 @@ export const ROLE_SLUG: Record<UserRole, string> = {
 };
 
 export const ROLE_LABEL: Record<UserRole, string> = {
-  SUPER_ADMIN: "Super Admin",
-  STAFF: "Operations Staff",
-  BUYER: "Buyer",
-  SUPPLIER: "Supplier",
+  SUPER_ADMIN: "System Admin",
+  STAFF: "Yosti Staff",
+  BUYER: "Customer / Buyer",
+  SUPPLIER: "Supplier / Factory",
   LOGISTICS_PARTNER: "Logistics Partner",
 };
 
 export type DashboardPageKey =
   | "dashboard"
   | "users"
+  | "verifications"
   | "sourcing"
   | "logistics"
   | "quality-control"
   | "trips"
-  | "visa-invitations"
   | "payments"
-  | "services"
-  | "blogs"
-  | "projects"
-  | "contacts"
-  | "files"
   | "supports";
 
 export interface NavItem {
@@ -71,84 +67,112 @@ export const getNavigation = (role: UserRole): NavGroup[] => {
   const slug = ROLE_SLUG[role];
 
   const dashboard: NavGroup = {
-    label: "Dashboard",
+    label: role === "SUPER_ADMIN" ? "Business Intelligence" : "Dashboard",
     icon: LayoutDashboard,
     path: `/${slug}/dashboard`,
   };
 
-  const sourcing: NavGroup = {
-    label: "Sourcing",
-    icon: FileText,
-    path: `/${slug}/sourcing`,
-  };
-
-  const logistics: NavGroup = {
-    label: "Logistics & Operations",
-    icon: Truck,
-    children: [
-      item(slug, "logistics", "Cargo & Tracking"),
-      item(slug, "quality-control", "Quality Control"),
-      item(slug, "trips", "Trips"),
-    ],
-  };
-
-  const commercial: NavGroup = {
-    label: "Commercial",
-    icon: BriefcaseBusiness,
-    children: [
-      item(slug, "visa-invitations", "Visa Invitations"),
-      item(slug, "payments", "Payments"),
-      item(slug, "services", "Services"),
-    ],
-  };
-
-  const content: NavGroup = {
-    label: "Content",
-    icon: Newspaper,
-    children: [
-      item(slug, "blogs", "Blogs"),
-      item(slug, "projects", "Projects"),
-    ],
-  };
-
-  const administration: NavGroup = {
-    label: "Administration",
-    icon: Users,
-    children: [
-      item(slug, "users", "Users"),
-      item(slug, "contacts", "Contacts"),
-      item(slug, "files", "Files"),
-    ],
-  };
-
-  const support: NavGroup = {
-    label: "Support",
-    icon: LifeBuoy,
-    children: [item(slug, "supports", "Support Tickets")],
-  };
-
-  const buyerOps: NavGroup = {
-    label: "My Operations",
-    icon: Package,
-    children: [
-      item(slug, "sourcing", "My Requests"),
-      item(slug, "logistics", "My Shipments"),
-      item(slug, "quality-control", "Inspections"),
-      item(slug, "trips", "My Trips"),
-    ],
-  };
-
   switch (role) {
     case "SUPER_ADMIN":
-      return [dashboard, sourcing, logistics, commercial, content, administration, support];
+      return [
+        dashboard,
+        {
+          label: "Accounts",
+          icon: Users,
+          children: [item(slug, "users", "User Account Management")],
+        },
+        {
+          label: "Operations",
+          icon: BriefcaseBusiness,
+          children: [
+            item(slug, "verifications", "Supplier Verifications"),
+            item(slug, "sourcing", "Sourcing Assignment"),
+            item(slug, "quality-control", "Quality Reports"),
+            item(slug, "trips", "Visa Parameters"),
+            item(slug, "supports", "Support Tickets"),
+          ],
+        },
+      ];
     case "STAFF":
-      return [dashboard, sourcing, logistics, commercial, support];
+      return [
+        dashboard,
+        {
+          label: "Factory desk",
+          icon: FileCheck,
+          path: `/${slug}/verifications`,
+        },
+        {
+          label: "Sourcing board",
+          icon: FileText,
+          path: `/${slug}/sourcing`,
+        },
+        {
+          label: "Operations",
+          icon: BriefcaseBusiness,
+          children: [
+            item(slug, "quality-control", "Quality Reports"),
+            item(slug, "trips", "Visa Parameters"),
+            item(slug, "supports", "Support Tickets"),
+          ],
+        },
+      ];
     case "BUYER":
-      return [dashboard, buyerOps, commercial, support];
+      return [
+        dashboard,
+        {
+          label: "Trade actions",
+          icon: Package,
+          children: [
+            item(slug, "sourcing", "Submit Sourcing Request"),
+            item(slug, "logistics", "Cargo Tracking System"),
+            item(slug, "quality-control", "Request Quality Inspection"),
+            item(slug, "trips", "Visa / Business Trip"),
+          ],
+        },
+        {
+          label: "Payments & Invoices",
+          icon: BriefcaseBusiness,
+          path: `/${slug}/payments`,
+        },
+        {
+          label: "Support",
+          icon: LifeBuoy,
+          path: `/${slug}/supports`,
+        },
+      ];
     case "SUPPLIER":
-      return [dashboard, sourcing, logistics, support];
+      return [
+        dashboard,
+        {
+          label: "Onboarding Verification",
+          icon: FileCheck,
+          path: `/${slug}/verifications`,
+        },
+        {
+          label: "Open RFQs",
+          icon: FileText,
+          path: `/${slug}/sourcing`,
+        },
+        {
+          label: "Assigned Inspections",
+          icon: ClipboardCheck,
+          path: `/${slug}/quality-control`,
+        },
+      ];
     case "LOGISTICS_PARTNER":
-      return [dashboard, logistics, support];
+      return [
+        dashboard,
+        {
+          label: "Shipment Bookings",
+          icon: Truck,
+          path: `/${slug}/logistics`,
+        },
+        {
+          label: "Support",
+          icon: LifeBuoy,
+          path: `/${slug}/supports`,
+        },
+      ];
     default:
       return [dashboard];
   }
@@ -157,7 +181,10 @@ export const getNavigation = (role: UserRole): NavGroup[] => {
 export const roleCanAccess = (role: UserRole, page: DashboardPageKey) => {
   const groups = getNavigation(role);
   return groups.some((group) => {
-    if (group.path?.endsWith(`/${page}`) || (page === "dashboard" && group.path?.endsWith("/dashboard"))) {
+    if (
+      group.path?.endsWith(`/${page}`) ||
+      (page === "dashboard" && group.path?.endsWith("/dashboard"))
+    ) {
       return true;
     }
     return group.children?.some((child) => child.key === page) ?? false;

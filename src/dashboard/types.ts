@@ -5,222 +5,171 @@ export type UserRole =
   | "SUPPLIER"
   | "LOGISTICS_PARTNER";
 
-export type UserStatus = "ACTIVE" | "INACTIVE" | "PENDING";
+export type AccountType = "individual" | "business" | "supplier" | "logistics";
+export type SupplierRegion = "Yiwu" | "Guangzhou" | "Shenzhen";
+export type SourcingStatus = "open" | "quoted" | "completed";
+export type VerificationStatus = "pending" | "approved" | "rejected";
+export type ShippingMethod = "sea" | "air" | "express";
 export type ShipmentStatus =
-  | "PENDING"
-  | "PROCESSING"
-  | "IN_TRANSIT"
-  | "CUSTOMS"
-  | "DELIVERED"
-  | "DELAYED"
-  | "CANCELLED";
-export type ShipmentMode = "SEA" | "AIR" | "ROAD";
-export type RfqStatus = "OPEN" | "QUOTED" | "AWARDED" | "COMPLETED";
-export type QuoteStatus = "SUBMITTED" | "ACCEPTED" | "REJECTED";
-export type InspectionStatus =
-  | "PENDING"
-  | "IN_PROGRESS"
-  | "PASSED"
-  | "FAILED"
-  | "COMPLETED";
-export type InspectionPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-export type TripStatus = "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
-export type VisaStatus = "DRAFT" | "SUBMITTED" | "ISSUED" | "REJECTED";
-export type PaymentStatus = "PENDING" | "PAID" | "FAILED" | "REFUNDED";
-export type TicketStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
-export type TicketPriority = "LOW" | "MEDIUM" | "HIGH";
-export type ContentStatus = "DRAFT" | "PUBLISHED";
-export type ContactStatus = "NEW" | "REVIEWED" | "CLOSED";
+  | "booked"
+  | "in transit"
+  | "at port"
+  | "customs"
+  | "delivered";
+export type DestinationCountry = "Ethiopia" | "China" | "Uganda" | "South Sudan";
+export type InspectionType = "sample" | "pre-shipment" | "factory visit";
+export type InspectionStatus = "pending" | "scheduled" | "in progress" | "completed";
+export type VisaStatus = "pending" | "approved" | "rejected";
+export type ServiceType = "sourcing" | "logistics" | "inspection" | "trip" | "visa";
+export type PaymentMethod = "bank transfer" | "card" | "Alipay" | "WeChat Pay";
+export type PaymentStatus = "pending" | "completed" | "failed";
+export type IssueType = "defect" | "damage" | "missing";
+export type Urgency = "low" | "medium" | "high";
+export type SupportStatus = "open" | "resolved" | "closed";
 
-export interface User {
+export interface UserAccount {
   id: string;
-  fullName: string;
-  email: string;
-  phone: string;
-  companyName: string;
+  full_name: string;
+  company_name: string;
   country: string;
+  phone: string;
+  email: string;
+  account_type: AccountType;
+  language_preference: string;
   role: UserRole;
-  status: UserStatus;
-  languagePreference: string;
-  createdAt: string;
-}
-
-export interface SourcingRequest {
-  id: string;
-  reference: string;
-  productName: string;
-  description: string;
-  quantity: number;
-  unit: string;
-  targetPrice: number;
-  currency: string;
-  region: string;
-  buyerId: string;
-  status: RfqStatus;
-  deadline: string;
-  sampleRequired: boolean;
-  createdAt: string;
-}
-
-export interface SupplierQuote {
-  id: string;
-  requestId: string;
-  supplierId: string;
-  unitPrice: number;
-  currency: string;
-  leadDays: number;
-  notes: string;
-  status: QuoteStatus;
-  createdAt: string;
-}
-
-export interface Shipment {
-  id: string;
-  trackingNumber: string;
-  requestId: string;
-  buyerId: string;
-  supplierId: string;
-  logisticsPartnerId: string;
-  title: string;
-  origin: string;
-  destination: string;
-  mode: ShipmentMode;
-  status: ShipmentStatus;
-  weightKg: number;
-  volumeCbm: number;
-  eta: string;
-  createdAt: string;
-}
-
-export interface Inspection {
-  id: string;
-  requestNumber: string;
-  requestId: string;
-  shipmentId?: string;
-  productName: string;
-  supplierId: string;
-  buyerId: string;
-  inspectorName: string;
-  location: string;
-  status: InspectionStatus;
-  priority: InspectionPriority;
-  scheduledDate: string;
-  result?: string;
-}
-
-export interface Trip {
-  id: string;
-  title: string;
-  buyerId: string;
-  origin: string;
-  destination: string;
-  startDate: string;
-  endDate: string;
-  status: TripStatus;
-  purpose: string;
-}
-
-export interface VisaInvitation {
-  id: string;
-  buyerId: string;
-  fullName: string;
-  passportNo: string;
-  nationality: string;
-  purpose: string;
-  status: VisaStatus;
-  issuedAt?: string;
-}
-
-export interface Payment {
-  id: string;
-  reference: string;
-  buyerId: string;
-  shipmentId?: string;
-  requestId?: string;
-  amount: number;
-  currency: string;
-  method: "BANK_TRANSFER" | "LETTER_OF_CREDIT" | "ESCROW";
-  status: PaymentStatus;
-  paidAt?: string;
-}
-
-export interface TradeService {
-  id: string;
-  name: string;
-  description: string;
-  feeUsd: number;
   active: boolean;
 }
 
-export interface ContactMessage {
-  id: string;
+export interface SupplierFactory {
+  supplier_id: string;
   name: string;
-  email: string;
-  phone: string;
-  company: string;
-  subject: string;
-  status: ContactStatus;
-  createdAt: string;
+  contact_person: string;
+  verified: boolean;
+  location_city: string;
+  location_province: string;
+  account_id: string;
 }
 
-export interface StoredFile {
-  id: string;
-  name: string;
-  type: string;
-  sizeKb: number;
-  uploadedBy: string;
-  createdAt: string;
+export interface SupplierVerification {
+  verification_id: string;
+  supplier_id: string;
+  status: VerificationStatus;
+  turnaround_time: string;
+  concerns: string;
 }
 
-export interface SupportTicket {
-  id: string;
-  userId: string;
-  subject: string;
-  category: string;
-  priority: TicketPriority;
-  status: TicketStatus;
-  createdAt: string;
+export interface SourcingRequest {
+  request_id: string;
+  product_name: string;
+  description: string;
+  quantity: number;
+  target_price: number;
+  supplier_region: SupplierRegion;
+  deadline: string;
+  status: SourcingStatus;
+  buyer_id: string;
+  assigned_supplier_ids: string[];
 }
 
-export interface BlogPost {
-  id: string;
-  title: string;
-  author: string;
-  status: ContentStatus;
-  publishedAt?: string;
+export interface SupplierQuote {
+  quote_id: string;
+  request_id: string;
+  supplier_id: string;
+  price: number;
+  moq: number;
+  lead_time: string;
+  notes: string;
 }
 
-export interface Project {
-  id: string;
-  title: string;
-  country: string;
-  status: ContentStatus;
-  year: number;
+export interface Shipment {
+  shipment_id: string;
+  tracking_number: string;
+  pickup_location: string;
+  destination_country: DestinationCountry;
+  goods_description: string;
+  weight: number;
+  volume: number;
+  shipping_method: ShippingMethod;
+  status: ShipmentStatus;
+  estimated_delivery_date: string;
+  buyer_id: string;
+  supplier_id: string;
+  logistics_id: string;
+  documents: string[];
+}
+
+export interface QualityInspection {
+  inspection_id: string;
+  product_type: string;
+  inspection_type: InspectionType;
+  photo_video_required: boolean;
+  report_url: string;
+  status: InspectionStatus;
+  buyer_id: string;
+  supplier_id: string;
+  scheduled_date: string;
+}
+
+export interface BusinessTrip {
+  trip_id: string;
+  arrival_city: string;
+  duration_days: number;
+  passport_number: string;
+  nationality: string;
+  visa_status: VisaStatus;
+  hotel_booking: boolean;
+  translator: boolean;
+  buyer_id: string;
+}
+
+export interface Payment {
+  payment_id: string;
+  service_type: ServiceType;
+  amount: number;
+  currency: string;
+  payment_method: PaymentMethod;
+  status: PaymentStatus;
+  buyer_id: string;
+  order_reference: string;
+}
+
+export interface SupportRequest {
+  support_id: string;
+  order_reference: string;
+  issue_type: IssueType;
+  urgency: Urgency;
+  status: SupportStatus;
+  user_id: string;
+  notes: string;
+}
+
+export interface CountryProductList {
+  country_name: string;
+  iso_code: string;
+  export_categories: string[];
+  export_products: string[];
 }
 
 export interface ActivityLog {
-  id: string;
-  actorId: string;
+  log_id: string;
+  actor_id: string;
   action: string;
   entity: string;
-  entityId: string;
-  createdAt: string;
+  entity_id: string;
+  created_at: string;
 }
 
 export interface DashboardSnapshot {
-  users: User[];
-  sourcingRequests: SourcingRequest[];
+  users: UserAccount[];
+  suppliers: SupplierFactory[];
+  verifications: SupplierVerification[];
+  sourcing_requests: SourcingRequest[];
   quotes: SupplierQuote[];
   shipments: Shipment[];
-  inspections: Inspection[];
-  trips: Trip[];
-  visas: VisaInvitation[];
+  inspections: QualityInspection[];
+  trips: BusinessTrip[];
   payments: Payment[];
-  services: TradeService[];
-  contacts: ContactMessage[];
-  files: StoredFile[];
-  tickets: SupportTicket[];
-  blogs: BlogPost[];
-  projects: Project[];
+  support_requests: SupportRequest[];
+  country_products: CountryProductList[];
   activity: ActivityLog[];
 }

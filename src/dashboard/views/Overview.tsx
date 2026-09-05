@@ -13,37 +13,32 @@ import {
 import ChartCard from "../components/ChartCard";
 import PageHeader from "../components/PageHeader";
 import StatCard from "../components/StatCard";
-import StatusBadge from "../components/StatusBadge";
+import { ROLE_LABEL } from "../roles";
 import {
   findUserName,
-  getActivity,
-  getInspections,
-  getPayments,
-  getSessionUser,
-  getShipments,
-  getSourcingRequests,
-} from "../data";
-import { ROLE_LABEL } from "../roles";
-import type { UserRole } from "../types";
+  useDashboard,
+  useScopedRecords,
+} from "../store";
 import { DASHBOARD_GOLD, DASHBOARD_NAVY } from "../theme";
 
-export default function Overview({ role }: { role: UserRole }) {
-  const user = getSessionUser(role);
-  const shipments = getShipments(role, user.id);
-  const requests = getSourcingRequests(role, user.id);
-  const inspections = getInspections(role, user.id);
-  const payments = getPayments(role, user.id);
-  const activity = getActivity(role, user.id);
+export default function Overview() {
+  const { snapshot, role, user } = useDashboard();
+  const records = useScopedRecords();
 
-  const paid = payments
-    .filter((row) => row.status === "PAID")
+  if (role === "SUPER_ADMIN") {
+    return <BusinessIntelligenceHub />;
+  }
+
+  const paid = records.payments
+    .filter((row) => row.status === "completed")
     .reduce((sum, row) => sum + row.amount, 0);
 
   const chartData = [
-    { name: "Pending", count: shipments.filter((row) => row.status === "PENDING").length },
-    { name: "Transit", count: shipments.filter((row) => row.status === "IN_TRANSIT").length },
-    { name: "Customs", count: shipments.filter((row) => row.status === "CUSTOMS").length },
-    { name: "Delivered", count: shipments.filter((row) => row.status === "DELIVERED").length },
+    { name: "Booked", count: records.shipments.filter((row) => row.status === "booked").length },
+    { name: "Transit", count: records.shipments.filter((row) => row.status === "in transit").length },
+    { name: "Port", count: records.shipments.filter((row) => row.status === "at port").length },
+    { name: "Customs", count: records.shipments.filter((row) => row.status === "customs").length },
+    { name: "Delivered", count: records.shipments.filter((row) => row.status === "delivered").length },
   ];
 
   return (
@@ -52,36 +47,36 @@ export default function Overview({ role }: { role: UserRole }) {
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#FDC700]">
           {ROLE_LABEL[role]}
         </p>
-        <h1 className="mt-2 text-3xl font-bold">Good day, {user.fullName}</h1>
+        <h1 className="mt-2 text-3xl font-bold">Good day, {user.full_name}</h1>
         <p className="mt-2 max-w-2xl text-sm text-white/70">
-          Live operations snapshot from isolated mock data. Swap `src/dashboard/mocks/data.ts`
-          for API calls without changing these views.
+          Role-scoped workspace for {user.company_name}. Actions write into the isolated
+          mock schema in `src/dashboard/mocks/data.ts`.
         </p>
       </section>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="Shipments"
-          value={String(shipments.length)}
+          value={String(records.shipments.length)}
           hint="Visible to this role"
           icon={Truck}
         />
         <StatCard
           title="Sourcing RFQs"
-          value={String(requests.length)}
-          hint={`${requests.filter((row) => row.status === "OPEN").length} open`}
+          value={String(records.sourcing.length)}
+          hint={`${records.sourcing.filter((row) => row.status === "open").length} open`}
           icon={Package}
         />
         <StatCard
           title="Inspections"
-          value={String(inspections.length)}
-          hint={`${inspections.filter((row) => row.status === "PENDING").length} pending`}
+          value={String(records.inspections.length)}
+          hint={`${records.inspections.filter((row) => row.status === "pending").length} pending`}
           icon={ClipboardCheck}
         />
         <StatCard
           title="Collected"
           value={`$${paid.toLocaleString()}`}
-          hint="Paid invoices"
+          hint="Completed invoices"
           icon={Wallet}
         />
       </div>
@@ -109,36 +104,151 @@ export default function Overview({ role }: { role: UserRole }) {
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="mb-4 text-sm font-semibold text-[#0F3952]">Recent activity</h2>
           <ul className="space-y-4">
-            {activity.map((item) => (
-              <li key={item.id} className="border-l-2 border-[#FDC700] pl-3">
+            {records.activity.slice(0, 6).map((item) => (
+              <li key={item.log_id} className="border-l-2 border-[#FDC700] pl-3">
                 <p className="text-sm font-semibold text-slate-800">{item.action}</p>
                 <p className="text-xs text-slate-500">
-                  {findUserName(item.actorId)} · {item.entity}
+                  {findUserName(snapshot, item.actor_id)} · {item.entity}
                 </p>
               </li>
             ))}
           </ul>
         </section>
       </div>
+    </div>
+  );
+}
+
+function BusinessIntelligenceHub() {
+  const { snapshot, user } = useDashboard();
+
+  const destinationData = ["Ethiopia", "China", "Uganda", "South Sudan"].map(
+    (country) => ({
+      name: country,
+      count: snapshot.shipments.filter((row) => row.destination_country === country)
+        .length,
+    })
+  );
+
+  const categoryCount = new Map<string, number>();
+  snapshot.country_products.forEach((row) => {
+    row.export_categories.forEach((category) => {
+      categoryCount.set(category, (categoryCount.get(category) ?? 0) + 1);
+    });
+  });
+  const exportData = ["Coffee", "Oilseeds", "Electronics"].map((name) => ({
+    name,
+    count: categoryCount.get(name) ?? 0,
+  }));
+
+  const paymentData = ["sourcing", "logistics", "inspection", "trip", "visa"].map(
+    (service) => ({
+      name: service,
+      volume: snapshot.payments
+        .filter((row) => row.service_type === service && row.status === "completed")
+        .reduce((sum, row) => sum + row.amount, 0),
+    })
+  );
+
+  const totalVolume = snapshot.payments
+    .filter((row) => row.status === "completed")
+    .reduce((sum, row) => sum + row.amount, 0);
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Business Intelligence Hub"
+        description={`Master controls for ${user.full_name}. Shipments, export mix, and payment volume from the live mock snapshot.`}
+      />
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard
+          title="Active accounts"
+          value={String(snapshot.users.filter((row) => row.active).length)}
+          hint={`${snapshot.users.length} total users`}
+          icon={Wallet}
+        />
+        <StatCard
+          title="Completed volume"
+          value={`$${totalVolume.toLocaleString()}`}
+          hint="Aggregate payments"
+          icon={Package}
+        />
+        <StatCard
+          title="Live shipments"
+          value={String(
+            snapshot.shipments.filter((row) => row.status !== "delivered").length
+          )}
+          hint="Not yet delivered"
+          icon={Truck}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <ChartCard title="Shipments by Destination Country">
+          <ResponsiveContainer width="100%" height={240} minWidth={1} minHeight={1}>
+            <BarChart data={destinationData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 11 }} />
+              <YAxis allowDecimals={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+              <Tooltip />
+              <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                {destinationData.map((entry, index) => (
+                  <Cell
+                    key={entry.name}
+                    fill={index % 2 === 0 ? DASHBOARD_NAVY : DASHBOARD_GOLD}
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Top Exports">
+          <ResponsiveContainer width="100%" height={240} minWidth={1} minHeight={1}>
+            <BarChart data={exportData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 11 }} />
+              <YAxis allowDecimals={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+              <Tooltip />
+              <Bar dataKey="count" radius={[6, 6, 0, 0]} fill={DASHBOARD_GOLD} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Payment volumes">
+          <ResponsiveContainer width="100%" height={240} minWidth={1} minHeight={1}>
+            <BarChart data={paymentData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 11 }} />
+              <YAxis allowDecimals={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+              <Tooltip />
+              <Bar dataKey="volume" radius={[6, 6, 0, 0]} fill={DASHBOARD_NAVY} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </div>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-4 text-sm font-semibold text-[#0F3952]">Active freight</h2>
-        <ul className="space-y-3">
-          {shipments.slice(0, 4).map((shipment) => (
-            <li
-              key={shipment.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-slate-50 px-4 py-3"
-            >
-              <div>
-                <p className="font-semibold text-[#0F3952]">{shipment.trackingNumber}</p>
-                <p className="text-sm text-slate-500">
-                  {shipment.origin} → {shipment.destination}
-                </p>
-              </div>
-              <StatusBadge value={shipment.status} />
-            </li>
+        <h2 className="mb-4 text-sm font-semibold text-[#0F3952]">
+          Country product lists
+        </h2>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {snapshot.country_products.map((row) => (
+            <article key={row.iso_code} className="rounded-xl bg-slate-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+                {row.iso_code}
+              </p>
+              <h3 className="mt-1 font-semibold text-[#0F3952]">{row.country_name}</h3>
+              <p className="mt-2 text-sm text-slate-600">
+                {row.export_categories.join(" · ")}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                {row.export_products.join(", ")}
+              </p>
+            </article>
           ))}
-        </ul>
+        </div>
       </section>
     </div>
   );
