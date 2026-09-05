@@ -27,6 +27,7 @@ export const STATUS_TONE: Record<string, StatusTone> = {
   reject: "red",
   failed: "red",
   closed: "red",
+  close: "red",
   inactive: "red",
   disabled: "red",
   removed: "red",

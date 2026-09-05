@@ -220,9 +220,133 @@ export const OPEN_TICKET_CONFLICT_MESSAGE =
   "An active open support ticket already exists for this request. Our team is currently reviewing it.";
 
 export const TICKETS_INVALIDATE_EVENT = "yosti:tickets-invalidate";
+export const SUPPORTS_INVALIDATE_EVENT = "yosti:supports-invalidate";
 
 export function invalidateTicketsCache() {
   window.dispatchEvent(new CustomEvent(TICKETS_INVALIDATE_EVENT));
+  window.dispatchEvent(new CustomEvent(SUPPORTS_INVALIDATE_EVENT));
+}
+
+export function invalidateSupportsCache() {
+  invalidateTicketsCache();
+}
+
+export function buildSupportsQueryString(query: SupportsListQuery) {
+  const params = new URLSearchParams();
+  params.set("page", String(query.page || 1));
+  params.set("pageSize", String(query.pageSize || 10));
+  params.set("limit", String(query.pageSize || 10));
+
+  if (query.search.trim()) {
+    params.set("search", query.search.trim());
+  }
+  if (query.orderReference.trim()) {
+    params.set("orderReference", query.orderReference.trim());
+  }
+  if (query.issuesType) {
+    params.set("issuesType", query.issuesType);
+  }
+  if (query.resolutionToRequest) {
+    params.set("resolutionToRequest", query.resolutionToRequest);
+  }
+  if (query.urgency) {
+    params.set("urgency", query.urgency);
+  }
+  if (query.status) {
+    params.set("status", query.status);
+  }
+
+  return params.toString();
+}
+
+function normalizeSupportsResponse(
+  raw: unknown,
+  query: SupportsListQuery
+): SupportsListResponse {
+  const record = asRecord(raw);
+  const nested = asRecord(record?.data);
+  const meta = asRecord(record?.meta) ?? asRecord(nested?.meta);
+  const rows = Array.isArray(record?.data)
+    ? record.data
+    : Array.isArray(nested?.data)
+      ? nested.data
+      : Array.isArray(record?.tickets)
+        ? record.tickets
+        : Array.isArray(record?.supports)
+          ? record.supports
+          : [];
+
+  const data = rows
+    .map((row) => normalizeTicket(row))
+    .filter((row): row is TicketRecord => Boolean(row));
+
+  const total = pickNumber(meta?.total, record?.total, nested?.total) ?? data.length;
+  const page = pickNumber(meta?.page, record?.page, nested?.page) ?? query.page;
+  const pageSize =
+    pickNumber(meta?.pageSize, record?.pageSize, record?.limit, nested?.pageSize) ??
+    query.pageSize;
+  const totalPages =
+    pickNumber(meta?.totalPages, record?.totalPages, nested?.totalPages) ??
+    Math.max(1, Math.ceil(total / Math.max(pageSize, 1)));
+
+  return {
+    data,
+    meta: { total, page, pageSize, totalPages },
+  };
+}
+
+export async function fetchSupportsList(
+  query: SupportsListQuery
+): Promise<SupportsListResponse> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new TicketsRequestError("Unauthorized", 401);
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(`${SUPPORTS_URL}?${buildSupportsQueryString(query)}`, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch {
+    throw new TicketsRequestError(
+      "Unable to reach the server. Check your connection and try again.",
+      0
+    );
+  }
+
+  const raw: unknown = await response.json().catch(() => null);
+
+  if (response.status === 400) {
+    throw new TicketsRequestError(
+      readApiMessage(raw, "Invalid support ticket filters."),
+      400
+    );
+  }
+  if (response.status === 401) {
+    throw new TicketsRequestError("Unauthorized", 401);
+  }
+  if (response.status >= 500) {
+    throw new TicketsRequestError(
+      readApiMessage(raw, "The server could not load support tickets."),
+      response.status
+    );
+  }
+  if (!response.ok) {
+    throw new TicketsRequestError(
+      readApiMessage(
+        raw,
+        `Unable to load support tickets. Server returned ${response.status}.`
+      ),
+      response.status
+    );
+  }
+
+  return normalizeSupportsResponse(raw, query);
 }
 
 function ticketsCreateUrls() {
