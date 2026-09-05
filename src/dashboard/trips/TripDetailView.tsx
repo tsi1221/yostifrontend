@@ -1,8 +1,11 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
+import SideDrawer from "../components/SideDrawer";
 import { ROLE_SLUG } from "../roles";
 import { useDashboard } from "../store";
+import EditTripForm from "./EditTripForm";
 import {
   formatTripDuration,
   formatTripStatus,
@@ -86,9 +89,20 @@ export default function TripDetailView() {
   const navigate = useNavigate();
   const { role } = useDashboard();
   const listPath = `/${ROLE_SLUG[role]}/trips`;
-  const { trip, loading, notFound, serverError, retry } = useTripDetail(tripId);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { trip, loading, notFound, serverError, applyTrip, retry } =
+    useTripDetail(tripId);
+  const [editing, setEditing] = useState(searchParams.get("edit") === "1");
 
   const goBack = () => navigate(listPath);
+  const closeEditor = () => {
+    setEditing(false);
+    if (searchParams.get("edit") === "1") {
+      const next = new URLSearchParams(searchParams);
+      next.delete("edit");
+      setSearchParams(next, { replace: true });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -96,6 +110,9 @@ export default function TripDetailView() {
         <ActionButton tone="ghost" onClick={goBack}>
           Back to List
         </ActionButton>
+        {trip ? (
+          <ActionButton onClick={() => setEditing(true)}>Edit itinerary</ActionButton>
+        ) : null}
       </div>
 
       {loading ? <DetailSkeleton /> : null}
@@ -154,6 +171,24 @@ export default function TripDetailView() {
           </p>
         </div>
       ) : null}
+
+      <SideDrawer
+        open={Boolean(editing && trip)}
+        title={trip ? `Edit trip #${trip.id}` : "Edit trip itinerary"}
+        description="Update itinerary details and save. Changes are sent with PATCH."
+        onClose={closeEditor}
+      >
+        {trip ? (
+          <EditTripForm
+            trip={trip}
+            onCancel={closeEditor}
+            onSaved={(updated) => {
+              applyTrip(updated);
+              closeEditor();
+            }}
+          />
+        ) : null}
+      </SideDrawer>
     </div>
   );
 }

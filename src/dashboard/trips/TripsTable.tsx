@@ -1,10 +1,13 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
 import { SelectInput, TextInput } from "../components/FormField";
+import SideDrawer from "../components/SideDrawer";
 import StatusBadge from "../components/StatusBadge";
 import { ROLE_SLUG } from "../roles";
 import { useDashboard } from "../store";
+import EditTripForm from "./EditTripForm";
 import type { TripRecord, TripStatusFilter } from "./types";
 import { TRIP_STATUS_FILTERS } from "./types";
 import { formatTripStatus } from "./tripsService";
@@ -40,6 +43,7 @@ function SkeletonRows() {
 export default function TripsTable() {
   const navigate = useNavigate();
   const { role } = useDashboard();
+  const [editing, setEditing] = useState<TripRecord | null>(null);
   const {
     filters,
     setFilter,
@@ -153,15 +157,25 @@ export default function TripsTable() {
                       <StatusBadge value={formatTripStatus(row.status)} />
                     </td>
                     <td className="px-4 py-3">
-                      <ActionButton
-                        tone="ghost"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          navigate(detailPath(row.id));
-                        }}
-                      >
-                        View
-                      </ActionButton>
+                      <div className="flex items-center gap-2">
+                        <ActionButton
+                          tone="ghost"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            navigate(detailPath(row.id));
+                          }}
+                        >
+                          View
+                        </ActionButton>
+                        <ActionButton
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setEditing(row);
+                          }}
+                        >
+                          Edit
+                        </ActionButton>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -202,6 +216,21 @@ export default function TripsTable() {
           </div>
         </footer>
       </div>
+
+      <SideDrawer
+        open={Boolean(editing)}
+        title={editing ? `Edit trip #${editing.id}` : "Edit trip itinerary"}
+        description="Update itinerary details and save. Changes are sent with PATCH."
+        onClose={() => setEditing(null)}
+      >
+        {editing ? (
+          <EditTripForm
+            trip={editing}
+            onCancel={() => setEditing(null)}
+            onSaved={() => setEditing(null)}
+          />
+        ) : null}
+      </SideDrawer>
     </div>
   );
 }
