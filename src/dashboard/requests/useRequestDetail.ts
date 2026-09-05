@@ -75,6 +75,7 @@ export function useRequestDetail(id: string | undefined) {
     loading,
     notFound,
     serverError,
+    applyRequest: setRequest,
     retry: () => setReloadToken((value) => value + 1),
   };
 }

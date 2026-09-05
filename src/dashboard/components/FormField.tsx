@@ -9,16 +9,18 @@ import { SELECT_TONE_CLASS, getStatusTone } from "../statusStyles";
 
 interface FieldProps {
   label: string;
+  error?: string;
   children: ReactNode;
 }
 
-export function Field({ label, children }: FieldProps) {
+export function Field({ label, error, children }: FieldProps) {
   return (
     <label className="block space-y-1.5">
       <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
         {label}
       </span>
       {children}
+      {error ? <span className="text-xs font-medium text-red-600">{error}</span> : null}
     </label>
   );
 }

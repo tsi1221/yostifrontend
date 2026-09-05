@@ -2,6 +2,8 @@ import { REQUESTS_URL } from "../auth/endpoints";
 import { getAccessToken } from "../auth/session";
 import { isPreviewAccessToken } from "../users/usersService";
 import type {
+  RequestFieldErrors,
+  RequestUpdatePayload,
   RequestsListQuery,
   RequestsListResponse,
   SourcingRequestRecord,
@@ -11,11 +13,13 @@ export { isPreviewAccessToken };
 
 export class RequestsRequestError extends Error {
   status: number;
+  fields?: RequestFieldErrors;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, fields?: RequestFieldErrors) {
     super(message);
     this.name = "RequestsRequestError";
     this.status = status;
+    this.fields = fields;
   }
 }
 
@@ -84,6 +88,55 @@ function readApiMessage(raw: unknown, fallback: string) {
     }
   }
   return fallback;
+}
+
+const FIELD_KEYS: Array<keyof RequestUpdatePayload> = [
+  "productName",
+  "description",
+  "quantity",
+  "targetPrice",
+  "supplierRegion",
+  "deadline",
+  "status",
+];
+
+function parseFieldErrors(raw: unknown): RequestFieldErrors {
+  const record = asRecord(raw);
+  const message = record?.message;
+  const fields: RequestFieldErrors = {};
+  const nested = asRecord(message) ?? asRecord(record?.errors);
+
+  if (nested) {
+    for (const key of FIELD_KEYS) {
+      const value = pickString(nested[key]);
+      if (value) {
+        fields[key] = value;
+      }
+    }
+  }
+
+  const items = Array.isArray(message)
+    ? message.filter((item): item is string => typeof item === "string")
+    : typeof message === "string"
+      ? [message]
+      : [];
+
+  for (const item of items) {
+    const key = FIELD_KEYS.find((field) =>
+      item.toLowerCase().includes(field.toLowerCase())
+    );
+    if (key && !fields[key]) {
+      fields[key] = item;
+    }
+  }
+
+  return fields;
+}
+
+export const REQUESTS_INVALIDATE_EVENT = "yosti:requests-invalidate";
+
+export function invalidateRequestsCache() {
+  window.dispatchEvent(new CustomEvent(REQUESTS_INVALIDATE_EVENT));
 }
 
 export function requestDetailUrl(id: string) {
@@ -280,4 +333,87 @@ export async function fetchRequestById(id: string): Promise<SourcingRequestRecor
   }
 
   return payload;
+}
+
+export async function patchRequest(
+  id: string,
+  payload: RequestUpdatePayload
+): Promise<SourcingRequestRecord> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new RequestsRequestError("Unauthorized", 401);
+  }
+
+  const requestId = id.trim();
+  if (!requestId) {
+    throw new RequestsRequestError("The request ID format is invalid.", 400);
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(requestDetailUrl(requestId), {
+      method: "PATCH",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    throw new RequestsRequestError(
+      "Unable to reach the server. Check your connection and try again.",
+      0
+    );
+  }
+
+  const raw: unknown = await response.json().catch(() => null);
+
+  if (response.status === 400) {
+    throw new RequestsRequestError(
+      readApiMessage(raw, "Unable to save this request. Check the highlighted fields."),
+      400,
+      parseFieldErrors(raw)
+    );
+  }
+  if (response.status === 401) {
+    throw new RequestsRequestError("Unauthorized", 401);
+  }
+  if (response.status === 404) {
+    throw new RequestsRequestError(
+      "This request no longer exists or was removed.",
+      404
+    );
+  }
+  if (response.status === 409) {
+    throw new RequestsRequestError(
+      "This update conflicts with an existing active request.",
+      409
+    );
+  }
+  if (response.status >= 500) {
+    throw new RequestsRequestError(
+      readApiMessage(raw, "The server could not save this request."),
+      response.status
+    );
+  }
+  if (!response.ok) {
+    throw new RequestsRequestError(
+      readApiMessage(raw, `Unable to save this request. Server returned ${response.status}.`),
+      response.status
+    );
+  }
+
+  const record = asRecord(raw);
+  const updated =
+    normalizeRequest(raw) ??
+    normalizeRequest(record?.data) ??
+    normalizeRequest(record?.request);
+
+  if (!updated) {
+    throw new RequestsRequestError("The server returned an incomplete request.", 500);
+  }
+
+  invalidateRequestsCache();
+  return updated;
 }

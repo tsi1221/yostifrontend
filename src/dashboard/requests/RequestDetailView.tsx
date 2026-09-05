@@ -1,8 +1,11 @@
-import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { useState } from "react";
+import { Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
+import SideDrawer from "../components/SideDrawer";
 import { ROLE_SLUG } from "../roles";
 import { useDashboard } from "../store";
+import EditRequestForm from "./EditRequestForm";
 import {
   formatDeadline,
   formatMoney,
@@ -29,13 +32,24 @@ export default function RequestDetailView() {
   const navigate = useNavigate();
   const { role } = useDashboard();
   const listPath = `/${ROLE_SLUG[role]}/sourcing`;
-  const { request, loading, notFound, serverError, retry } = useRequestDetail(requestId);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { request, loading, notFound, serverError, applyRequest, retry } =
+    useRequestDetail(requestId);
+  const [editing, setEditing] = useState(searchParams.get("edit") === "1");
 
   if (role !== "SUPER_ADMIN") {
     return <Navigate to={listPath} replace />;
   }
 
   const goBack = () => navigate(listPath);
+  const closeEditor = () => {
+    setEditing(false);
+    if (searchParams.get("edit") === "1") {
+      const next = new URLSearchParams(searchParams);
+      next.delete("edit");
+      setSearchParams(next, { replace: true });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -43,6 +57,9 @@ export default function RequestDetailView() {
         <ActionButton tone="ghost" onClick={goBack}>
           Back to Requests List
         </ActionButton>
+        {request ? (
+          <ActionButton onClick={() => setEditing(true)}>Edit request</ActionButton>
+        ) : null}
       </div>
 
       {loading ? <DetailSkeleton /> : null}
@@ -147,6 +164,24 @@ export default function RequestDetailView() {
           </p>
         </div>
       ) : null}
+
+      <SideDrawer
+        open={Boolean(editing && request)}
+        title="Edit request"
+        description="Update fields and save. Changes are sent with PATCH."
+        onClose={closeEditor}
+      >
+        {request ? (
+          <EditRequestForm
+            request={request}
+            onCancel={closeEditor}
+            onSaved={(updated) => {
+              applyRequest(updated);
+              closeEditor();
+            }}
+          />
+        ) : null}
+      </SideDrawer>
     </div>
   );
 }

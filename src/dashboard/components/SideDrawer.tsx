@@ -30,7 +30,7 @@ export default function SideDrawer({
         onClick={onClose}
         aria-label="Close drawer"
       />
-      <aside className="relative flex h-full w-full max-w-md flex-col bg-white shadow-2xl">
+      <aside className="relative flex h-full w-full max-w-lg flex-col bg-white shadow-2xl">
         <header className="flex items-start justify-between border-b border-slate-200 px-5 py-4">
           <div>
             <h2 className="text-lg font-semibold text-[#0F3952]">{title}</h2>

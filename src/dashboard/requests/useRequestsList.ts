@@ -6,6 +6,7 @@ import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { RequestsListQuery, RequestsListResponse } from "./types";
 import { DEFAULT_REQUESTS_QUERY } from "./types";
 import {
+  REQUESTS_INVALIDATE_EVENT,
   RequestsRequestError,
   fetchRequestsList,
   isPreviewAccessToken,
@@ -98,6 +99,12 @@ export function useRequestsList() {
   useEffect(() => {
     void load();
   }, [load, reloadToken]);
+
+  useEffect(() => {
+    const refresh = () => setReloadToken((value) => value + 1);
+    window.addEventListener(REQUESTS_INVALIDATE_EVENT, refresh);
+    return () => window.removeEventListener(REQUESTS_INVALIDATE_EVENT, refresh);
+  }, []);
 
   const setFilter = <K extends keyof RequestsListQuery>(
     key: K,

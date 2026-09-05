@@ -1,4 +1,7 @@
 import { BADGE_TONE_CLASS, type StatusTone } from "../statusStyles";
+import { deadlineToIso } from "./requestsService";
+import type { RequestFormValues, RequestRegion, RequestUpdatePayload, SourcingRequestRecord } from "./types";
+import { REQUEST_REGIONS } from "./types";
 
 export function formatMoney(value: number) {
   return new Intl.NumberFormat("en-US", {
@@ -55,4 +58,56 @@ export function requestStatusTone(status: string): StatusTone {
 
 export function requestStatusClass(status: string) {
   return BADGE_TONE_CLASS[requestStatusTone(status)];
+}
+
+export function isoToDateInput(iso: string) {
+  if (!iso) {
+    return "";
+  }
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+  return date.toISOString().slice(0, 10);
+}
+
+export function dateInputToIso(dateValue: string, originalIso = "") {
+  if (!dateValue) {
+    return "";
+  }
+  if (originalIso && isoToDateInput(originalIso) === dateValue) {
+    return originalIso;
+  }
+  return deadlineToIso(dateValue);
+}
+
+export function requestToFormValues(request: SourcingRequestRecord): RequestFormValues {
+  const region = REQUEST_REGIONS.includes(request.supplierRegion as RequestRegion)
+    ? (request.supplierRegion as RequestRegion)
+    : "Yiwu";
+
+  return {
+    productName: request.productName,
+    description: request.description,
+    quantity: String(request.quantity),
+    targetPrice: request.targetPrice.toFixed(2),
+    supplierRegion: region,
+    deadline: isoToDateInput(request.deadline),
+    status: request.status,
+  };
+}
+
+export function formValuesToPayload(
+  values: RequestFormValues,
+  original?: SourcingRequestRecord
+): RequestUpdatePayload {
+  return {
+    productName: values.productName.trim(),
+    description: values.description.trim(),
+    quantity: Number(values.quantity),
+    targetPrice: Number(values.targetPrice).toFixed(2),
+    supplierRegion: values.supplierRegion,
+    deadline: dateInputToIso(values.deadline, original?.deadline),
+    status: values.status,
+  };
 }

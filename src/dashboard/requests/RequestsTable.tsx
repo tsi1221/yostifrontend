@@ -183,15 +183,25 @@ export default function RequestsTable() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <ActionButton
-                        tone="ghost"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          navigate(`/${ROLE_SLUG[role]}/sourcing/${row.id}`);
-                        }}
-                      >
-                        View
-                      </ActionButton>
+                      <div className="flex gap-2">
+                        <ActionButton
+                          tone="ghost"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            navigate(`/${ROLE_SLUG[role]}/sourcing/${row.id}`);
+                          }}
+                        >
+                          View
+                        </ActionButton>
+                        <ActionButton
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            navigate(`/${ROLE_SLUG[role]}/sourcing/${row.id}?edit=1`);
+                          }}
+                        >
+                          Edit
+                        </ActionButton>
+                      </div>
                     </td>
                   </tr>
                 ))}
