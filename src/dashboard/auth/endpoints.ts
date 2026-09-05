@@ -28,5 +28,8 @@ export const PAYMENTS_URL = `${AUTH_API_BASE}/payments`;
 /** POST create support tickets (try first; 201 { id, userId, orderReference, ... }) */
 export const TICKETS_URL = `${AUTH_API_BASE}/tickets`;
 
-/** Fallback create path when POST /tickets is 404 */
+/** Fallback when POST /tickets is 404 */
 export const SUPPORT_URL = `${AUTH_API_BASE}/support`;
+
+/** Live collection path used when /tickets and /support are 404 */
+export const SUPPORTS_URL = `${AUTH_API_BASE}/supports`;

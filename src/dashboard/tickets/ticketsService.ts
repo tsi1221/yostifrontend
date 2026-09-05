@@ -1,8 +1,10 @@
-import { SUPPORT_URL, TICKETS_URL } from "../auth/endpoints";
+import { SUPPORT_URL, SUPPORTS_URL, TICKETS_URL } from "../auth/endpoints";
 import { getAccessToken } from "../auth/session";
 import { isPreviewAccessToken } from "../users/usersService";
 import type {
   CreateTicketPayload,
+  SupportsListQuery,
+  SupportsListResponse,
   TicketFieldErrors,
   TicketFormValues,
   TicketIssuesType,
@@ -224,11 +226,7 @@ export function invalidateTicketsCache() {
 }
 
 function ticketsCreateUrls() {
-  const urls = [TICKETS_URL];
-  if (SUPPORT_URL !== TICKETS_URL) {
-    urls.push(SUPPORT_URL);
-  }
-  return urls;
+  return [...new Set([TICKETS_URL, SUPPORT_URL, SUPPORTS_URL])];
 }
 
 async function postTicket(

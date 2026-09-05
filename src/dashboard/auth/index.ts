@@ -10,6 +10,7 @@ export {
   PAYMENTS_URL,
   TICKETS_URL,
   SUPPORT_URL,
+  SUPPORTS_URL,
 } from "./endpoints";
 export { loginWithPassword } from "./loginService";
 export {
