@@ -1,9 +1,12 @@
 import { Check, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
 import { SelectInput, TextInput } from "../components/FormField";
+import { ROLE_SLUG } from "../roles";
 import { BADGE_TONE_CLASS, getStatusTone } from "../statusStyles";
-import { formatInspectionDate } from "./inspectionsService";
+import { useDashboard } from "../store";
+import { formatInspectionDate, formatInspectionType } from "./inspectionsService";
 import type {
   InspectionMediaFilter,
   InspectionRecord,
@@ -12,7 +15,7 @@ import type {
 import { INSPECTION_MEDIA_FILTERS, INSPECTION_TYPE_FILTERS } from "./types";
 import { useInspectionsList } from "./useInspectionsList";
 
-const COLUMNS = 5;
+const COLUMNS = 6;
 
 function rangeLabel(page: number, pageSize: number, total: number) {
   if (total === 0) {
@@ -29,7 +32,7 @@ function typeBadge(type: string) {
     <span
       className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${BADGE_TONE_CLASS[tone]}`}
     >
-      {type}
+      {formatInspectionType(type)}
     </span>
   );
 }
@@ -68,6 +71,8 @@ function SkeletonRows() {
 }
 
 export default function InspectionsTable() {
+  const navigate = useNavigate();
+  const { role } = useDashboard();
   const {
     filters,
     setFilter,
@@ -79,6 +84,8 @@ export default function InspectionsTable() {
     serverError,
     retry,
   } = useInspectionsList();
+
+  const detailPath = (id: number) => `/${ROLE_SLUG[role]}/quality-control/${id}`;
 
   return (
     <div className="space-y-4">
@@ -173,6 +180,7 @@ export default function InspectionsTable() {
                   <th className="px-4 py-3">Type</th>
                   <th className="px-4 py-3">Scheduled date</th>
                   <th className="px-4 py-3">Media</th>
+                  <th className="px-4 py-3"> </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -191,7 +199,11 @@ export default function InspectionsTable() {
 
                 {!loading &&
                   inspections.map((row: InspectionRecord) => (
-                    <tr key={row.id} className="hover:bg-slate-50/80">
+                    <tr
+                      key={row.id}
+                      className="cursor-pointer hover:bg-slate-50/80"
+                      onClick={() => navigate(detailPath(row.id))}
+                    >
                       <td className="px-4 py-3 font-medium text-slate-800">
                         {row.id}
                       </td>
@@ -204,6 +216,17 @@ export default function InspectionsTable() {
                       </td>
                       <td className="px-4 py-3">
                         <MediaBadge required={row.photoVideoRequired} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <ActionButton
+                          tone="ghost"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            navigate(detailPath(row.id));
+                          }}
+                        >
+                          View
+                        </ActionButton>
                       </td>
                     </tr>
                   ))}

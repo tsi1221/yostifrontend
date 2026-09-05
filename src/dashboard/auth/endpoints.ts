@@ -16,5 +16,5 @@ export const REQUESTS_URL = `${AUTH_API_BASE}/requests`;
 /** GET list / POST create / PATCH :id update / DELETE :id shipments */
 export const SHIPMENTS_URL = `${AUTH_API_BASE}/shipments`;
 
-/** GET list / POST create inspection requests */
+/** GET list / POST create / GET :id inspection requests */
 export const INSPECTIONS_URL = `${AUTH_API_BASE}/inspections`;

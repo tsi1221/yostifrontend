@@ -175,6 +175,17 @@ function asInspectionType(value: string): string {
   return match ?? value;
 }
 
+export function formatInspectionType(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return "—";
+  }
+  if (trimmed.toLowerCase() === "factory visit") {
+    return "Factory Visit";
+  }
+  return trimmed;
+}
+
 export function formatInspectionDate(value: string) {
   if (!value) {
     return "—";
@@ -183,13 +194,32 @@ export function formatInspectionDate(value: string) {
   if (Number.isNaN(date.getTime())) {
     return value;
   }
-  return new Intl.DateTimeFormat("en-US", {
+
+  const datePart = new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
   }).format(date);
+
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const period = hours >= 12 ? "PM" : "AM";
+  const hour12 = hours % 12 || 12;
+  const timePart = `${String(hour12).padStart(2, "0")}:${String(minutes).padStart(2, "0")} ${period}`;
+
+  return `${datePart} - ${timePart}`;
+}
+
+export function parseInspectionId(value: string | undefined): number | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) {
+    return undefined;
+  }
+  const id = Number.parseInt(trimmed, 10);
+  return Number.isInteger(id) && id > 0 ? id : undefined;
 }
 
 export function filterDateToIso(value: string) {
@@ -350,6 +380,88 @@ export function invalidateInspectionsCache() {
 
 export function inspectionsUrl() {
   return INSPECTIONS_URL;
+}
+
+export function inspectionDetailUrl(id: number) {
+  return `${INSPECTIONS_URL}/${id}`;
+}
+
+export async function fetchInspection(id: number): Promise<InspectionRecord> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new InspectionsRequestError("Unauthorized", 401);
+  }
+
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new InspectionsRequestError(
+      "This inspection request could not be found or has been removed.",
+      404
+    );
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(inspectionDetailUrl(id), {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch {
+    throw new InspectionsRequestError(
+      "Unable to reach the server. Check your connection and try again.",
+      0
+    );
+  }
+
+  const raw: unknown = await response.json().catch(() => null);
+
+  if (response.status === 400) {
+    throw new InspectionsRequestError(
+      readApiMessage(raw, "The inspection ID format is invalid."),
+      400
+    );
+  }
+  if (response.status === 401) {
+    throw new InspectionsRequestError("Unauthorized", 401);
+  }
+  if (response.status === 404) {
+    throw new InspectionsRequestError(
+      "This inspection request could not be found or has been removed.",
+      404
+    );
+  }
+  if (response.status >= 500) {
+    throw new InspectionsRequestError(
+      readApiMessage(raw, "The server could not load this inspection request."),
+      response.status
+    );
+  }
+  if (!response.ok) {
+    throw new InspectionsRequestError(
+      readApiMessage(
+        raw,
+        `Unable to load this inspection request. Server returned ${response.status}.`
+      ),
+      response.status
+    );
+  }
+
+  const record = asRecord(raw);
+  const payload =
+    normalizeInspection(raw) ??
+    normalizeInspection(record?.data) ??
+    normalizeInspection(record?.inspection);
+
+  if (!payload) {
+    throw new InspectionsRequestError(
+      "The server returned an incomplete inspection request.",
+      500
+    );
+  }
+
+  return payload;
 }
 
 export async function createInspection(
