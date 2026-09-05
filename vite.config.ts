@@ -7,6 +7,14 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  server: {
+    proxy: {
+      "/api": {
+        target: "https://yosti.nedhigibe.com",
+        changeOrigin: true,
+      },
+    },
+  },
   optimizeDeps: {
     include: ["recharts", "react", "react-dom", "react-router-dom"]
   }

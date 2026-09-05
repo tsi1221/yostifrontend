@@ -1,284 +1,153 @@
-
 import { useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
 import type { UserRole } from "../../layout/Sidebar";
 
-import LoginForm, {
-  type LoginFormValues,
-} from "./LoginForm";
-
-/* =========================================================
-   PROPS
-========================================================= */
+import LoginForm, { type LoginFormValues } from "./LoginForm";
+import {
+  findMockUser,
+  getRoleDashboardPath,
+  getRoleLabel,
+  normalizeLoginRole,
+} from "./mockUsers";
 
 interface LoginProps {
   setRole: (role: UserRole | null) => void;
   setEmail: (email: string | null) => void;
 }
 
-/* =========================================================
-   API RESPONSE
-========================================================= */
-
 interface LoginResponse {
   accessToken?: string;
   access_token?: string;
   token?: string;
-
   user?: {
     id?: string;
     email?: string;
-    role?: UserRole;
+    role?: string;
   };
-
   email?: string;
-  role?: UserRole;
-
+  role?: string;
   message?: string | string[];
 }
 
-/* =========================================================
-   ROLE SLUG
-========================================================= */
+interface AuthSession {
+  role: UserRole;
+  email: string;
+  token: string;
+}
 
-const getRoleSlug = (role: UserRole): string => {
-  switch (role) {
-    case "SUPER_ADMIN":
-      return "superadmin";
+const apiBase = String(import.meta.env.VITE_API_URL ?? "")
+  .trim()
+  .replace(/\/$/, "");
 
-    case "STAFF":
-      return "staff";
-
-    case "BUYER":
-      return "buyer";
-
-    case "SUPPLIER":
-      return "supplier";
-
-    case "LOGISTICS_PARTNER":
-      return "logistics";
-
-    default:
-      return "buyer";
+function loginEndpoints() {
+  const endpoints = ["/api/auth/login"];
+  if (apiBase) {
+    endpoints.unshift(`${apiBase}/auth/login`);
   }
-};
+  return endpoints;
+}
 
-/* =========================================================
-   ROLE LABEL
-========================================================= */
+async function tryApiLogin(
+  email: string,
+  password: string
+): Promise<AuthSession | null> {
+  for (const url of loginEndpoints()) {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-const getRoleLabel = (role: UserRole): string => {
-  switch (role) {
-    case "SUPER_ADMIN":
-      return "Super Admin";
+      const contentType = response.headers.get("content-type") ?? "";
+      if (!contentType.includes("application/json")) {
+        continue;
+      }
 
-    case "STAFF":
-      return "Staff";
+      const data = (await response.json().catch(() => ({}))) as LoginResponse;
+      if (!response.ok) {
+        continue;
+      }
 
-    case "BUYER":
-      return "Buyer";
+      const role = normalizeLoginRole(data.user?.role ?? data.role);
+      if (!role) {
+        continue;
+      }
 
-    case "SUPPLIER":
-      return "Supplier";
-
-    case "LOGISTICS_PARTNER":
-      return "Logistics Partner";
-
-    default:
-      return role;
+      return {
+        role,
+        email: data.user?.email || data.email || email,
+        token: data.accessToken || data.access_token || data.token || "api-session",
+      };
+    } catch {
+      continue;
+    }
   }
-};
 
-/* =========================================================
-   LOGIN
-========================================================= */
+  return null;
+}
 
-export default function Login({
-  setRole,
-  setEmail,
-}: LoginProps) {
+function persistSession(
+  session: AuthSession,
+  remember: boolean,
+  setRole: LoginProps["setRole"],
+  setEmail: LoginProps["setEmail"]
+) {
+  localStorage.removeItem("token");
+  localStorage.removeItem("access_token");
+  localStorage.removeItem("role");
+  localStorage.removeItem("email");
+  sessionStorage.removeItem("token");
+  sessionStorage.removeItem("access_token");
+  sessionStorage.removeItem("role");
+  sessionStorage.removeItem("email");
+
+  const storage = remember ? localStorage : sessionStorage;
+  storage.setItem("token", session.token);
+  storage.setItem("access_token", session.token);
+  storage.setItem("role", session.role);
+  storage.setItem("email", session.email);
+
+  setRole(session.role);
+  setEmail(session.email);
+}
+
+export default function Login({ setRole, setEmail }: LoginProps) {
   const navigate = useNavigate();
-
   const [loading, setLoading] = useState(false);
 
-  /* =======================================================
-     HANDLE LOGIN
-  ======================================================= */
-
-  const handleLogin = async (
-    values: LoginFormValues
-  ) => {
+  const handleLogin = async (values: LoginFormValues) => {
     setLoading(true);
 
     try {
-      /* ===================================================
-         NORMALIZE FORM DATA
-      =================================================== */
-
-      const email = values.email
-        .trim()
-        .toLowerCase();
-
+      const email = values.email.trim().toLowerCase();
       const password = values.password;
 
-      /* ===================================================
-         LOGIN REQUEST
-         
-         IMPORTANT:
-         We use /api/auth/login instead of the full
-         backend URL. Vite proxy handles the request.
-      =================================================== */
+      const apiSession = await tryApiLogin(email, password);
+      const mockUser = findMockUser(email, password);
+      const session: AuthSession | null = apiSession
+        ? apiSession
+        : mockUser
+          ? {
+              role: mockUser.role,
+              email: mockUser.email,
+              token: "demo",
+            }
+          : null;
 
-      const response = await fetch(
-        "/api/auth/login",
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-
-          body: JSON.stringify({
-            email,
-            password,
-          }),
-        }
-      );
-
-      /* ===================================================
-         READ RESPONSE
-      =================================================== */
-
-      const data: LoginResponse =
-        await response.json().catch(() => ({}));
-
-      /* ===================================================
-         API ERROR
-      =================================================== */
-
-      if (!response.ok) {
-        const apiMessage = Array.isArray(
-          data.message
-        )
-          ? data.message.join(", ")
-          : data.message;
-
-        throw new Error(
-          apiMessage ||
-            "Invalid email or password."
-        );
+      if (!session) {
+        throw new Error("Invalid email or password.");
       }
 
-      /* ===================================================
-         TOKEN
-      =================================================== */
-
-      const token =
-        data.accessToken ||
-        data.access_token ||
-        data.token;
-
-      /* ===================================================
-         USER EMAIL
-      =================================================== */
-
-      const userEmail =
-        data.user?.email ||
-        data.email ||
-        email;
-
-      /* ===================================================
-         USER ROLE
-      =================================================== */
-
-      const role =
-        data.user?.role ||
-        data.role;
-
-      /*
-       * Your frontend uses the role to determine
-       * which dashboard the user should see.
-       */
-      if (!role) {
-        console.error(
-          "Login response:",
-          data
-        );
-
-        throw new Error(
-          "Login succeeded, but the user role was not returned."
-        );
-      }
-
-      /* ===================================================
-         CLEAR OLD SESSION
-      =================================================== */
-
-      localStorage.removeItem("token");
-      localStorage.removeItem("role");
-      localStorage.removeItem("email");
-
-      sessionStorage.removeItem("token");
-      sessionStorage.removeItem("role");
-      sessionStorage.removeItem("email");
-
-      /* ===================================================
-         SELECT STORAGE
-      =================================================== */
-
-      const storage = values.remember
-        ? localStorage
-        : sessionStorage;
-
-      /* ===================================================
-         SAVE TOKEN
-      =================================================== */
-
-      if (token) {
-        storage.setItem("token", token);
-      }
-
-      /* ===================================================
-         SAVE USER DATA
-      =================================================== */
-
-      storage.setItem("role", role);
-      storage.setItem("email", userEmail);
-
-      /* ===================================================
-         UPDATE APP STATE
-      =================================================== */
-
-      setRole(role);
-      setEmail(userEmail);
-
-      /* ===================================================
-         SUCCESS
-      =================================================== */
-
-      message.success(
-        `Welcome back, ${getRoleLabel(role)}!`
-      );
-
-      /* ===================================================
-         REDIRECT
-      =================================================== */
-
-      navigate(
-        `/${getRoleSlug(role)}/dashboard`,
-        {
-          replace: true,
-        }
-      );
+      persistSession(session, Boolean(values.remember ?? true), setRole, setEmail);
+      message.success(`Welcome back, ${getRoleLabel(session.role)}!`);
+      navigate(getRoleDashboardPath(session.role), { replace: true });
     } catch (error) {
-      console.error(
-        "Login error:",
-        error
-      );
-
       message.error(
         error instanceof Error
           ? error.message
@@ -289,32 +158,13 @@ export default function Login({
     }
   };
 
-  /* =======================================================
-     RENDER
-  ======================================================= */
-
   return (
-    <main
-      className="
-        flex
-        min-h-screen
-        w-full
-        items-center
-        justify-center
-        bg-slate-50
-        px-4
-        py-6
-      "
-    >
+    <main className="flex min-h-screen w-full items-center justify-center bg-slate-50 px-4 py-6">
       <LoginForm
         loading={loading}
         onFinish={handleLogin}
-        onForgotPassword={() =>
-          navigate("/forgot-password")
-        }
-        onRegister={() =>
-          navigate("/register")
-        }
+        onForgotPassword={() => navigate("/forgot-password")}
+        onRegister={() => navigate("/register")}
       />
     </main>
   );

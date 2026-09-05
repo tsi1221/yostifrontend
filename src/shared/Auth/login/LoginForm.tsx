@@ -69,6 +69,7 @@ export default function LoginForm({
           onFinish={onFinish}
           requiredMark={false}
           size="large"
+          initialValues={{ remember: true }}
         >
           {/* Email */}
           <Form.Item
@@ -194,6 +195,23 @@ export default function LoginForm({
             </Button>
           </Form.Item>
         </Form>
+
+        <div className="mt-6 rounded-xl bg-slate-50 px-4 py-3 text-left">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#0F3952]">
+            Demo accounts
+          </p>
+          <p className="mt-1 text-xs text-slate-500">
+            Password for every role is{" "}
+            <span className="font-semibold text-[#0F3952]">password123</span>
+          </p>
+          <ul className="mt-2 space-y-1 text-xs text-slate-600">
+            <li>System Admin — admin@example.com</li>
+            <li>Staff — staff@example.com</li>
+            <li>Buyer — buyer@example.com</li>
+            <li>Supplier — supplier@example.com</li>
+            <li>Logistics — logistics@example.com</li>
+          </ul>
+        </div>
 
         {/* Register */}
         <div
