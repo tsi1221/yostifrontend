@@ -92,17 +92,19 @@ function patchFetch() {
     if (grantDepth > 0 || response.status !== 403) {
       return response;
     }
-    if (!isSuperAdminSession() || !isYostiApi(input)) {
+    if (!getAccessToken() || !isYostiApi(input)) {
       return response;
     }
     if (isPreviewAccessToken(getAccessToken())) {
       return withQuietForbiddenMessage(response);
     }
 
-    const recovered = await recoverSuperAdminAccess();
-    if (recovered) {
-      const retry = await apiFetch(input, init);
-      return retry.status === 403 ? withQuietForbiddenMessage(retry) : retry;
+    if (isSuperAdminSession()) {
+      const recovered = await recoverSuperAdminAccess();
+      if (recovered) {
+        const retry = await apiFetch(input, init);
+        return retry.status === 403 ? withQuietForbiddenMessage(retry) : retry;
+      }
     }
     return withQuietForbiddenMessage(response);
   };
@@ -122,8 +124,10 @@ function patchPermissionToasts() {
         : content instanceof Error
           ? content.message
           : "";
-    if (isSuperAdminSession() && isPermissionDeniedMessage(text)) {
-      void recoverSuperAdminAccess();
+    if (isPermissionDeniedMessage(text)) {
+      if (isSuperAdminSession()) {
+        void recoverSuperAdminAccess();
+      }
       return;
     }
     return original(content as Parameters<typeof original>[0], ...(args as []));
@@ -177,20 +181,22 @@ async function fetchAllPermissions() {
     .map(([id, name]) => ({ id, name }));
 }
 
-async function findSuperAdminRole(): Promise<RoleRecord> {
-  try {
-    return await fetchRole(SUPER_ADMIN_ROLE_ID);
-  } catch (cause) {
-    if (cause instanceof RoleRequestError && cause.status === 401) {
-      throw new SuperAdminAccessError(cause.message, 401);
+async function fetchAllRoles(): Promise<RoleRecord[]> {
+  const byId = new Map<number, RoleRecord>();
+
+  for (const id of [SUPER_ADMIN_ROLE_ID, 4, 3, 2, 1]) {
+    try {
+      const role = await fetchRole(id);
+      byId.set(role.id, role);
+    } catch (cause) {
+      if (cause instanceof RoleRequestError && cause.status === 401) {
+        throw new SuperAdminAccessError(cause.message, 401);
+      }
     }
   }
 
   let page = 1;
   let totalPages = 1;
-  let best: RoleRecord | null = null;
-  let bestScore = 0;
-
   try {
     do {
       const payload = await fetchRolesList({
@@ -200,41 +206,31 @@ async function findSuperAdminRole(): Promise<RoleRecord> {
         name: "",
       });
       for (const role of payload.data) {
-        const score = superAdminRoleScore(role);
-        if (score > bestScore) {
-          best = role;
-          bestScore = score;
+        const existing = byId.get(role.id);
+        if (!existing || role.permissionIds.length > existing.permissionIds.length) {
+          byId.set(role.id, role);
         }
       }
       totalPages = Math.max(1, payload.meta.totalPages);
       page += 1;
-    } while (page <= totalPages && page <= 20 && bestScore < 4);
+    } while (page <= totalPages && page <= 20);
   } catch (cause) {
-    if (cause instanceof RoleRequestError) {
+    if (byId.size === 0 && cause instanceof RoleRequestError) {
       throw new SuperAdminAccessError(
-        cause.status === 403 ? "Super Admin cannot load roles." : cause.message,
+        cause.status === 403 ? "Cannot load roles to grant permissions." : cause.message,
         cause.status
       );
     }
-    throw cause;
   }
 
-  if (!best || bestScore === 0) {
-    throw new SuperAdminAccessError(
-      "Could not find the Super Admin role (usually id 5).",
-      404
-    );
+  const roles = [...byId.values()];
+  if (roles.length === 0) {
+    throw new SuperAdminAccessError("Could not find any roles to grant permissions.", 404);
   }
 
-  if (best.permissionIds.length === 0) {
-    try {
-      return await fetchRole(best.id);
-    } catch {
-      return best;
-    }
-  }
-
-  return best;
+  return roles.sort(
+    (a, b) => superAdminRoleScore(b) - superAdminRoleScore(a) || a.id - b.id
+  );
 }
 
 function authJsonHeaders() {
@@ -250,6 +246,10 @@ function authJsonHeaders() {
 }
 
 async function assignAllPermissions(role: RoleRecord, permissionIds: number[], permissionNames: string[]) {
+  const permissionObjects = permissionIds.map((id, index) => ({
+    id,
+    name: permissionNames[index] || `Permission #${id}`,
+  }));
   const bodies: Record<string, unknown>[] = [
     {
       ...(role.name.trim() ? { name: role.name.trim() } : {}),
@@ -261,11 +261,17 @@ async function assignAllPermissions(role: RoleRecord, permissionIds: number[], p
     {
       permissionIds,
       permission_ids: permissionIds,
+      permissions: permissionObjects,
+    },
+    {
+      permissionIds,
+      permission_ids: permissionIds,
       permissions: permissionNames,
     },
     { permissionIds },
     { permission_ids: permissionIds },
     { permissions: permissionIds },
+    { permissions: permissionObjects },
   ];
 
   const attempts: Array<{ method: string; url: string }> = [
@@ -277,7 +283,7 @@ async function assignAllPermissions(role: RoleRecord, permissionIds: number[], p
   ];
 
   let lastStatus = 0;
-  let lastMessage = "Could not assign Super Admin permissions.";
+  let lastMessage = `Could not assign permissions to ${role.name || `role ${role.id}`}.`;
 
   for (const attempt of attempts) {
     for (const body of bodies) {
@@ -322,32 +328,44 @@ export async function grantSuperAdminAllPermissions() {
 
   grantDepth += 1;
   try {
-    const [permissions, role] = await Promise.all([
+    const [permissions, roles] = await Promise.all([
       fetchAllPermissions(),
-      findSuperAdminRole(),
+      fetchAllRoles(),
     ]);
     const permissionIds = permissions.map((item) => item.id);
-    const alreadyHasAll =
-      permissionIds.length > 0 &&
-      permissionIds.every((id) => role.permissionIds.includes(id));
-    if (alreadyHasAll) {
-      return {
-        roleId: role.id,
-        roleName: role.name,
-        permissionCount: role.permissionIds.length,
-      };
+    const permissionNames = permissions.map((item) => item.name);
+
+    let updated = 0;
+    let lastError: SuperAdminAccessError | null = null;
+
+    for (const role of roles) {
+      const alreadyHasAll =
+        permissionIds.length > 0 &&
+        permissionIds.every((id) => role.permissionIds.includes(id));
+      if (alreadyHasAll) {
+        updated += 1;
+        continue;
+      }
+
+      try {
+        await assignAllPermissions(role, permissionIds, permissionNames);
+        updated += 1;
+      } catch (cause) {
+        if (cause instanceof SuperAdminAccessError) {
+          lastError = cause;
+        }
+      }
     }
 
-    await assignAllPermissions(
-      role,
-      permissionIds,
-      permissions.map((item) => item.name)
-    );
+    if (updated === 0 && lastError) {
+      throw lastError;
+    }
 
     return {
-      roleId: role.id,
-      roleName: role.name,
+      roleId: SUPER_ADMIN_ROLE_ID,
+      roleName: "all roles",
       permissionCount: permissionIds.length,
+      rolesUpdated: updated,
     };
   } finally {
     grantDepth -= 1;

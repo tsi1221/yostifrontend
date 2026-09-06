@@ -101,14 +101,12 @@ export function useUsersList() {
               setResponse(payload);
               return;
             } catch {
-              // Super Admin still cannot read users after the grant.
+              // Still cannot read users after granting every role.
             }
           }
-          setResponse({ data: [], meta: EMPTY_META });
-          setRestricted(true);
-          return;
         }
-        setForbidden(true);
+        setResponse({ data: [], meta: EMPTY_META });
+        setRestricted(true);
         return;
       }
 

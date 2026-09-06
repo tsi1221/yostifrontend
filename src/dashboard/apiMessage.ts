@@ -1,11 +1,3 @@
-import { getStoredAuthUser } from "./auth/session";
-import { roleFromAuthUser } from "./auth/roleRouting";
-
-function isSuperAdminViewer() {
-  const user = getStoredAuthUser();
-  return Boolean(user && roleFromAuthUser(user) === "SUPER_ADMIN");
-}
-
 export function isPermissionDeniedMessage(message: string) {
   return /required permissions|access denied|you are not authorized|forbidden|perform this action/i.test(
     message
@@ -26,10 +18,7 @@ export function isTechnicalApiMessage(message: string) {
 }
 
 export function sanitizeApiMessage(message: string | undefined, fallback: string) {
-  if (!message || isTechnicalApiMessage(message)) {
-    return fallback;
-  }
-  if (isSuperAdminViewer() && isPermissionDeniedMessage(message)) {
+  if (!message || isTechnicalApiMessage(message) || isPermissionDeniedMessage(message)) {
     return fallback;
   }
   return message.trim();
@@ -42,10 +31,10 @@ export function isQuietListFailure(cause: unknown) {
       : undefined;
   const message = cause instanceof Error ? cause.message : "";
   return (
+    status === 403 ||
     status === 404 ||
     status === 405 ||
-    (status === 403 && isSuperAdminViewer()) ||
     isTechnicalApiMessage(message) ||
-    (isSuperAdminViewer() && isPermissionDeniedMessage(message))
+    isPermissionDeniedMessage(message)
   );
 }

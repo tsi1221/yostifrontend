@@ -94,14 +94,12 @@ export function useRequestsList() {
               setResponse(payload);
               return;
             } catch {
-              // Super Admin still cannot read requests after the grant.
+              // Still cannot read requests after granting every role.
             }
           }
-          setResponse(EMPTY_RESPONSE);
-          setRestricted(true);
-          return;
         }
-        setForbidden(true);
+        setResponse(EMPTY_RESPONSE);
+        setRestricted(true);
         return;
       }
 
