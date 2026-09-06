@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { isQuietListFailure } from "../apiMessage";
+import { LIVE_DATA_RELOAD_EVENT } from "../auth/liveDataReload";
 import { isSuperAdminSession, recoverSuperAdminAccess } from "../auth/superAdminAccess";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { UsersListMeta, UsersListQuery, UsersListResponse } from "./types";
@@ -124,6 +125,12 @@ export function useUsersList() {
   useEffect(() => {
     void load();
   }, [load, reloadToken]);
+
+  useEffect(() => {
+    const refresh = () => setReloadToken((value) => value + 1);
+    window.addEventListener(LIVE_DATA_RELOAD_EVENT, refresh);
+    return () => window.removeEventListener(LIVE_DATA_RELOAD_EVENT, refresh);
+  }, []);
 
   const setFilter = <K extends keyof UsersListQuery>(key: K, value: UsersListQuery[K]) => {
     setFilters((current) => ({

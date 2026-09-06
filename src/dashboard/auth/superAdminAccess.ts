@@ -12,6 +12,7 @@ import {
 } from "../rbac/api";
 import type { RoleRecord } from "../rbac/types";
 import { isPermissionDeniedMessage } from "../apiMessage";
+import { notifyLiveDataReload } from "./liveDataReload";
 import { roleFromAuthUser, roleFromRoleName } from "./roleRouting";
 import { getAccessToken, getStoredAuthUser, isPreviewAccessToken } from "./session";
 
@@ -29,7 +30,13 @@ export class SuperAdminAccessError extends Error {
 
 export function isSuperAdminSession() {
   const user = getStoredAuthUser();
-  return Boolean(user && roleFromAuthUser(user) === "SUPER_ADMIN");
+  if (user && roleFromAuthUser(user) === "SUPER_ADMIN") {
+    return true;
+  }
+  if (typeof window !== "undefined" && window.location.pathname.startsWith("/superadmin")) {
+    return Boolean(getAccessToken());
+  }
+  return false;
 }
 
 export function isSuperAdminRoleRecord(role: Pick<RoleRecord, "id" | "name">) {
@@ -63,14 +70,6 @@ function isYostiApi(input: RequestInfo | URL) {
   return /\/api\//.test(url) && !/\/api\/auth\//.test(url);
 }
 
-function withQuietForbiddenMessage(response: Response) {
-  return new Response(JSON.stringify({ message: "" }), {
-    status: 403,
-    statusText: response.statusText,
-    headers: { "Content-Type": "application/json" },
-  });
-}
-
 let nativeFetch: typeof fetch | null = null;
 let grantDepth = 0;
 let fetchPatched = false;
@@ -88,25 +87,27 @@ function patchFetch() {
   nativeFetch = window.fetch.bind(window);
 
   window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-    const response = await apiFetch(input, init);
-    if (grantDepth > 0 || response.status !== 403) {
-      return response;
-    }
-    if (!getAccessToken() || !isYostiApi(input)) {
-      return response;
-    }
-    if (isPreviewAccessToken(getAccessToken())) {
-      return withQuietForbiddenMessage(response);
+    const grantInternal = grantDepth > 0;
+    const liveSuperAdmin =
+      !grantInternal &&
+      isYostiApi(input) &&
+      isSuperAdminSession() &&
+      !isPreviewAccessToken(getAccessToken());
+
+    if (liveSuperAdmin) {
+      await recoverSuperAdminAccess();
     }
 
-    if (isSuperAdminSession()) {
+    let response = await apiFetch(input, init);
+
+    if (liveSuperAdmin && response.status === 403) {
       const recovered = await recoverSuperAdminAccess();
       if (recovered) {
-        const retry = await apiFetch(input, init);
-        return retry.status === 403 ? withQuietForbiddenMessage(retry) : retry;
+        response = await apiFetch(input, init);
       }
     }
-    return withQuietForbiddenMessage(response);
+
+    return response;
   };
 }
 
@@ -361,12 +362,14 @@ export async function grantSuperAdminAllPermissions() {
       throw lastError;
     }
 
-    return {
+    const result = {
       roleId: SUPER_ADMIN_ROLE_ID,
       roleName: "all roles",
       permissionCount: permissionIds.length,
       rolesUpdated: updated,
     };
+    notifyLiveDataReload();
+    return result;
   } finally {
     grantDepth -= 1;
   }

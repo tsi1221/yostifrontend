@@ -10,8 +10,12 @@ export function roleFromRoleName(value: string | undefined | null): UserRole | n
   switch (value.trim().toLowerCase().replace(/[\s-]+/g, "_")) {
     case "super_admin":
     case "superadmin":
+    case "super_administrator":
+    case "administrator":
     case "admin":
     case "system_admin":
+    case "owner":
+    case "root":
       return "SUPER_ADMIN";
     case "staff":
     case "yosti_staff":

@@ -1,4 +1,5 @@
 import { BLOGS_URL } from "../auth/endpoints";
+import { extractListRows } from "../listResponse";
 import { getAccessToken } from "../auth/session";
 import { isPreviewAccessToken } from "../users/usersService";
 import type {
@@ -231,13 +232,7 @@ function normalizeBlogsResponse(raw: unknown, query: BlogsListQuery): BlogsListR
   const record = asRecord(raw);
   const nested = asRecord(record?.data);
   const meta = asRecord(record?.meta) ?? asRecord(nested?.meta);
-  const rows = Array.isArray(record?.data)
-    ? record.data
-    : Array.isArray(nested?.data)
-      ? nested.data
-      : Array.isArray(record?.blogs)
-        ? record.blogs
-        : [];
+  const rows = extractListRows(raw);
 
   const data = rows
     .map((row) => normalizeBlog(row))

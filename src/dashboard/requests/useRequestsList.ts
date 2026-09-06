@@ -3,6 +3,7 @@ import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
 import { isQuietListFailure } from "../apiMessage";
+import { LIVE_DATA_RELOAD_EVENT } from "../auth/liveDataReload";
 import { isSuperAdminSession, recoverSuperAdminAccess } from "../auth/superAdminAccess";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { RequestsListQuery, RequestsListResponse } from "./types";
@@ -121,7 +122,11 @@ export function useRequestsList() {
   useEffect(() => {
     const refresh = () => setReloadToken((value) => value + 1);
     window.addEventListener(REQUESTS_INVALIDATE_EVENT, refresh);
-    return () => window.removeEventListener(REQUESTS_INVALIDATE_EVENT, refresh);
+    window.addEventListener(LIVE_DATA_RELOAD_EVENT, refresh);
+    return () => {
+      window.removeEventListener(REQUESTS_INVALIDATE_EVENT, refresh);
+      window.removeEventListener(LIVE_DATA_RELOAD_EVENT, refresh);
+    };
   }, []);
 
   const setFilter = <K extends keyof RequestsListQuery>(

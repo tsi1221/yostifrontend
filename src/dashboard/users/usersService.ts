@@ -1,5 +1,6 @@
 import { USERS_URL } from "../auth/endpoints";
 import { getAccessToken } from "../auth/session";
+import { extractListRows, pickListNumber } from "../listResponse";
 import type {
   ManagedUser,
   ManagedUserRole,
@@ -48,6 +49,7 @@ export function buildUsersQueryString(query: UsersListQuery) {
   const params = new URLSearchParams();
   params.set("page", String(query.page || 1));
   params.set("pageSize", String(query.pageSize || 10));
+  params.set("limit", String(query.pageSize || 10));
 
   const textFilters = [
     "search",
@@ -94,13 +96,19 @@ function normalizeUser(raw: unknown): ManagedUser | null {
     return null;
   }
 
-  const id = pickNumber(record.id, record.userId, record.user_id);
-  const email = pickString(record.email);
-  if (id === undefined || !email) {
+  const id =
+    pickNumber(record.id, record.userId, record.user_id) ??
+    pickListNumber(record.id, record.userId, record.user_id);
+  const email = pickString(record.email, record.userEmail, record.mail);
+  if (id === undefined) {
     return null;
   }
 
-  const roleId = pickNumber(record.roleId, record.role_id);
+  const roleId = pickNumber(
+    record.roleId,
+    record.role_id,
+    typeof record.role === "number" ? record.role : undefined
+  );
   return {
     id,
     fullname: pickString(record.fullname, record.full_name, record.fullName, record.name) || "Unnamed user",
@@ -120,15 +128,7 @@ function normalizeUser(raw: unknown): ManagedUser | null {
 function normalizeUsersResponse(raw: unknown, query: UsersListQuery): UsersListResponse {
   const record = asRecord(raw);
   const nested = asRecord(record?.data);
-  const rows = Array.isArray(record?.data)
-    ? record.data
-    : Array.isArray(nested?.data)
-      ? nested.data
-      : Array.isArray(nested?.users)
-        ? nested.users
-        : Array.isArray(record?.users)
-          ? record.users
-          : [];
+  const rows = extractListRows(raw);
 
   const data = rows
     .map((row) => normalizeUser(row))

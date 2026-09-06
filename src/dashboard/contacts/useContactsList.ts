@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { isQuietListFailure } from "../apiMessage";
+import { LIVE_DATA_RELOAD_EVENT } from "../auth/liveDataReload";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { ContactsListQuery, ContactsListResponse } from "./types";
 import { DEFAULT_CONTACTS_QUERY } from "./types";
@@ -90,7 +91,11 @@ export function useContactsList() {
   useEffect(() => {
     const refresh = () => setReloadToken((value) => value + 1);
     window.addEventListener(CONTACTS_INVALIDATE_EVENT, refresh);
-    return () => window.removeEventListener(CONTACTS_INVALIDATE_EVENT, refresh);
+    window.addEventListener(LIVE_DATA_RELOAD_EVENT, refresh);
+    return () => {
+      window.removeEventListener(CONTACTS_INVALIDATE_EVENT, refresh);
+      window.removeEventListener(LIVE_DATA_RELOAD_EVENT, refresh);
+    };
   }, []);
 
   const setFilter = <K extends keyof ContactsListQuery>(

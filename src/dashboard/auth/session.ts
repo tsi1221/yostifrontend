@@ -155,6 +155,7 @@ export function persistAuthSession(payload: AuthLoginResponse) {
   const user = mergeAuthUser(payload.user, pending);
 
   localStorage.setItem(ACCESS_TOKEN_KEY, payload.access_token);
+  localStorage.setItem("token", payload.access_token);
   persistAuthUser(user, false);
   localStorage.setItem("email", user.email);
   localStorage.setItem("role", roleFromAuthUser(user));

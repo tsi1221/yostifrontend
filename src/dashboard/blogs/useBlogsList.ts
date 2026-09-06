@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { isQuietListFailure } from "../apiMessage";
+import { LIVE_DATA_RELOAD_EVENT } from "../auth/liveDataReload";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { BlogsListQuery, BlogsListResponse } from "./types";
 import { DEFAULT_BLOGS_QUERY } from "./types";
@@ -87,7 +88,11 @@ export function useBlogsList(options?: { publicFeed?: boolean }) {
   useEffect(() => {
     const refresh = () => setReloadToken((value) => value + 1);
     window.addEventListener(BLOGS_INVALIDATE_EVENT, refresh);
-    return () => window.removeEventListener(BLOGS_INVALIDATE_EVENT, refresh);
+    window.addEventListener(LIVE_DATA_RELOAD_EVENT, refresh);
+    return () => {
+      window.removeEventListener(BLOGS_INVALIDATE_EVENT, refresh);
+      window.removeEventListener(LIVE_DATA_RELOAD_EVENT, refresh);
+    };
   }, []);
 
   const setFilter = <K extends keyof BlogsListQuery>(

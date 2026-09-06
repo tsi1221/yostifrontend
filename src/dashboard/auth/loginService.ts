@@ -61,6 +61,7 @@ export function normalizeAuthUser(raw: unknown): AuthUser | null {
   }
 
   const roleRecord = asRecord(record.role);
+  const roles = Array.isArray(record.roles) ? asRecord(record.roles[0]) : null;
   const rawId = record.id ?? record.userId ?? record.user_id ?? record._id;
   const id = pickNumber(rawId) ?? (pickString(rawId) ? 0 : undefined);
   const fullname = pickString(
@@ -74,9 +75,13 @@ export function normalizeAuthUser(raw: unknown): AuthUser | null {
     record.roleId,
     record.role_id,
     record.roleID,
+    typeof record.role === "number" ? record.role : undefined,
     roleRecord?.id,
     roleRecord?.roleId,
-    roleRecord?.role_id
+    roleRecord?.role_id,
+    roles?.id,
+    roles?.roleId,
+    roles?.role_id
   );
   const role = pickString(
     typeof record.role === "string" ? record.role : undefined,
@@ -84,7 +89,10 @@ export function normalizeAuthUser(raw: unknown): AuthUser | null {
     record.role_name,
     roleRecord?.name,
     roleRecord?.roleName,
-    roleRecord?.title
+    roleRecord?.title,
+    roles?.name,
+    roles?.roleName,
+    roles?.title
   );
 
   if (id === undefined || !fullname || !email) {
@@ -131,6 +139,7 @@ function normalizeLoginPayload(raw: unknown): AuthLoginResponse | null {
     record.access_token,
     record.accessToken,
     record.token,
+    typeof record.data === "string" ? record.data : undefined,
     nested?.access_token,
     nested?.accessToken,
     nested?.token

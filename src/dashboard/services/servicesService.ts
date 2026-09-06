@@ -1,5 +1,6 @@
 import { SERVICES_URL } from "../auth/endpoints";
 import { getAccessToken } from "../auth/session";
+import { extractListRows } from "../listResponse";
 import { isPreviewAccessToken } from "../users/usersService";
 import type {
   CreateServicePayload,
@@ -367,13 +368,7 @@ function normalizeServicesResponse(
   const record = asRecord(raw);
   const nested = asRecord(record?.data);
   const meta = asRecord(record?.meta) ?? asRecord(nested?.meta);
-  const rows = Array.isArray(record?.data)
-    ? record.data
-    : Array.isArray(nested?.data)
-      ? nested.data
-      : Array.isArray(record?.services)
-        ? record.services
-        : [];
+  const rows = extractListRows(raw);
 
   const data = rows
     .map((row) => normalizeService(row))

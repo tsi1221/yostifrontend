@@ -1,4 +1,5 @@
 import { sanitizeApiMessage } from "../apiMessage";
+import { extractListRows } from "../listResponse";
 import { REQUESTS_URL } from "../auth/endpoints";
 import { getAccessToken } from "../auth/session";
 import { isPreviewAccessToken } from "../users/usersService";
@@ -180,13 +181,7 @@ function normalizeRequestsResponse(
 ): RequestsListResponse {
   const record = asRecord(raw);
   const nested = asRecord(record?.data);
-  const rows = Array.isArray(record?.data)
-    ? record.data
-    : Array.isArray(nested?.data)
-      ? nested.data
-      : Array.isArray(record?.requests)
-        ? record.requests
-        : [];
+  const rows = extractListRows(raw);
 
   const data = rows
     .map((row) => normalizeRequest(row))

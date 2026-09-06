@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { isQuietListFailure } from "../apiMessage";
+import { LIVE_DATA_RELOAD_EVENT } from "../auth/liveDataReload";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { SupportsListQuery, SupportsListResponse } from "./types";
 import { DEFAULT_SUPPORTS_QUERY } from "./types";
@@ -106,7 +107,7 @@ export function useSupportsList() {
   useEffect(() => {
     const refresh = () => setReloadToken((value) => value + 1);
     const events = Array.from(
-      new Set([TICKETS_INVALIDATE_EVENT, SUPPORTS_INVALIDATE_EVENT])
+      new Set([TICKETS_INVALIDATE_EVENT, SUPPORTS_INVALIDATE_EVENT, LIVE_DATA_RELOAD_EVENT])
     );
     for (const eventName of events) {
       window.addEventListener(eventName, refresh);

@@ -31,10 +31,8 @@ export function isQuietListFailure(cause: unknown) {
       : undefined;
   const message = cause instanceof Error ? cause.message : "";
   return (
-    status === 403 ||
     status === 404 ||
     status === 405 ||
-    isTechnicalApiMessage(message) ||
-    isPermissionDeniedMessage(message)
+    isTechnicalApiMessage(message)
   );
 }

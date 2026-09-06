@@ -3,6 +3,7 @@ import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
 import { isQuietListFailure } from "../apiMessage";
+import { LIVE_DATA_RELOAD_EVENT } from "../auth/liveDataReload";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { InspectionsListQuery, InspectionsListResponse } from "./types";
 import { DEFAULT_INSPECTIONS_QUERY } from "./types";
@@ -108,7 +109,11 @@ export function useInspectionsList() {
   useEffect(() => {
     const refresh = () => setReloadToken((value) => value + 1);
     window.addEventListener(INSPECTIONS_INVALIDATE_EVENT, refresh);
-    return () => window.removeEventListener(INSPECTIONS_INVALIDATE_EVENT, refresh);
+    window.addEventListener(LIVE_DATA_RELOAD_EVENT, refresh);
+    return () => {
+      window.removeEventListener(INSPECTIONS_INVALIDATE_EVENT, refresh);
+      window.removeEventListener(LIVE_DATA_RELOAD_EVENT, refresh);
+    };
   }, []);
 
   const setFilter = <K extends keyof InspectionsListQuery>(

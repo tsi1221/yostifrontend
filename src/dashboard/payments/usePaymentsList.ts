@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { isQuietListFailure } from "../apiMessage";
+import { LIVE_DATA_RELOAD_EVENT } from "../auth/liveDataReload";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { PaymentsListQuery, PaymentsListResponse } from "./types";
 import { DEFAULT_PAYMENTS_QUERY } from "./types";
@@ -93,7 +94,11 @@ export function usePaymentsList() {
   useEffect(() => {
     const refresh = () => setReloadToken((value) => value + 1);
     window.addEventListener(PAYMENTS_INVALIDATE_EVENT, refresh);
-    return () => window.removeEventListener(PAYMENTS_INVALIDATE_EVENT, refresh);
+    window.addEventListener(LIVE_DATA_RELOAD_EVENT, refresh);
+    return () => {
+      window.removeEventListener(PAYMENTS_INVALIDATE_EVENT, refresh);
+      window.removeEventListener(LIVE_DATA_RELOAD_EVENT, refresh);
+    };
   }, []);
 
   const setFilter = <K extends keyof PaymentsListQuery>(

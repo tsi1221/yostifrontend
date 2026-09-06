@@ -1,4 +1,5 @@
 import { CONTACTS_URL } from "../auth/endpoints";
+import { extractListRows } from "../listResponse";
 import { getAccessToken } from "../auth/session";
 import { isPreviewAccessToken } from "../users/usersService";
 import type {
@@ -267,13 +268,7 @@ function normalizeContactsResponse(
   const record = asRecord(raw);
   const nested = asRecord(record?.data);
   const meta = asRecord(record?.meta) ?? asRecord(nested?.meta);
-  const rows = Array.isArray(record?.data)
-    ? record.data
-    : Array.isArray(nested?.data)
-      ? nested.data
-      : Array.isArray(record?.contacts)
-        ? record.contacts
-        : [];
+  const rows = extractListRows(raw);
 
   const data = rows
     .map((row) => normalizeContact(row))

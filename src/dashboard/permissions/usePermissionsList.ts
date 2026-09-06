@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { isQuietListFailure } from "../apiMessage";
+import { LIVE_DATA_RELOAD_EVENT } from "../auth/liveDataReload";
 import { isSuperAdminSession, recoverSuperAdminAccess } from "../auth/superAdminAccess";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { PermissionsListQuery, PermissionsListResponse } from "./types";
@@ -105,7 +106,11 @@ export function usePermissionsList(options?: { lookup?: boolean; pageSize?: numb
   useEffect(() => {
     const refresh = () => setReloadToken((value) => value + 1);
     window.addEventListener(PERMISSIONS_INVALIDATE_EVENT, refresh);
-    return () => window.removeEventListener(PERMISSIONS_INVALIDATE_EVENT, refresh);
+    window.addEventListener(LIVE_DATA_RELOAD_EVENT, refresh);
+    return () => {
+      window.removeEventListener(PERMISSIONS_INVALIDATE_EVENT, refresh);
+      window.removeEventListener(LIVE_DATA_RELOAD_EVENT, refresh);
+    };
   }, []);
 
   const permissions = useMemo(() => response?.data ?? [], [response]);

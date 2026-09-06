@@ -1,4 +1,5 @@
 import { sanitizeApiMessage } from "../apiMessage";
+import { extractListRows } from "../listResponse";
 import { INSPECTIONS_URL } from "../auth/endpoints";
 import { getAccessToken } from "../auth/session";
 import { isPreviewAccessToken } from "../users/usersService";
@@ -331,13 +332,7 @@ function normalizeInspectionsResponse(
   const record = asRecord(raw);
   const nested = asRecord(record?.data);
   const meta = asRecord(record?.meta) ?? asRecord(nested?.meta);
-  const rows = Array.isArray(record?.data)
-    ? record.data
-    : Array.isArray(nested?.data)
-      ? nested.data
-      : Array.isArray(record?.inspections)
-        ? record.inspections
-        : [];
+  const rows = extractListRows(raw);
 
   const data = rows
     .map((row) => normalizeInspection(row))
