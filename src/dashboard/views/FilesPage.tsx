@@ -5,8 +5,8 @@ export default function FilesPage() {
   return (
     <div>
       <PageHeader
-        title="File library"
-        description="Upload images and documents to the live files API, then remove them by system filename. There is no remote file list — this page keeps uploads in the current session only."
+        title="File Library"
+        description="Manage and upload files for use across the Yosti Trading platform."
       />
       <FileUploadManager />
     </div>

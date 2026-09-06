@@ -6,6 +6,7 @@ import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { FileFieldErrors, UploadedFile } from "./types";
 import {
   FILE_INVALID_FORMAT_MESSAGE,
+  FILE_UPLOAD_SUCCESS_MESSAGE,
   FileRequestError,
   deleteFileByFilename,
   isAllowedFile,
@@ -14,9 +15,10 @@ import {
 } from "./api";
 
 type PendingAction =
-  | { kind: "upload"; file: File; description?: string }
+  | { kind: "upload"; files: File[]; description?: string }
   | { kind: "delete"; filename: string };
 
+const UPLOAD_CONCURRENCY = 3;
 const PREVIEW_AUTH_MESSAGE = "Sign in with a live account to manage files.";
 
 export function useFileManager() {
@@ -43,46 +45,95 @@ export function useFileManager() {
     return false;
   };
 
-  const addFile = async (file: File, description?: string) => {
-    pendingRef.current = { kind: "upload", file, description };
+  const addFiles = async (incoming: File[], description?: string) => {
+    pendingRef.current = { kind: "upload", files: incoming, description };
 
-    if (!isAllowedFile(file)) {
-      const fileError = "This file type is not allowed.";
-      setFieldErrors({ file: fileError });
+    const blocked = incoming.filter((file) => !isAllowedFile(file));
+    const allowed = incoming.filter((file) => isAllowedFile(file));
+
+    if (blocked.length > 0) {
+      setFieldErrors({ file: "This file type is not allowed." });
       message.error(FILE_INVALID_FORMAT_MESSAGE);
-      return null;
+    }
+
+    if (allowed.length === 0) {
+      return [];
     }
 
     setUploading(true);
     setProgress(0);
     setAuthError(null);
-    setFieldErrors({});
+    if (blocked.length === 0) {
+      setFieldErrors({});
+    }
+
+    const progresses = allowed.map(() => 0);
+    let stopped = false;
+    let uploadedCount = 0;
+    let cursor = 0;
+
+    const uploadOne = async (file: File, index: number) => {
+      if (stopped) {
+        return null;
+      }
+
+      try {
+        const uploaded = await uploadFile({ file, description }, (percent) => {
+          progresses[index] = percent;
+          const total = progresses.reduce((sum, value) => sum + value, 0);
+          setProgress(Math.round(total / Math.max(allowed.length, 1)));
+        });
+        setFiles((current) => [
+          uploaded.record,
+          ...current.filter((item) => item.filename !== uploaded.record.filename),
+        ]);
+        uploadedCount += 1;
+        return uploaded.record;
+      } catch (cause) {
+        if (cause instanceof FileRequestError && cause.status === 400) {
+          setFieldErrors(cause.fields ?? { file: cause.message });
+          message.error(cause.message);
+          return null;
+        }
+        if (handleAuth(cause)) {
+          stopped = true;
+          return null;
+        }
+        message.error(
+          cause instanceof Error ? cause.message : "Could not upload this file."
+        );
+        return null;
+      }
+    };
+
+    const workers = Array.from(
+      { length: Math.min(UPLOAD_CONCURRENCY, allowed.length) },
+      async () => {
+        while (cursor < allowed.length && !stopped) {
+          const index = cursor;
+          cursor += 1;
+          await uploadOne(allowed[index], index);
+        }
+      }
+    );
 
     try {
-      const uploaded = await uploadFile({ file, description }, setProgress);
-      setFiles((current) => [
-        uploaded.record,
-        ...current.filter((item) => item.filename !== uploaded.record.filename),
-      ]);
-      pendingRef.current = null;
-      message.success(uploaded.message);
-      return uploaded.record;
-    } catch (cause) {
-      if (cause instanceof FileRequestError && cause.status === 400) {
-        setFieldErrors(cause.fields ?? { file: cause.message });
-        message.error(cause.message);
-        return null;
+      await Promise.all(workers);
+      if (uploadedCount === 1) {
+        message.success(FILE_UPLOAD_SUCCESS_MESSAGE);
+        pendingRef.current = null;
+      } else if (uploadedCount > 1) {
+        message.success(`${uploadedCount} files uploaded successfully.`);
+        pendingRef.current = null;
       }
-      if (handleAuth(cause)) {
-        return null;
-      }
-      message.error(cause instanceof Error ? cause.message : "Could not upload this file.");
-      return null;
+      return allowed.slice(0, uploadedCount);
     } finally {
       setUploading(false);
       setProgress(0);
     }
   };
+
+  const addFile = (file: File, description?: string) => addFiles([file], description);
 
   const removeFile = async (filename: string) => {
     pendingRef.current = { kind: "delete", filename };
@@ -127,7 +178,7 @@ export function useFileManager() {
       return;
     }
     if (pending.kind === "upload") {
-      await addFile(pending.file, pending.description);
+      await addFiles(pending.files, pending.description);
       return;
     }
     await removeFile(pending.filename);
@@ -141,6 +192,7 @@ export function useFileManager() {
     authError,
     fieldErrors,
     addFile,
+    addFiles,
     removeFile,
     retry,
   };
