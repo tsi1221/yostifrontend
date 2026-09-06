@@ -11,6 +11,8 @@ export type {
   ServicesListResponse,
   UpdateServiceDetails,
   UpdateServicePayload,
+  DeleteServiceResponse,
+  ServiceDeletionPhase,
 } from "./types";
 export {
   DEFAULT_SERVICES_QUERY,
@@ -30,6 +32,7 @@ export {
   buildServicesQueryString,
   collectedFeatures,
   createService,
+  deleteService,
   fetchServicesList,
   formValuesToPayload,
   formValuesToUpdatePayload,
@@ -45,6 +48,8 @@ export {
 export { useCreateService } from "./useCreateService";
 export { useServicesList } from "./useServicesList";
 export { useUpdateService } from "./useUpdateService";
+export { useDeleteService } from "./useDeleteService";
 export { default as CreateServiceForm } from "./CreateServiceForm";
 export { default as EditServiceForm } from "./EditServiceForm";
+export { default as DeleteServiceDialog } from "./DeleteServiceDialog";
 export { default as ServicesGrid } from "./ServicesGrid";

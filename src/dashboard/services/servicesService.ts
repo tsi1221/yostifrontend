@@ -517,3 +517,67 @@ export async function patchService(
   invalidateServicesCache();
   return updated;
 }
+
+function parseDeleteServiceResponse(raw: unknown) {
+  return {
+    message: readApiMessage(raw, "Service deleted successfully."),
+  };
+}
+
+export async function deleteService(id: number): Promise<string> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new ServiceRequestError("Unauthorized", 401);
+  }
+
+  if (asServiceId(id) === undefined) {
+    throw new ServiceRequestError(SERVICE_NOT_FOUND_MESSAGE, 404);
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(serviceDetailUrl(id), {
+      method: "DELETE",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch {
+    throw new ServiceRequestError(
+      "Unable to reach the server. Check your connection and try again.",
+      0
+    );
+  }
+
+  const raw: unknown = await response.json().catch(() => null);
+
+  if (response.status === 400) {
+    throw new ServiceRequestError(
+      readApiMessage(raw, "Unable to delete this service."),
+      400
+    );
+  }
+  if (response.status === 401) {
+    throw new ServiceRequestError("Unauthorized", 401);
+  }
+  if (response.status === 404) {
+    throw new ServiceRequestError(SERVICE_NOT_FOUND_MESSAGE, 404);
+  }
+  if (response.status >= 500) {
+    throw new ServiceRequestError(
+      readApiMessage(raw, "Server error occurred. Could not delete service."),
+      response.status
+    );
+  }
+  if (response.status !== 200) {
+    throw new ServiceRequestError(
+      readApiMessage(raw, `Unable to delete this service. Server returned ${response.status}.`),
+      response.status
+    );
+  }
+
+  const parsed = parseDeleteServiceResponse(raw);
+  invalidateServicesCache();
+  return parsed.message;
+}

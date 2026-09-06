@@ -98,3 +98,9 @@ export const DEFAULT_SERVICES_QUERY: ServicesListQuery = {
   search: "",
   title: "",
 };
+
+export interface DeleteServiceResponse {
+  message: string;
+}
+
+export type ServiceDeletionPhase = "idle" | "confirming" | "deleting";

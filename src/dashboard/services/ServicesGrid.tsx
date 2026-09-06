@@ -1,10 +1,13 @@
 import { useState } from "react";
+import { Trash2 } from "lucide-react";
 
 import ActionButton from "../components/ActionButton";
 import { SelectInput, TextInput } from "../components/FormField";
 import SideDrawer from "../components/SideDrawer";
 import StatusBadge from "../components/StatusBadge";
+import DeleteServiceDialog from "./DeleteServiceDialog";
 import EditServiceForm from "./EditServiceForm";
+import { asServiceId } from "./servicesService";
 import type { ServiceRecord } from "./types";
 import { useServicesList } from "./useServicesList";
 
@@ -42,9 +45,11 @@ function ServiceLogo({ title, logo }: { title: string; logo: string }) {
 function ServiceCard({
   service,
   onEdit,
+  onDelete,
 }: {
   service: ServiceRecord;
   onEdit: (service: ServiceRecord) => void;
+  onDelete: (id: number) => void;
 }) {
   const features = service.details.features.slice(0, 6);
   const extra = service.details.features.length - features.length;
@@ -88,8 +93,21 @@ function ServiceCard({
           </li>
         ) : null}
       </ul>
-      <div className="mt-auto pt-1">
+      <div className="mt-auto flex items-center gap-2 pt-1">
         <ActionButton onClick={() => onEdit(service)}>Edit</ActionButton>
+        <button
+          type="button"
+          className="rounded-xl bg-red-600 p-2 text-white hover:bg-red-700"
+          aria-label={`Delete service ${service.id}`}
+          onClick={() => {
+            const id = asServiceId(service.id);
+            if (id !== undefined) {
+              onDelete(id);
+            }
+          }}
+        >
+          <Trash2 size={16} />
+        </button>
       </div>
     </article>
   );
@@ -133,6 +151,7 @@ export default function ServicesGrid() {
     retry,
   } = useServicesList();
   const [editing, setEditing] = useState<ServiceRecord | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<number | null>(null);
 
   return (
     <div className="space-y-4">
@@ -175,7 +194,12 @@ export default function ServicesGrid() {
         ) : null}
         {!loading
           ? services.map((service) => (
-              <ServiceCard key={service.id} service={service} onEdit={setEditing} />
+              <ServiceCard
+                key={service.id}
+                service={service}
+                onEdit={setEditing}
+                onDelete={setPendingDelete}
+              />
             ))
           : null}
       </div>
@@ -227,6 +251,18 @@ export default function ServicesGrid() {
           />
         ) : null}
       </SideDrawer>
+
+      <DeleteServiceDialog
+        open={pendingDelete !== null}
+        serviceId={pendingDelete}
+        onClose={() => setPendingDelete(null)}
+        onDeleted={() => {
+          if (editing && pendingDelete !== null && editing.id === pendingDelete) {
+            setEditing(null);
+          }
+          setPendingDelete(null);
+        }}
+      />
     </div>
   );
 }
