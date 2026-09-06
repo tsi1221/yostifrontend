@@ -33,3 +33,6 @@ export const SUPPORT_URL = `${AUTH_API_BASE}/support`;
 
 /** GET paginated support tickets / GET :id detail / PATCH :id update / DELETE :id; also used as a create fallback */
 export const SUPPORTS_URL = `${AUTH_API_BASE}/supports`;
+
+/** POST create catalog services { title, logo, details: { tier, support247, features } } */
+export const SERVICES_URL = `${AUTH_API_BASE}/services`;

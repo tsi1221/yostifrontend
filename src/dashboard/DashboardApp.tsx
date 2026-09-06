@@ -25,6 +25,8 @@ import PaymentsPage from "./views/PaymentsPage";
 import CreateTicketForm from "./tickets/CreateTicketForm";
 import SupportTicketDetailView from "./tickets/SupportTicketDetailView";
 import SupportPage from "./views/SupportPage";
+import CreateServiceForm from "./services/CreateServiceForm";
+import ServicesPage from "./views/ServicesPage";
 
 interface DashboardAppProps {
   role: UserRole;
@@ -182,6 +184,22 @@ function DashboardRoutes({ role }: DashboardAppProps) {
           element={
             <Guard role={role} page="payments">
               <PaymentsPage />
+            </Guard>
+          }
+        />
+        <Route
+          path="services/new"
+          element={
+            <Guard role={role} page="services">
+              <CreateServiceForm />
+            </Guard>
+          }
+        />
+        <Route
+          path="services"
+          element={
+            <Guard role={role} page="services">
+              <ServicesPage />
             </Guard>
           }
         />

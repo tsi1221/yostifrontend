@@ -38,6 +38,7 @@ export type DashboardPageKey =
   | "quality-control"
   | "trips"
   | "payments"
+  | "services"
   | "supports";
 
 export interface NavItem {
@@ -90,6 +91,7 @@ export const getNavigation = (role: UserRole): NavGroup[] => {
             item(slug, "logistics", "Shipments"),
             item(slug, "quality-control", "Quality Reports"),
             item(slug, "trips", "Visa Parameters"),
+            item(slug, "services", "Services"),
             item(slug, "supports", "Support Tickets"),
           ],
         },
@@ -113,6 +115,7 @@ export const getNavigation = (role: UserRole): NavGroup[] => {
           children: [
             item(slug, "quality-control", "Quality Reports"),
             item(slug, "trips", "Visa Parameters"),
+            item(slug, "services", "Services"),
             item(slug, "supports", "Support Tickets"),
           ],
         },
@@ -128,6 +131,7 @@ export const getNavigation = (role: UserRole): NavGroup[] => {
             item(slug, "logistics", "Cargo Tracking System"),
             item(slug, "quality-control", "Request Quality Inspection"),
             item(slug, "trips", "Visa / Business Trip"),
+            item(slug, "services", "Services"),
           ],
         },
         {
