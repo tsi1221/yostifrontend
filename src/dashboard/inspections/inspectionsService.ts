@@ -416,18 +416,31 @@ export function normalizeInspection(raw: unknown): InspectionRecord | null {
   }
 
   const id = pickNumber(record.id, record.inspectionId, record.inspection_id);
-  const supplierId = pickNumber(record.supplierId, record.supplier_id);
-  if (id === undefined || supplierId === undefined) {
+  if (id === undefined) {
     return null;
   }
 
   return {
     id,
     userId: pickNumber(record.userId, record.user_id) ?? 0,
-    supplierId,
-    productType: pickString(record.productType, record.product_type),
+    supplierId: pickNumber(record.supplierId, record.supplier_id) ?? 0,
+    productType: pickString(
+      record.productType,
+      record.product_type,
+      record.productName,
+      record.product_name,
+      record.title,
+      record.subject
+    ),
     type: asInspectionType(pickString(record.type, record.inspectionType, record.inspection_type)),
-    date: pickString(record.date, record.scheduledDate, record.scheduled_date),
+    date: pickString(
+      record.date,
+      record.scheduledDate,
+      record.scheduled_date,
+      record.inspectionDate,
+      record.inspection_date,
+      record.createdAt
+    ),
     photoVideoRequired:
       pickBoolean(
         record.photoVideoRequired,

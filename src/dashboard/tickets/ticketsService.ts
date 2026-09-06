@@ -359,7 +359,7 @@ export async function fetchSupportsList(
 }
 
 function ticketsCreateUrls() {
-  return [...new Set([TICKETS_URL, SUPPORT_URL, SUPPORTS_URL])];
+  return [...new Set([SUPPORTS_URL, TICKETS_URL, SUPPORT_URL])];
 }
 
 async function postTicket(
