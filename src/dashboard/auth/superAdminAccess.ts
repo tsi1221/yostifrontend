@@ -14,9 +14,6 @@ import { getAccessToken, getStoredAuthUser, isPreviewAccessToken } from "./sessi
 
 export const SUPER_ADMIN_ROLE_ID = 5;
 
-export const SUPER_ADMIN_MISSING_PERMISSIONS_MESSAGE =
-  "Your Super Admin role is missing this permission on the server. Grant full access, then retry.";
-
 export class SuperAdminAccessError extends Error {
   status: number;
 

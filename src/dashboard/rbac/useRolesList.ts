@@ -2,11 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { isQuietListFailure } from "../apiMessage";
-import {
-  SUPER_ADMIN_MISSING_PERMISSIONS_MESSAGE,
-  isSuperAdminSession,
-  recoverSuperAdminAccess,
-} from "../auth/superAdminAccess";
+import { isSuperAdminSession, recoverSuperAdminAccess } from "../auth/superAdminAccess";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { RolesListQuery, RolesListResponse } from "./types";
 import { DEFAULT_ROLES_QUERY } from "./types";
@@ -74,7 +70,6 @@ export function useRolesList() {
           }
         }
         setResponse(EMPTY_RESPONSE);
-        setServerError(SUPER_ADMIN_MISSING_PERMISSIONS_MESSAGE);
         return;
       }
 

@@ -3,11 +3,7 @@ import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
 import { isQuietListFailure } from "../apiMessage";
-import {
-  SUPER_ADMIN_MISSING_PERMISSIONS_MESSAGE,
-  isSuperAdminSession,
-  recoverSuperAdminAccess,
-} from "../auth/superAdminAccess";
+import { isSuperAdminSession, recoverSuperAdminAccess } from "../auth/superAdminAccess";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { RequestsListQuery, RequestsListResponse } from "./types";
 import { DEFAULT_REQUESTS_QUERY } from "./types";
@@ -103,7 +99,6 @@ export function useRequestsList() {
           }
           setResponse(EMPTY_RESPONSE);
           setRestricted(true);
-          setServerError(SUPER_ADMIN_MISSING_PERMISSIONS_MESSAGE);
           return;
         }
         setForbidden(true);

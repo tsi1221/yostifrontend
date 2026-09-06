@@ -2,11 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { isQuietListFailure } from "../apiMessage";
-import {
-  SUPER_ADMIN_MISSING_PERMISSIONS_MESSAGE,
-  isSuperAdminSession,
-  recoverSuperAdminAccess,
-} from "../auth/superAdminAccess";
+import { isSuperAdminSession, recoverSuperAdminAccess } from "../auth/superAdminAccess";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { UsersListMeta, UsersListQuery, UsersListResponse } from "./types";
 import { DEFAULT_USERS_QUERY } from "./types";
@@ -110,7 +106,6 @@ export function useUsersList() {
           }
           setResponse({ data: [], meta: EMPTY_META });
           setRestricted(true);
-          setError(SUPER_ADMIN_MISSING_PERMISSIONS_MESSAGE);
           return;
         }
         setForbidden(true);

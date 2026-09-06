@@ -4,7 +4,6 @@ import { Trash2 } from "lucide-react";
 
 import { isSuperAdminSession } from "../auth/superAdminAccess";
 import ActionButton from "../components/ActionButton";
-import SuperAdminAccessBanner from "../components/SuperAdminAccessBanner";
 import DeleteRequestDialog from "./DeleteRequestDialog";
 import { SelectInput, TextInput } from "../components/FormField";
 import { ROLE_SLUG } from "../roles";
@@ -120,15 +119,7 @@ export default function RequestsTable() {
         </label>
       </section>
 
-      {restricted || (forbidden && isSuperAdminSession()) ? (
-        <SuperAdminAccessBanner
-          message={
-            serverError ||
-            "Your Super Admin role is missing this permission on the server. Grant full access, then retry."
-          }
-          onRetry={retry}
-        />
-      ) : serverError && !loading ? (
+      {serverError && !loading && !restricted ? (
         <section className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm font-medium text-amber-900">{serverError}</p>
           <ActionButton onClick={retry}>Retry</ActionButton>

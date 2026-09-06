@@ -2,11 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import {
-  SUPER_ADMIN_MISSING_PERMISSIONS_MESSAGE,
-  isSuperAdminSession,
-  recoverSuperAdminAccess,
-} from "../auth/superAdminAccess";
+import { isSuperAdminSession, recoverSuperAdminAccess } from "../auth/superAdminAccess";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { SourcingRequestRecord } from "./types";
 import {
@@ -68,7 +64,7 @@ export function useRequestDetail(id: string | undefined) {
               // Super Admin still cannot read this request after the grant.
             }
           }
-          setServerError(SUPER_ADMIN_MISSING_PERMISSIONS_MESSAGE);
+          setServerError("Unable to load request details.");
           return;
         }
         setServerError(cause.message);

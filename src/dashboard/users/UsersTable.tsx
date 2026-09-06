@@ -1,7 +1,6 @@
 import { isSuperAdminSession } from "../auth/superAdminAccess";
 import ActionButton from "../components/ActionButton";
 import { SelectInput, TextInput } from "../components/FormField";
-import SuperAdminAccessBanner from "../components/SuperAdminAccessBanner";
 import type { ManagedUser } from "./types";
 import { USER_ROLE_FILTERS } from "./types";
 import { useUsersList } from "./useUsersList";
@@ -61,15 +60,6 @@ export default function UsersTable() {
 
   return (
     <div className="space-y-4">
-      {restricted || (forbidden && isSuperAdminSession()) ? (
-        <SuperAdminAccessBanner
-          message={
-            error ||
-            "Your Super Admin role is missing this permission on the server. Grant full access, then retry."
-          }
-          onRetry={retry}
-        />
-      ) : null}
       <section className="grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-[minmax(0,1fr)_220px]">
         <label className="block space-y-1.5">
           <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
@@ -132,15 +122,7 @@ export default function UsersTable() {
                 </tr>
               ) : null}
 
-              {!loading && (restricted || (forbidden && isSuperAdminSession())) && users.length === 0 ? (
-                <tr>
-                  <td colSpan={COLUMNS} className="px-4 py-12 text-center text-sm text-slate-500">
-                    Users will appear here after Super Admin has the required permissions.
-                  </td>
-                </tr>
-              ) : null}
-
-              {!loading && !error && !restricted && users.length === 0 ? (
+              {!loading && !error && users.length === 0 ? (
                 <tr>
                   <td colSpan={COLUMNS} className="px-4 py-12 text-center text-sm text-slate-500">
                     No users match the current filters.

@@ -53,7 +53,6 @@ export {
   roleFromRoleName,
 } from "./roleRouting";
 export {
-  SUPER_ADMIN_MISSING_PERMISSIONS_MESSAGE,
   SUPER_ADMIN_ROLE_ID,
   SuperAdminAccessError,
   grantSuperAdminAllPermissions,

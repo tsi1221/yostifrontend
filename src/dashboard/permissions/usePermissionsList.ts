@@ -2,11 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { isQuietListFailure } from "../apiMessage";
-import {
-  SUPER_ADMIN_MISSING_PERMISSIONS_MESSAGE,
-  isSuperAdminSession,
-  recoverSuperAdminAccess,
-} from "../auth/superAdminAccess";
+import { isSuperAdminSession, recoverSuperAdminAccess } from "../auth/superAdminAccess";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { PermissionsListQuery, PermissionsListResponse } from "./types";
 import { DEFAULT_PERMISSIONS_QUERY, LOOKUP_PERMISSIONS_QUERY } from "./types";
@@ -77,7 +73,6 @@ export function usePermissionsList(options?: { lookup?: boolean; pageSize?: numb
           }
         }
         setResponse(EMPTY_RESPONSE);
-        setServerError(SUPER_ADMIN_MISSING_PERMISSIONS_MESSAGE);
         return;
       }
 
