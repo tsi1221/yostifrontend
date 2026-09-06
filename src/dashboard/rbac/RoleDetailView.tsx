@@ -1,8 +1,6 @@
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
-import { isSuperAdminRoleRecord } from "../auth/superAdminAccess";
 import ActionButton from "../components/ActionButton";
-import GrantSuperAdminButton from "../components/GrantSuperAdminButton";
 import PageHeader from "../components/PageHeader";
 import SideDrawer from "../components/SideDrawer";
 import { ROLE_SLUG } from "../roles";
@@ -41,9 +39,6 @@ export default function RoleDetailView() {
             </ActionButton>
             {record ? (
               <ActionButton onClick={() => setSearchParams({ edit: "1" })}>Edit</ActionButton>
-            ) : null}
-            {record && isSuperAdminRoleRecord(record) ? (
-              <GrantSuperAdminButton onGranted={retry} />
             ) : null}
           </div>
         }

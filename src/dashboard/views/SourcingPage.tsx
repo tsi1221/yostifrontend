@@ -1,7 +1,6 @@
 import { useState } from "react";
 
 import ActionButton from "../components/ActionButton";
-import GrantSuperAdminButton from "../components/GrantSuperAdminButton";
 import DataTable from "../components/DataTable";
 import RequestsTable from "../requests/RequestsTable";
 import {
@@ -44,7 +43,6 @@ function AdminRequestsBoard() {
       <PageHeader
         title="Requests Management"
         description="Search, filter, and page through live sourcing requests from the Yosti API."
-        actions={<GrantSuperAdminButton />}
       />
       <RequestsTable />
     </div>

@@ -60,5 +60,4 @@ export {
   isSuperAdminSession,
   recoverSuperAdminAccess,
 } from "./superAdminAccess";
-export { useGrantSuperAdminAccess } from "./useGrantSuperAdminAccess";
 export { default as RequireAuth } from "./RequireAuth";
