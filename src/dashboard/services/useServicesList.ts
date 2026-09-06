@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { isQuietListFailure } from "../apiMessage";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { ServicesListQuery, ServicesListResponse } from "./types";
 import { DEFAULT_SERVICES_QUERY } from "./types";
@@ -73,9 +74,12 @@ export function useServicesList() {
         return;
       }
 
-      setServerError(
-        cause instanceof Error ? cause.message : "The server could not load services."
-      );
+      if (isQuietListFailure(cause)) {
+        setResponse(EMPTY_RESPONSE);
+        return;
+      }
+
+      setResponse(EMPTY_RESPONSE);
     } finally {
       setLoading(false);
     }

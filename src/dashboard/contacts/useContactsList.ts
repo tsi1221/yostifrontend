@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { isQuietListFailure } from "../apiMessage";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { ContactsListQuery, ContactsListResponse } from "./types";
 import { DEFAULT_CONTACTS_QUERY } from "./types";
@@ -71,11 +72,12 @@ export function useContactsList() {
         return;
       }
 
-      setServerError(
-        cause instanceof Error
-          ? cause.message
-          : "The server could not load contact submissions."
-      );
+      if (isQuietListFailure(cause)) {
+        setResponse(EMPTY_RESPONSE);
+        return;
+      }
+
+      setResponse(EMPTY_RESPONSE);
     } finally {
       setLoading(false);
     }

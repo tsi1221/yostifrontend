@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
+import { sanitizeApiMessage } from "../apiMessage";
+import { isTechnicalApiMessage, sanitizeApiMessage } from "../apiMessage";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { InspectionRecord } from "./types";
 import {
@@ -40,8 +42,9 @@ export function useInspectionDetail(id: string | undefined) {
       setInspection(null);
 
       if (cause instanceof InspectionsRequestError && cause.status === 400) {
-        message.error(cause.message);
-        setServerError(cause.message);
+        const text = sanitizeApiMessage(cause.message, "Unable to load this inspection.");
+        message.error(text);
+        setServerError(text);
         return;
       }
 
@@ -57,17 +60,15 @@ export function useInspectionDetail(id: string | undefined) {
         return;
       }
 
-      if (cause instanceof InspectionsRequestError && cause.status === 404) {
+      if (
+        (cause instanceof InspectionsRequestError && cause.status === 404) ||
+        (cause instanceof Error && isTechnicalApiMessage(cause.message))
+      ) {
         setNotFound(true);
         return;
       }
 
-      const text =
-        cause instanceof Error
-          ? cause.message
-          : "The server could not load this inspection request.";
-      message.error(text);
-      setServerError(text);
+      setServerError("Unable to load this inspection.");
     } finally {
       setLoading(false);
     }

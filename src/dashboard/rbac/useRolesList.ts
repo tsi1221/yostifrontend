@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { isQuietListFailure } from "../apiMessage";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { RolesListQuery, RolesListResponse } from "./types";
 import { DEFAULT_ROLES_QUERY } from "./types";
@@ -67,7 +68,12 @@ export function useRolesList() {
         return;
       }
 
-      setServerError(cause instanceof Error ? cause.message : "The server could not load roles.");
+      if (isQuietListFailure(cause)) {
+        setResponse(EMPTY_RESPONSE);
+        return;
+      }
+
+      setResponse(EMPTY_RESPONSE);
     } finally {
       setLoading(false);
     }

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
+import { isQuietListFailure } from "../apiMessage";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { RequestsListQuery, RequestsListResponse } from "./types";
 import { DEFAULT_REQUESTS_QUERY } from "./types";
@@ -86,11 +87,12 @@ export function useRequestsList() {
         return;
       }
 
-      setServerError(
-        cause instanceof Error
-          ? cause.message
-          : "The server could not load sourcing requests."
-      );
+      if (isQuietListFailure(cause)) {
+        setResponse(EMPTY_RESPONSE);
+        return;
+      }
+
+      setResponse(EMPTY_RESPONSE);
     } finally {
       setLoading(false);
     }

@@ -118,16 +118,12 @@ export default function RequestsTable() {
       </section>
 
       {serverError && !loading ? (
-        <section className="rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
-          <p className="text-lg font-semibold text-[#0F3952]">
-            Requests could not be loaded
-          </p>
-          <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">{serverError}</p>
-          <ActionButton className="mt-5" onClick={retry}>
-            Refresh requests
-          </ActionButton>
+        <section className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm font-medium text-amber-900">{serverError}</p>
+          <ActionButton onClick={retry}>Retry</ActionButton>
         </section>
-      ) : (
+      ) : null}
+
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
@@ -257,7 +253,6 @@ export default function RequestsTable() {
           </div>
         </footer>
       </div>
-      )}
 
       <DeleteRequestDialog
         open={Boolean(pendingDelete)}

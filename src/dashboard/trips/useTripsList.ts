@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { isQuietListFailure } from "../apiMessage";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { TripsListQuery, TripsListResponse } from "./types";
 import { DEFAULT_TRIPS_QUERY } from "./types";
@@ -74,9 +75,12 @@ export function useTripsList() {
         return;
       }
 
-      setServerError(
-        cause instanceof Error ? cause.message : "The server could not load trips."
-      );
+      if (isQuietListFailure(cause)) {
+        setResponse(EMPTY_RESPONSE);
+        return;
+      }
+
+      setResponse(EMPTY_RESPONSE);
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { isQuietListFailure } from "../apiMessage";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { PaymentsListQuery, PaymentsListResponse } from "./types";
 import { DEFAULT_PAYMENTS_QUERY } from "./types";
@@ -74,9 +75,12 @@ export function usePaymentsList() {
         return;
       }
 
-      setServerError(
-        cause instanceof Error ? cause.message : "The server could not load payments."
-      );
+      if (isQuietListFailure(cause)) {
+        setResponse(EMPTY_RESPONSE);
+        return;
+      }
+
+      setResponse(EMPTY_RESPONSE);
     } finally {
       setLoading(false);
     }

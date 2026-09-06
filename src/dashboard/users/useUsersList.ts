@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { isQuietListFailure } from "../apiMessage";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { UsersListMeta, UsersListQuery, UsersListResponse } from "./types";
 import { DEFAULT_USERS_QUERY } from "./types";
@@ -93,11 +94,12 @@ export function useUsersList() {
         return;
       }
 
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "Unable to load users. Please try again."
-      );
+      if (isQuietListFailure(cause)) {
+        setResponse({ data: [], meta: EMPTY_META });
+        return;
+      }
+
+      setResponse({ data: [], meta: EMPTY_META });
     } finally {
       setLoading(false);
     }

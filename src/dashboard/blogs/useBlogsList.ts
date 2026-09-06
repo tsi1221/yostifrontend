@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { isQuietListFailure } from "../apiMessage";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { BlogsListQuery, BlogsListResponse } from "./types";
 import { DEFAULT_BLOGS_QUERY } from "./types";
@@ -68,9 +69,12 @@ export function useBlogsList(options?: { publicFeed?: boolean }) {
         return;
       }
 
-      setServerError(
-        cause instanceof Error ? cause.message : "The server could not load blog posts."
-      );
+      if (isQuietListFailure(cause)) {
+        setResponse(EMPTY_RESPONSE);
+        return;
+      }
+
+      setResponse(EMPTY_RESPONSE);
     } finally {
       setLoading(false);
     }

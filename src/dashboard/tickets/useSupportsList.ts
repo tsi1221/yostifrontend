@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { isQuietListFailure } from "../apiMessage";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { SupportsListQuery, SupportsListResponse } from "./types";
 import { DEFAULT_SUPPORTS_QUERY } from "./types";
@@ -87,9 +88,12 @@ export function useSupportsList() {
         return;
       }
 
-      setServerError(
-        cause instanceof Error ? cause.message : "The server could not load support tickets."
-      );
+      if (isQuietListFailure(cause)) {
+        setResponse(EMPTY_RESPONSE);
+        return;
+      }
+
+      setResponse(EMPTY_RESPONSE);
     } finally {
       setLoading(false);
     }

@@ -1,3 +1,4 @@
+import { sanitizeApiMessage } from "../apiMessage";
 import { SHIPMENTS_URL } from "../auth/endpoints";
 import { getAccessToken } from "../auth/session";
 import { isPreviewAccessToken } from "../users/usersService";
@@ -55,12 +56,12 @@ function readApiMessage(raw: unknown, fallback: string) {
   const record = asRecord(raw);
   const message = record?.message;
   if (typeof message === "string" && message.trim()) {
-    return message.trim();
+    return sanitizeApiMessage(message, fallback);
   }
   if (Array.isArray(message)) {
     const text = message.filter((item) => typeof item === "string").join(", ");
     if (text) {
-      return text;
+      return sanitizeApiMessage(text, fallback);
     }
   }
   return fallback;

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
+import { isQuietListFailure } from "../apiMessage";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { ShipmentsListQuery, ShipmentsListResponse } from "./types";
 import { DEFAULT_SHIPMENTS_QUERY } from "./types";
@@ -79,11 +80,12 @@ export function useShipmentsList() {
         return;
       }
 
-      setServerError(
-        cause instanceof Error
-          ? cause.message
-          : "The server could not load shipments."
-      );
+      if (isQuietListFailure(cause)) {
+        setResponse(EMPTY_RESPONSE);
+        return;
+      }
+
+      setResponse(EMPTY_RESPONSE);
     } finally {
       setLoading(false);
     }

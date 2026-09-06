@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
+import { isQuietListFailure } from "../apiMessage";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { InspectionsListQuery, InspectionsListResponse } from "./types";
 import { DEFAULT_INSPECTIONS_QUERY } from "./types";
@@ -85,15 +86,16 @@ export function useInspectionsList() {
         return;
       }
 
+      if (isQuietListFailure(cause)) {
+        setResponse(EMPTY_RESPONSE);
+        return;
+      }
+
       if (cause instanceof InspectionsRequestError && cause.status === 400) {
         message.error(cause.message);
       }
 
-      setServerError(
-        cause instanceof Error
-          ? cause.message
-          : "The server could not load inspections."
-      );
+      setResponse(EMPTY_RESPONSE);
     } finally {
       setLoading(false);
     }
