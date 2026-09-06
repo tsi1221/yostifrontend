@@ -45,3 +45,7 @@ export const PROJECTS_URL = `${AUTH_API_BASE}/projects`;
 
 /** POST public contact / GET paginated admin inbox / GET :id / PATCH :id / DELETE :id */
 export const CONTACTS_URL = `${AUTH_API_BASE}/contacts`;
+
+/** POST multipart upload / DELETE :filename */
+export const FILES_URL = `${AUTH_API_BASE}/files`;
+export const FILES_UPLOAD_URL = `${FILES_URL}/upload`;

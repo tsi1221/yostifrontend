@@ -15,6 +15,8 @@ export {
   BLOGS_URL,
   PROJECTS_URL,
   CONTACTS_URL,
+  FILES_URL,
+  FILES_UPLOAD_URL,
 } from "./endpoints";
 export { loginWithPassword } from "./loginService";
 export {

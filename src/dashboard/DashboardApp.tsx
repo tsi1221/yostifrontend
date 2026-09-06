@@ -35,6 +35,7 @@ import ProjectDetailView from "./projects/ProjectDetailView";
 import ProjectsPage from "./views/ProjectsPage";
 import ContactDetailView from "./contacts/ContactDetailView";
 import ContactsPage from "./views/ContactsPage";
+import FilesPage from "./views/FilesPage";
 
 interface DashboardAppProps {
   role: UserRole;
@@ -272,6 +273,14 @@ function DashboardRoutes({ role }: DashboardAppProps) {
           element={
             <Guard role={role} page="contacts">
               <ContactsPage />
+            </Guard>
+          }
+        />
+        <Route
+          path="files"
+          element={
+            <Guard role={role} page="files">
+              <FilesPage />
             </Guard>
           }
         />
