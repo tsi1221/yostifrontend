@@ -1,6 +1,8 @@
 import { Loader2 } from "lucide-react";
 
+import { isSuperAdminSession } from "../auth/superAdminAccess";
 import ActionButton from "../components/ActionButton";
+import SuperAdminAccessBanner from "../components/SuperAdminAccessBanner";
 import { SelectInput, TextInput } from "../components/FormField";
 import { permissionGroup } from "./api";
 import { usePermissionsList } from "./usePermissionsList";
@@ -60,7 +62,9 @@ export default function PermissionsTable() {
         </label>
       </section>
 
-      {serverError && !loading ? (
+      {serverError && !loading && isSuperAdminSession() ? (
+        <SuperAdminAccessBanner message={serverError} onRetry={retry} />
+      ) : serverError && !loading ? (
         <section className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm font-medium text-amber-900">{serverError}</p>
           <ActionButton onClick={retry}>Retry</ActionButton>

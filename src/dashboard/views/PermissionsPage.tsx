@@ -1,3 +1,4 @@
+import GrantSuperAdminButton from "../components/GrantSuperAdminButton";
 import PageHeader from "../components/PageHeader";
 import PermissionsTable from "../permissions/PermissionsTable";
 
@@ -7,6 +8,7 @@ export default function PermissionsPage() {
       <PageHeader
         title="Permissions"
         description="Read-only master list of system permissions. Use this catalog as lookup data when assigning permission IDs to a role."
+        actions={<GrantSuperAdminButton />}
       />
       <PermissionsTable />
     </div>

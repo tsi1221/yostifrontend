@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
+import GrantSuperAdminButton from "../components/GrantSuperAdminButton";
 import PageHeader from "../components/PageHeader";
 import RolesTable from "../rbac/RolesTable";
 import { ROLE_SLUG } from "../roles";
@@ -16,9 +17,12 @@ export default function RolesPage() {
         title="Roles"
         description="Search, page, and configure system roles and their permission IDs."
         actions={
-          <ActionButton onClick={() => navigate(`/${ROLE_SLUG[role]}/roles/new`)}>
-            New role
-          </ActionButton>
+          <div className="flex flex-wrap gap-2">
+            <GrantSuperAdminButton />
+            <ActionButton onClick={() => navigate(`/${ROLE_SLUG[role]}/roles/new`)}>
+              New role
+            </ActionButton>
+          </div>
         }
       />
       <RolesTable />

@@ -3,6 +3,11 @@ import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
 import { isQuietListFailure } from "../apiMessage";
+import {
+  SUPER_ADMIN_MISSING_PERMISSIONS_MESSAGE,
+  isSuperAdminSession,
+  recoverSuperAdminAccess,
+} from "../auth/superAdminAccess";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { RequestsListQuery, RequestsListResponse } from "./types";
 import { DEFAULT_REQUESTS_QUERY } from "./types";
@@ -38,6 +43,7 @@ export function useRequestsList() {
   const [response, setResponse] = useState<RequestsListResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [forbidden, setForbidden] = useState(false);
+  const [restricted, setRestricted] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
 
@@ -59,6 +65,7 @@ export function useRequestsList() {
   const load = useCallback(async () => {
     setLoading(true);
     setForbidden(false);
+    setRestricted(false);
     setServerError(null);
 
     try {
@@ -83,6 +90,22 @@ export function useRequestsList() {
       }
 
       if (cause instanceof RequestsRequestError && cause.status === 403) {
+        if (isSuperAdminSession()) {
+          const recovered = await recoverSuperAdminAccess();
+          if (recovered) {
+            try {
+              const payload = await fetchRequestsList(query);
+              setResponse(payload);
+              return;
+            } catch {
+              // Super Admin still cannot read requests after the grant.
+            }
+          }
+          setResponse(EMPTY_RESPONSE);
+          setRestricted(true);
+          setServerError(SUPER_ADMIN_MISSING_PERMISSIONS_MESSAGE);
+          return;
+        }
         setForbidden(true);
         return;
       }
@@ -142,6 +165,7 @@ export function useRequestsList() {
     meta,
     loading,
     forbidden,
+    restricted,
     serverError,
     retry: () => setReloadToken((value) => value + 1),
   };

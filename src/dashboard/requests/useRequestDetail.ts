@@ -2,6 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
+import {
+  SUPER_ADMIN_MISSING_PERMISSIONS_MESSAGE,
+  isSuperAdminSession,
+  recoverSuperAdminAccess,
+} from "../auth/superAdminAccess";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { SourcingRequestRecord } from "./types";
 import {
@@ -48,6 +53,25 @@ export function useRequestDetail(id: string | undefined) {
         }
         clearAuthSession();
         navigate("/login", { replace: true });
+        return;
+      }
+
+      if (cause instanceof RequestsRequestError && cause.status === 403) {
+        if (isSuperAdminSession()) {
+          const recovered = await recoverSuperAdminAccess();
+          if (recovered && id) {
+            try {
+              const payload = await fetchRequestById(id);
+              setRequest(payload);
+              return;
+            } catch {
+              // Super Admin still cannot read this request after the grant.
+            }
+          }
+          setServerError(SUPER_ADMIN_MISSING_PERMISSIONS_MESSAGE);
+          return;
+        }
+        setServerError(cause.message);
         return;
       }
 

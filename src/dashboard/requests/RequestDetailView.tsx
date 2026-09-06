@@ -2,7 +2,9 @@ import { useState } from "react";
 import { Trash2 } from "lucide-react";
 import { Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
+import { isSuperAdminSession } from "../auth/superAdminAccess";
 import ActionButton from "../components/ActionButton";
+import SuperAdminAccessBanner from "../components/SuperAdminAccessBanner";
 import SideDrawer from "../components/SideDrawer";
 import { ROLE_SLUG } from "../roles";
 import { useDashboard } from "../store";
@@ -40,7 +42,7 @@ export default function RequestDetailView() {
   const [editing, setEditing] = useState(searchParams.get("edit") === "1");
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  if (role !== "SUPER_ADMIN") {
+  if (role !== "SUPER_ADMIN" && !isSuperAdminSession()) {
     return <Navigate to={listPath} replace />;
   }
 
@@ -90,15 +92,19 @@ export default function RequestDetailView() {
       ) : null}
 
       {!loading && !notFound && serverError ? (
-        <section className="rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
-          <p className="text-lg font-semibold text-[#0F3952]">
-            Unable to load request details
-          </p>
-          <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">{serverError}</p>
-          <ActionButton className="mt-5" onClick={retry}>
-            Retry Connection
-          </ActionButton>
-        </section>
+        isSuperAdminSession() ? (
+          <SuperAdminAccessBanner message={serverError} onRetry={retry} />
+        ) : (
+          <section className="rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
+            <p className="text-lg font-semibold text-[#0F3952]">
+              Unable to load request details
+            </p>
+            <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">{serverError}</p>
+            <ActionButton className="mt-5" onClick={retry}>
+              Retry Connection
+            </ActionButton>
+          </section>
+        )
       ) : null}
 
       {!loading && request ? (

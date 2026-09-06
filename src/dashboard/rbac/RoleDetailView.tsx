@@ -1,7 +1,10 @@
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
+import { isSuperAdminRoleRecord, isSuperAdminSession } from "../auth/superAdminAccess";
 import ActionButton from "../components/ActionButton";
+import GrantSuperAdminButton from "../components/GrantSuperAdminButton";
 import PageHeader from "../components/PageHeader";
+import SuperAdminAccessBanner from "../components/SuperAdminAccessBanner";
 import SideDrawer from "../components/SideDrawer";
 import { ROLE_SLUG } from "../roles";
 import { useDashboard } from "../store";
@@ -40,6 +43,9 @@ export default function RoleDetailView() {
             {record ? (
               <ActionButton onClick={() => setSearchParams({ edit: "1" })}>Edit</ActionButton>
             ) : null}
+            {record && isSuperAdminRoleRecord(record) ? (
+              <GrantSuperAdminButton onGranted={retry} />
+            ) : null}
           </div>
         }
       />
@@ -57,10 +63,14 @@ export default function RoleDetailView() {
       ) : null}
 
       {!loading && serverError && !notFound ? (
-        <div className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm font-medium text-amber-900">{serverError}</p>
-          <ActionButton onClick={retry}>Retry</ActionButton>
-        </div>
+        isSuperAdminSession() ? (
+          <SuperAdminAccessBanner message={serverError} onRetry={retry} />
+        ) : (
+          <div className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm font-medium text-amber-900">{serverError}</p>
+            <ActionButton onClick={retry}>Retry</ActionButton>
+          </div>
+        )
       ) : null}
 
       {!loading && record ? (

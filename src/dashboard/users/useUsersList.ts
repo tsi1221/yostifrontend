@@ -2,6 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { isQuietListFailure } from "../apiMessage";
+import {
+  SUPER_ADMIN_MISSING_PERMISSIONS_MESSAGE,
+  isSuperAdminSession,
+  recoverSuperAdminAccess,
+} from "../auth/superAdminAccess";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { UsersListMeta, UsersListQuery, UsersListResponse } from "./types";
 import { DEFAULT_USERS_QUERY } from "./types";
@@ -35,6 +40,7 @@ export function useUsersList() {
   const [response, setResponse] = useState<UsersListResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [forbidden, setForbidden] = useState(false);
+  const [restricted, setRestricted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
 
@@ -72,6 +78,7 @@ export function useUsersList() {
     setLoading(true);
     setError(null);
     setForbidden(false);
+    setRestricted(false);
 
     try {
       const payload = await fetchUsersList(query);
@@ -90,6 +97,22 @@ export function useUsersList() {
       }
 
       if (cause instanceof UsersRequestError && cause.status === 403) {
+        if (isSuperAdminSession()) {
+          const recovered = await recoverSuperAdminAccess();
+          if (recovered) {
+            try {
+              const payload = await fetchUsersList(query);
+              setResponse(payload);
+              return;
+            } catch {
+              // Super Admin still cannot read users after the grant.
+            }
+          }
+          setResponse({ data: [], meta: EMPTY_META });
+          setRestricted(true);
+          setError(SUPER_ADMIN_MISSING_PERMISSIONS_MESSAGE);
+          return;
+        }
         setForbidden(true);
         return;
       }
@@ -138,6 +161,7 @@ export function useUsersList() {
     },
     loading,
     forbidden,
+    restricted,
     error,
     retry: () => setReloadToken((value) => value + 1),
   };

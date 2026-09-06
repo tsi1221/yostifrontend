@@ -2,6 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { isQuietListFailure } from "../apiMessage";
+import {
+  SUPER_ADMIN_MISSING_PERMISSIONS_MESSAGE,
+  isSuperAdminSession,
+  recoverSuperAdminAccess,
+} from "../auth/superAdminAccess";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { RolesListQuery, RolesListResponse } from "./types";
 import { DEFAULT_ROLES_QUERY } from "./types";
@@ -57,6 +62,22 @@ export function useRolesList() {
       const payload = await fetchRolesList(query);
       setResponse(payload);
     } catch (cause) {
+      if (cause instanceof RoleRequestError && cause.status === 403 && isSuperAdminSession()) {
+        const recovered = await recoverSuperAdminAccess();
+        if (recovered) {
+          try {
+            const payload = await fetchRolesList(query);
+            setResponse(payload);
+            return;
+          } catch {
+            // Super Admin still cannot read roles after the grant.
+          }
+        }
+        setResponse(EMPTY_RESPONSE);
+        setServerError(SUPER_ADMIN_MISSING_PERMISSIONS_MESSAGE);
+        return;
+      }
+
       if (cause instanceof RoleRequestError && cause.status === 401) {
         setResponse(null);
         if (isPreviewAccessToken(getAccessToken())) {
