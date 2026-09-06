@@ -8,6 +8,7 @@ import {
   hasValidAccessToken,
   loginWithPassword,
   persistAuthSession,
+  refreshStoredAuthProfile,
   roleFromAuthUser,
 } from "../../../dashboard/auth";
 import type { UserRole } from "../../layout/Sidebar";
@@ -54,13 +55,14 @@ export default function Login({ setRole, setEmail }: LoginProps) {
       });
 
       persistAuthSession(payload);
+      const sessionUser = (await refreshStoredAuthProfile()) ?? payload.user;
 
-      const role = roleFromAuthUser(payload.user);
+      const role = roleFromAuthUser(sessionUser);
       setRole(role);
-      setEmail(payload.user.email);
+      setEmail(sessionUser.email);
 
-      message.success(`Welcome back, ${payload.user.fullname}!`);
-      navigate(getAuthUserDashboardPath(payload.user), { replace: true });
+      message.success(`Welcome back, ${sessionUser.fullname}!`);
+      navigate(getAuthUserDashboardPath(sessionUser), { replace: true });
     } catch (error) {
       message.error(
         error instanceof Error

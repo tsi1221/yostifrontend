@@ -94,7 +94,30 @@ export function normalizeAuthUser(raw: unknown): AuthUser | null {
     return null;
   }
 
-  return { id, fullname, email, roleId: roleId ?? 0, role };
+  return {
+    id,
+    fullname,
+    email,
+    roleId: roleId ?? 0,
+    role,
+    companyName: pickString(
+      record.companyName,
+      record.company_name,
+      record.company
+    ),
+    country: pickString(record.country),
+    phoneWhatsapp: pickString(
+      record.phoneWhatsapp,
+      record.phone_whatsapp,
+      record.phone,
+      record.whatsapp
+    ),
+    languagePreference: pickString(
+      record.languagePreference,
+      record.language_preference,
+      record.language
+    ),
+  };
 }
 
 function normalizeLoginPayload(raw: unknown): AuthLoginResponse | null {

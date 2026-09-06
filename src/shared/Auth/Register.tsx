@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   AuthRequestError,
   REGISTER_ROLE_OPTIONS,
+  persistPendingRegisterProfile,
   registerAccount,
   roleIdForRole,
 } from "../../dashboard/auth";
@@ -48,6 +49,13 @@ export default function Register() {
       };
 
       const data = await registerAccount(payload);
+      persistPendingRegisterProfile({
+        email: payload.email,
+        fullname: payload.fullname,
+        companyName: payload.companyName,
+        country: payload.country,
+        phoneWhatsapp: payload.phoneWhatsapp,
+      });
       const successMessage = Array.isArray(data.message)
         ? data.message.join(", ")
         : data.message;

@@ -4,6 +4,10 @@ export interface AuthUser {
   email: string;
   roleId: number;
   role?: string;
+  companyName?: string;
+  country?: string;
+  phoneWhatsapp?: string;
+  languagePreference?: string;
 }
 
 export interface AuthLoginResponse {

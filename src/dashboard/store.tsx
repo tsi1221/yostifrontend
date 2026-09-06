@@ -1,14 +1,20 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useMemo,
   useReducer,
+  useState,
   type ReactNode,
 } from "react";
 
 /* eslint-disable react-refresh/only-export-components -- session store exports selectors with the provider */
 
-import { getStoredAuthUser } from "./auth/session";
+import { refreshStoredAuthProfile } from "./profile/api";
+import {
+  AUTH_PROFILE_UPDATED_EVENT,
+  getStoredAuthUser,
+} from "./auth/session";
 import { initialSnapshot } from "./mocks/data";
 import type {
   AccountType,
@@ -578,19 +584,34 @@ export function DashboardProvider({
   children: ReactNode;
 }) {
   const [snapshot, dispatch] = useReducer(reducer, undefined, cloneSnapshot);
+  const [authUser, setAuthUser] = useState(() => getStoredAuthUser());
+
+  useEffect(() => {
+    const sync = () => setAuthUser(getStoredAuthUser());
+    window.addEventListener(AUTH_PROFILE_UPDATED_EVENT, sync);
+    void refreshStoredAuthProfile().then((next) => {
+      if (next) {
+        setAuthUser(next);
+      }
+    });
+    return () => window.removeEventListener(AUTH_PROFILE_UPDATED_EVENT, sync);
+  }, []);
+
   const user = useMemo(() => {
-    const sessionUser =
+    const workspaceUser =
       snapshot.users.find((item) => item.id === SESSION_USERS[role]) ??
       snapshot.users[0];
-    const authUser = getStoredAuthUser();
     return authUser
       ? {
-          ...sessionUser,
-          full_name: authUser.fullname,
-          email: authUser.email,
+          ...workspaceUser,
+          full_name: authUser.fullname || workspaceUser.full_name,
+          email: authUser.email || workspaceUser.email,
+          company_name: authUser.companyName || workspaceUser.company_name,
+          country: authUser.country || workspaceUser.country,
+          phone: authUser.phoneWhatsapp || workspaceUser.phone,
         }
-      : sessionUser;
-  }, [role, snapshot.users]);
+      : workspaceUser;
+  }, [authUser, role, snapshot.users]);
 
   const actor = user.id;
 

@@ -43,6 +43,8 @@ export default function DashboardShell({ role, children }: DashboardShellProps) 
         <TopBar
           role={role}
           userName={user.full_name}
+          userEmail={user.email}
+          userCompany={user.company_name}
           alerts={alerts}
           onMenu={() => setMobileOpen(true)}
         />
@@ -55,11 +57,15 @@ export default function DashboardShell({ role, children }: DashboardShellProps) 
 function TopBar({
   role,
   userName,
+  userEmail,
+  userCompany,
   alerts,
   onMenu,
 }: {
   role: UserRole;
   userName: string;
+  userEmail: string;
+  userCompany: string;
   alerts: number;
   onMenu: () => void;
 }) {
@@ -106,10 +112,27 @@ function TopBar({
             <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-[#FDC700]" />
           ) : null}
         </span>
-        <div className="hidden text-right sm:block">
-          <p className="text-sm font-semibold text-slate-900">{userName}</p>
-          <p className="text-xs font-medium text-[#0F3952]">{ROLE_LABEL[role]}</p>
-        </div>
+        <NavLink
+          to={`/${ROLE_SLUG[role]}/profile`}
+          className="flex items-center gap-3 rounded-xl px-2 py-1 hover:bg-slate-50"
+          aria-label="Open profile"
+        >
+          <div className="hidden text-right sm:block">
+            <p className="text-sm font-semibold text-slate-900">{userName}</p>
+            <p className="max-w-[240px] truncate text-xs font-medium text-[#0F3952]">
+              {ROLE_LABEL[role]}
+              {userCompany || userEmail ? ` · ${userCompany || userEmail}` : ""}
+            </p>
+          </div>
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0F3952] text-xs font-bold text-[#FDC700]">
+            {userName
+              .split(/\s+/)
+              .filter(Boolean)
+              .slice(0, 2)
+              .map((part) => part[0]?.toUpperCase() ?? "")
+              .join("") || "Y"}
+          </span>
+        </NavLink>
         <button
           type="button"
           onClick={logout}

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { sanitizeApiMessage } from "../apiMessage";
 import { isTechnicalApiMessage, sanitizeApiMessage } from "../apiMessage";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { InspectionRecord } from "./types";

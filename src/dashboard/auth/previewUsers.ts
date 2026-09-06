@@ -8,6 +8,9 @@ interface PreviewAccount {
   role: UserRole;
   roleId: number;
   id: number;
+  companyName: string;
+  country: string;
+  phoneWhatsapp: string;
 }
 
 const PREVIEW_PASSWORD = "password123";
@@ -20,6 +23,9 @@ const PREVIEW_ACCOUNTS: PreviewAccount[] = [
     role: "SUPER_ADMIN",
     roleId: 5,
     id: 2,
+    companyName: "Yosti Trading",
+    country: "China",
+    phoneWhatsapp: "+86 186 2198 0391",
   },
   {
     email: "staff@example.com",
@@ -28,6 +34,9 @@ const PREVIEW_ACCOUNTS: PreviewAccount[] = [
     role: "STAFF",
     roleId: 4,
     id: 5,
+    companyName: "Yosti Trading",
+    country: "China",
+    phoneWhatsapp: "+86 131 2773 2480",
   },
   {
     email: "buyer@example.com",
@@ -36,6 +45,9 @@ const PREVIEW_ACCOUNTS: PreviewAccount[] = [
     role: "BUYER",
     roleId: 1,
     id: 1,
+    companyName: "Blue Nile Electronics",
+    country: "Ethiopia",
+    phoneWhatsapp: "+251 911 234 567",
   },
   {
     email: "supplier@example.com",
@@ -44,6 +56,9 @@ const PREVIEW_ACCOUNTS: PreviewAccount[] = [
     role: "SUPPLIER",
     roleId: 2,
     id: 3,
+    companyName: "Yiwu Solar Works",
+    country: "China",
+    phoneWhatsapp: "+86 138 0000 1122",
   },
   {
     email: "logistics@example.com",
@@ -52,6 +67,9 @@ const PREVIEW_ACCOUNTS: PreviewAccount[] = [
     role: "LOGISTICS_PARTNER",
     roleId: 3,
     id: 4,
+    companyName: "Horn Corridor Freight",
+    country: "Djibouti",
+    phoneWhatsapp: "+253 77 123 456",
   },
 ];
 
@@ -80,6 +98,9 @@ export function loginWithPreviewAccount(
       email: account.email,
       roleId: account.roleId,
       role: account.role,
+      companyName: account.companyName,
+      country: account.country,
+      phoneWhatsapp: account.phoneWhatsapp,
     },
   };
 }

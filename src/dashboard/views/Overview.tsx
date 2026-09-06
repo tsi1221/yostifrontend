@@ -101,7 +101,8 @@ function RoleBanner({
       </p>
       <h1 className="mt-2 text-3xl font-bold">{title}</h1>
       <p className="mt-2 max-w-2xl text-sm text-white/70">
-        {description} Signed in as {user.full_name}, {user.company_name}.
+        {description} Signed in as {user.full_name}
+        {user.company_name ? `, ${user.company_name}` : ""}.
       </p>
     </section>
   );
@@ -500,7 +501,7 @@ function BusinessIntelligenceHub() {
     <div className="space-y-6">
       <PageHeader
         title="Business Intelligence Hub"
-        description={`Master controls for ${user.full_name}. Shipments by destination, top exports, and payment volume from the mock schema.`}
+        description={`Master controls for ${user.full_name}. Workspace snapshot of destinations, exports, and payment volume.`}
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">

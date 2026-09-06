@@ -3,6 +3,7 @@ export {
   AUTH_LOGIN_URL,
   AUTH_REGISTER_URL,
   USERS_URL,
+  USERS_ME_URL,
   REQUESTS_URL,
   SHIPMENTS_URL,
   INSPECTIONS_URL,
@@ -20,7 +21,8 @@ export {
   ROLES_URL,
   PERMISSIONS_URL,
 } from "./endpoints";
-export { loginWithPassword } from "./loginService";
+export { loginWithPassword, normalizeAuthUser } from "./loginService";
+export { refreshStoredAuthProfile } from "../profile/api";
 export {
   AuthRequestError,
   REGISTER_ROLE_OPTIONS,
@@ -29,12 +31,18 @@ export {
 } from "./registerService";
 export {
   ACCESS_TOKEN_KEY,
+  AUTH_PROFILE_UPDATED_EVENT,
   AUTH_USER_KEY,
   clearAuthSession,
+  consumePendingRegisterProfile,
   getAccessToken,
   getStoredAuthUser,
   hasValidAccessToken,
+  isPreviewAccessToken,
+  mergeAuthUser,
   persistAuthSession,
+  persistAuthUser,
+  persistPendingRegisterProfile,
 } from "./session";
 export {
   getAuthUserDashboardPath,

@@ -7,6 +7,7 @@ import {
   LifeBuoy,
   Package,
   Truck,
+  UserRound,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -45,7 +46,8 @@ export type DashboardPageKey =
   | "contacts"
   | "files"
   | "roles"
-  | "permissions";
+  | "permissions"
+  | "profile";
 
 export interface NavItem {
   key: DashboardPageKey;
@@ -79,6 +81,12 @@ export const getNavigation = (role: UserRole): NavGroup[] => {
     path: `/${slug}/dashboard`,
   };
 
+  const profile: NavGroup = {
+    label: "Profile",
+    icon: UserRound,
+    path: `/${slug}/profile`,
+  };
+
   switch (role) {
     case "SUPER_ADMIN":
       return [
@@ -109,6 +117,7 @@ export const getNavigation = (role: UserRole): NavGroup[] => {
             item(slug, "files", "Files"),
           ],
         },
+        profile,
       ];
     case "STAFF":
       return [
@@ -137,6 +146,7 @@ export const getNavigation = (role: UserRole): NavGroup[] => {
             item(slug, "files", "Files"),
           ],
         },
+        profile,
       ];
     case "BUYER":
       return [
@@ -162,6 +172,7 @@ export const getNavigation = (role: UserRole): NavGroup[] => {
           icon: LifeBuoy,
           path: `/${slug}/supports`,
         },
+        profile,
       ];
     case "SUPPLIER":
       return [
@@ -181,6 +192,7 @@ export const getNavigation = (role: UserRole): NavGroup[] => {
           icon: ClipboardCheck,
           path: `/${slug}/quality-control`,
         },
+        profile,
       ];
     case "LOGISTICS_PARTNER":
       return [
@@ -195,9 +207,10 @@ export const getNavigation = (role: UserRole): NavGroup[] => {
           icon: LifeBuoy,
           path: `/${slug}/supports`,
         },
+        profile,
       ];
     default:
-      return [dashboard];
+      return [dashboard, profile];
   }
 };
 
