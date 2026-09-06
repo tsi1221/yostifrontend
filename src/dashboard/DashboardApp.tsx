@@ -36,6 +36,9 @@ import ProjectsPage from "./views/ProjectsPage";
 import ContactDetailView from "./contacts/ContactDetailView";
 import ContactsPage from "./views/ContactsPage";
 import FilesPage from "./views/FilesPage";
+import CreateRoleForm from "./rbac/CreateRoleForm";
+import RoleDetailView from "./rbac/RoleDetailView";
+import RolesPage from "./views/RolesPage";
 
 interface DashboardAppProps {
   role: UserRole;
@@ -77,6 +80,30 @@ function DashboardRoutes({ role }: DashboardAppProps) {
           element={
             <Guard role={role} page="users">
               <UsersPage />
+            </Guard>
+          }
+        />
+        <Route
+          path="roles/new"
+          element={
+            <Guard role={role} page="roles">
+              <CreateRoleForm />
+            </Guard>
+          }
+        />
+        <Route
+          path="roles/:roleId"
+          element={
+            <Guard role={role} page="roles">
+              <RoleDetailView />
+            </Guard>
+          }
+        />
+        <Route
+          path="roles"
+          element={
+            <Guard role={role} page="roles">
+              <RolesPage />
             </Guard>
           }
         />

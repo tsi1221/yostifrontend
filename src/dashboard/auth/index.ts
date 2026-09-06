@@ -17,6 +17,8 @@ export {
   CONTACTS_URL,
   FILES_URL,
   FILES_UPLOAD_URL,
+  ROLES_URL,
+  PERMISSIONS_URL,
 } from "./endpoints";
 export { loginWithPassword } from "./loginService";
 export {

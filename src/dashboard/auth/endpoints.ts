@@ -49,3 +49,9 @@ export const CONTACTS_URL = `${AUTH_API_BASE}/contacts`;
 /** POST multipart upload / DELETE :filename */
 export const FILES_URL = `${AUTH_API_BASE}/files`;
 export const FILES_UPLOAD_URL = `${FILES_URL}/upload`;
+
+/** GET paginated roles / POST create / GET :id / PATCH :id */
+export const ROLES_URL = `${AUTH_API_BASE}/roles`;
+
+/** GET permission catalog for role checkbox assignment */
+export const PERMISSIONS_URL = `${AUTH_API_BASE}/permissions`;
