@@ -94,7 +94,7 @@ export default function RolesTable() {
 
       {showFirstEmpty ? (
         <RoleEmptyState onAction={() => navigate(createPath)} />
-      ) : (
+      ) : serverError && !loading && roles.length === 0 ? null : (
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
