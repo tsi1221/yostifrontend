@@ -60,3 +60,29 @@ export interface CreateServiceResult {
   record: ServiceRecord;
   message: string;
 }
+
+export interface ServicesListMeta {
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface ServicesListResponse {
+  data: ServiceRecord[];
+  meta: ServicesListMeta;
+}
+
+export interface ServicesListQuery {
+  page: number;
+  pageSize: number;
+  search: string;
+  title: string;
+}
+
+export const DEFAULT_SERVICES_QUERY: ServicesListQuery = {
+  page: 1,
+  pageSize: 10,
+  search: "",
+  title: "",
+};

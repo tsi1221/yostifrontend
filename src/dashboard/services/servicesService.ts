@@ -9,6 +9,8 @@ import type {
   ServiceFormValues,
   ServiceRecord,
   ServiceTierValue,
+  ServicesListQuery,
+  ServicesListResponse,
 } from "./types";
 import { SERVICE_TIER_VALUES } from "./types";
 
@@ -303,4 +305,105 @@ export async function createService(
     record: created,
     message: readApiMessage(raw, CREATE_SERVICE_SUCCESS_MESSAGE),
   };
+}
+
+export function buildServicesQueryString(query: ServicesListQuery) {
+  const params = new URLSearchParams();
+  params.set("page", String(query.page || 1));
+  params.set("pageSize", String(query.pageSize || 10));
+  params.set("limit", String(query.pageSize || 10));
+
+  if (query.search.trim()) {
+    params.set("search", query.search.trim());
+  }
+  if (query.title.trim()) {
+    params.set("title", query.title.trim());
+  }
+
+  return params.toString();
+}
+
+function normalizeServicesResponse(
+  raw: unknown,
+  query: ServicesListQuery
+): ServicesListResponse {
+  const record = asRecord(raw);
+  const nested = asRecord(record?.data);
+  const meta = asRecord(record?.meta) ?? asRecord(nested?.meta);
+  const rows = Array.isArray(record?.data)
+    ? record.data
+    : Array.isArray(nested?.data)
+      ? nested.data
+      : Array.isArray(record?.services)
+        ? record.services
+        : [];
+
+  const data = rows
+    .map((row) => normalizeService(row))
+    .filter((row): row is ServiceRecord => Boolean(row));
+
+  const total = pickNumber(meta?.total, record?.total, nested?.total) ?? data.length;
+  const page = pickNumber(meta?.page, record?.page, nested?.page) ?? query.page;
+  const pageSize =
+    pickNumber(meta?.pageSize, record?.pageSize, record?.limit, nested?.pageSize) ??
+    query.pageSize;
+  const totalPages =
+    pickNumber(meta?.totalPages, record?.totalPages, nested?.totalPages) ??
+    Math.max(1, Math.ceil(total / Math.max(pageSize, 1)));
+
+  return {
+    data,
+    meta: { total, page, pageSize, totalPages },
+  };
+}
+
+export async function fetchServicesList(
+  query: ServicesListQuery
+): Promise<ServicesListResponse> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new ServiceRequestError("Unauthorized", 401);
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(`${SERVICES_URL}?${buildServicesQueryString(query)}`, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch {
+    throw new ServiceRequestError(
+      "Unable to reach the server. Check your connection and try again.",
+      0
+    );
+  }
+
+  const raw: unknown = await response.json().catch(() => null);
+
+  if (response.status === 400) {
+    throw new ServiceRequestError(
+      readApiMessage(raw, "Invalid service filters."),
+      400
+    );
+  }
+  if (response.status === 401) {
+    throw new ServiceRequestError("Unauthorized", 401);
+  }
+  if (response.status >= 500) {
+    throw new ServiceRequestError(
+      readApiMessage(raw, "The server could not load services."),
+      response.status
+    );
+  }
+  if (!response.ok) {
+    throw new ServiceRequestError(
+      readApiMessage(raw, `Unable to load services. Server returned ${response.status}.`),
+      response.status
+    );
+  }
+
+  return normalizeServicesResponse(raw, query);
 }

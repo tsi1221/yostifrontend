@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import ActionButton from "../components/ActionButton";
 import PageHeader from "../components/PageHeader";
 import { ROLE_SLUG } from "../roles";
+import ServicesGrid from "../services/ServicesGrid";
 import { useDashboard } from "../store";
 
 export default function ServicesPage() {
@@ -14,17 +15,12 @@ export default function ServicesPage() {
     <div>
       <PageHeader
         title="Services"
-        description="Create catalog offerings with a title, logo, tier, and feature list."
+        description="Search and page through catalog offerings by title, tier, and support."
         actions={
           <ActionButton onClick={() => navigate(createPath)}>New service</ActionButton>
         }
       />
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm text-slate-600">
-          Publish a new catalog service. A live directory will appear here when the
-          services list API is connected.
-        </p>
-      </div>
+      <ServicesGrid />
     </div>
   );
 }
