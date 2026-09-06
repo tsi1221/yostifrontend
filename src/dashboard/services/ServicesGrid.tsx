@@ -2,7 +2,9 @@ import { useState } from "react";
 
 import ActionButton from "../components/ActionButton";
 import { SelectInput, TextInput } from "../components/FormField";
+import SideDrawer from "../components/SideDrawer";
 import StatusBadge from "../components/StatusBadge";
+import EditServiceForm from "./EditServiceForm";
 import type { ServiceRecord } from "./types";
 import { useServicesList } from "./useServicesList";
 
@@ -37,7 +39,13 @@ function ServiceLogo({ title, logo }: { title: string; logo: string }) {
   );
 }
 
-function ServiceCard({ service }: { service: ServiceRecord }) {
+function ServiceCard({
+  service,
+  onEdit,
+}: {
+  service: ServiceRecord;
+  onEdit: (service: ServiceRecord) => void;
+}) {
   const features = service.details.features.slice(0, 6);
   const extra = service.details.features.length - features.length;
 
@@ -80,6 +88,9 @@ function ServiceCard({ service }: { service: ServiceRecord }) {
           </li>
         ) : null}
       </ul>
+      <div className="mt-auto pt-1">
+        <ActionButton onClick={() => onEdit(service)}>Edit</ActionButton>
+      </div>
     </article>
   );
 }
@@ -121,6 +132,7 @@ export default function ServicesGrid() {
     serverError,
     retry,
   } = useServicesList();
+  const [editing, setEditing] = useState<ServiceRecord | null>(null);
 
   return (
     <div className="space-y-4">
@@ -162,7 +174,9 @@ export default function ServicesGrid() {
           </div>
         ) : null}
         {!loading
-          ? services.map((service) => <ServiceCard key={service.id} service={service} />)
+          ? services.map((service) => (
+              <ServiceCard key={service.id} service={service} onEdit={setEditing} />
+            ))
           : null}
       </div>
 
@@ -198,6 +212,21 @@ export default function ServicesGrid() {
           </ActionButton>
         </div>
       </footer>
+
+      <SideDrawer
+        open={Boolean(editing)}
+        title={editing ? `Edit service #${editing.id}` : "Edit service"}
+        description="Update the catalog title, logo, tier, 24/7 support, and features."
+        onClose={() => setEditing(null)}
+      >
+        {editing ? (
+          <EditServiceForm
+            service={editing}
+            onCancel={() => setEditing(null)}
+            onSaved={() => setEditing(null)}
+          />
+        ) : null}
+      </SideDrawer>
     </div>
   );
 }

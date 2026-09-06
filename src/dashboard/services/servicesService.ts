@@ -11,6 +11,7 @@ import type {
   ServiceTierValue,
   ServicesListQuery,
   ServicesListResponse,
+  UpdateServicePayload,
 } from "./types";
 import { SERVICE_TIER_VALUES } from "./types";
 
@@ -225,7 +226,43 @@ export function normalizeService(raw: unknown): ServiceRecord | null {
 export const SERVICE_TITLE_CONFLICT_MESSAGE =
   "A service with this title already exists.";
 
+export const SERVICE_TITLE_TAKEN_MESSAGE = "This title is already taken";
+
+export const SERVICE_NOT_FOUND_MESSAGE = "Service not found.";
+
 export const CREATE_SERVICE_SUCCESS_MESSAGE = "Service created successfully.";
+
+export const UPDATE_SERVICE_SUCCESS_MESSAGE = "Service updated successfully.";
+
+export function asServiceId(value: unknown): number | undefined {
+  const id = typeof value === "number" ? value : Number(value);
+  if (!Number.isInteger(id) || id <= 0) {
+    return undefined;
+  }
+  return id;
+}
+
+export function serviceDetailUrl(id: number) {
+  return `${SERVICES_URL}/${id}`;
+}
+
+export function serviceToFormValues(service: ServiceRecord): ServiceFormValues {
+  const features = service.details.features.length > 0 ? service.details.features : [""];
+  const tier = SERVICE_TIER_VALUES.includes(service.details.tier as ServiceTierValue)
+    ? (service.details.tier as ServiceTierValue)
+    : "";
+  return {
+    title: service.title,
+    logo: service.logo,
+    tier,
+    support247: service.details.support247,
+    features,
+  };
+}
+
+export function formValuesToUpdatePayload(values: ServiceFormValues): UpdateServicePayload {
+  return formValuesToPayload(values);
+}
 
 export const SERVICES_INVALIDATE_EVENT = "yosti:services-invalidate";
 
@@ -406,4 +443,77 @@ export async function fetchServicesList(
   }
 
   return normalizeServicesResponse(raw, query);
+}
+
+export async function patchService(
+  id: number,
+  payload: UpdateServicePayload
+): Promise<ServiceRecord> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new ServiceRequestError("Unauthorized", 401);
+  }
+
+  if (asServiceId(id) === undefined) {
+    throw new ServiceRequestError(SERVICE_NOT_FOUND_MESSAGE, 404);
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(serviceDetailUrl(id), {
+      method: "PATCH",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    throw new ServiceRequestError(
+      "Unable to reach the server. Check your connection and try again.",
+      0
+    );
+  }
+
+  const raw: unknown = await response.json().catch(() => null);
+
+  if (response.status === 400) {
+    throw new ServiceRequestError(
+      readApiMessage(raw, "Unable to save this service. Check the highlighted fields."),
+      400,
+      parseFieldErrors(raw)
+    );
+  }
+  if (response.status === 401) {
+    throw new ServiceRequestError("Unauthorized", 401);
+  }
+  if (response.status === 404) {
+    throw new ServiceRequestError(SERVICE_NOT_FOUND_MESSAGE, 404);
+  }
+  if (response.status === 409) {
+    throw new ServiceRequestError(SERVICE_TITLE_TAKEN_MESSAGE, 409, {
+      title: SERVICE_TITLE_TAKEN_MESSAGE,
+    });
+  }
+  if (response.status >= 500) {
+    throw new ServiceRequestError(
+      readApiMessage(raw, "Server error occurred. Could not update service."),
+      response.status
+    );
+  }
+  if (!response.ok) {
+    throw new ServiceRequestError(
+      readApiMessage(raw, `Unable to update this service. Server returned ${response.status}.`),
+      response.status
+    );
+  }
+
+  const updated = serviceFromResponse(raw);
+  if (!updated) {
+    throw new ServiceRequestError("The server returned an incomplete service.", 500);
+  }
+
+  invalidateServicesCache();
+  return updated;
 }

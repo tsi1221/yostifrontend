@@ -32,6 +32,18 @@ export interface CreateServicePayload {
   details: ServiceDetails;
 }
 
+export interface UpdateServiceDetails {
+  tier?: string;
+  support247?: boolean;
+  features?: string[];
+}
+
+export interface UpdateServicePayload {
+  title?: string;
+  logo?: string;
+  details?: UpdateServiceDetails;
+}
+
 export interface ServiceRecord extends CreateServicePayload {
   id: number;
 }

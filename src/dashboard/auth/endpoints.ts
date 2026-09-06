@@ -34,5 +34,5 @@ export const SUPPORT_URL = `${AUTH_API_BASE}/support`;
 /** GET paginated support tickets / GET :id detail / PATCH :id update / DELETE :id; also used as a create fallback */
 export const SUPPORTS_URL = `${AUTH_API_BASE}/supports`;
 
-/** GET paginated catalog services / POST create { title, logo, details: { tier, support247, features } } */
+/** GET paginated catalog services / POST create / PATCH :id update { title, logo, details } */
 export const SERVICES_URL = `${AUTH_API_BASE}/services`;
