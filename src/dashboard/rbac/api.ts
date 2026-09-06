@@ -1,5 +1,10 @@
-import { PERMISSIONS_URL, ROLES_URL } from "../auth/endpoints";
+import { ROLES_URL } from "../auth/endpoints";
 import { getAccessToken } from "../auth/session";
+import {
+  PermissionRequestError,
+  fetchPermissionsList,
+  permissionGroup,
+} from "../permissions/api";
 import { isPreviewAccessToken } from "../users/usersService";
 import type {
   CreateRolePayload,
@@ -454,68 +459,32 @@ export async function fetchRole(id: number): Promise<RoleRecord> {
   return role;
 }
 
-function normalizePermissionsResponse(raw: unknown): RolePermission[] {
-  const record = asRecord(raw);
-  const nested = asRecord(record?.data);
-  const rows = Array.isArray(record?.data)
-    ? record.data
-    : Array.isArray(nested?.data)
-      ? nested.data
-      : Array.isArray(record?.permissions)
-        ? record.permissions
-        : Array.isArray(raw)
-          ? raw
-          : [];
-
-  return rows
-    .map((row) => normalizePermission(row))
-    .filter((row): row is RolePermission => Boolean(row));
-}
-
 export async function fetchPermissionsCatalog(): Promise<{
   permissions: RolePermission[];
   source: "api" | "fallback";
 }> {
-  let response: Response;
   try {
-    const params = new URLSearchParams({
-      page: "1",
-      pageSize: "200",
-      limit: "200",
-    });
-    response = await fetch(`${PERMISSIONS_URL}?${params.toString()}`, {
-      method: "GET",
-      headers: authHeaders(true),
-    });
-  } catch {
+    const payload = await fetchPermissionsList({ page: 1, pageSize: 200, search: "" });
+    const permissions = payload.data.map((item) => ({
+      ...item,
+      group: permissionGroup(item.name),
+    }));
+    return {
+      permissions: permissions.length > 0 ? permissions : FALLBACK_PERMISSIONS,
+      source: permissions.length > 0 ? "api" : "fallback",
+    };
+  } catch (cause) {
+    if (cause instanceof PermissionRequestError && cause.status === 401) {
+      throw new RoleRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
+    }
+    if (cause instanceof PermissionRequestError && cause.status === 404) {
+      return { permissions: FALLBACK_PERMISSIONS, source: "fallback" };
+    }
     throw new RoleRequestError(
-      "Unable to reach the server. Check your connection and try again.",
-      0,
-      undefined,
-      "NETWORK"
+      cause instanceof Error ? cause.message : "The server could not load permissions.",
+      cause instanceof PermissionRequestError ? cause.status : 500
     );
   }
-
-  const raw: unknown = await parseJson(response);
-
-  if (response.status === 401) {
-    throw new RoleRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
-  }
-  if (response.status === 404) {
-    return { permissions: FALLBACK_PERMISSIONS, source: "fallback" };
-  }
-  if (!response.ok) {
-    throw new RoleRequestError(
-      readApiMessage(raw, "The server could not load permissions."),
-      response.status
-    );
-  }
-
-  const permissions = normalizePermissionsResponse(raw);
-  return {
-    permissions: permissions.length > 0 ? permissions : FALLBACK_PERMISSIONS,
-    source: permissions.length > 0 ? "api" : "fallback",
-  };
 }
 
 export async function createRole(payload: CreateRolePayload): Promise<CreateRoleResult> {
