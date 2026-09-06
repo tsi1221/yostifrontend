@@ -42,3 +42,6 @@ export const BLOGS_URL = `${AUTH_API_BASE}/blogs`;
 
 /** GET paginated projects / POST create / GET :id / PATCH :id / DELETE :id */
 export const PROJECTS_URL = `${AUTH_API_BASE}/projects`;
+
+/** POST public contact / GET paginated admin inbox / GET :id / PATCH :id / DELETE :id */
+export const CONTACTS_URL = `${AUTH_API_BASE}/contacts`;

@@ -40,6 +40,7 @@ import PublicBlogDetail from "./dashboard/blogs/PublicBlogDetail";
 import PublicBlogsPage from "./dashboard/blogs/PublicBlogsPage";
 import PublicProjectDetail from "./dashboard/projects/PublicProjectDetail";
 import PublicProjectsPage from "./dashboard/projects/PublicProjectsPage";
+import PublicContactForm from "./dashboard/contacts/PublicContactForm";
 
 import type { UserRole } from "./shared/layout/Sidebar";
 
@@ -249,6 +250,15 @@ export default function App() {
         element={
           <PublicLayout>
             <ContactSection />
+          </PublicLayout>
+        }
+      />
+
+      <Route
+        path="/contacts"
+        element={
+          <PublicLayout>
+            <PublicContactForm />
           </PublicLayout>
         }
       />

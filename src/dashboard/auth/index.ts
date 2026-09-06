@@ -14,6 +14,7 @@ export {
   SERVICES_URL,
   BLOGS_URL,
   PROJECTS_URL,
+  CONTACTS_URL,
 } from "./endpoints";
 export { loginWithPassword } from "./loginService";
 export {
