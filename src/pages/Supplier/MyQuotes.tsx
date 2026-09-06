@@ -12,7 +12,7 @@ import {
 } from "antd";
 import { EyeOutlined, MessageOutlined, SendOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
-import { getSupplierQuotes, sendQuoteReply } from "../../hooks/authQuoteSupplier";
+import { getSupplierQuotes, sendQuoteReply } from "../../VisitorPublicUser/hooks/authQuoteSupplier";
 
 interface QuoteReply {
   sender: "supplier" | "buyer";

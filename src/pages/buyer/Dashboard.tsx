@@ -20,7 +20,7 @@ import {
   Grid,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
-import { useBuyerDashboard } from "../../hooks/useBuyerDashboard";
+import { useBuyerDashboard } from "../../VisitorPublicUser/hooks/useBuyerDashboard";
 import type { SourcingRequest, CreateSourcingPayload } from "./sourcing";
 
 const { Content } = Layout;

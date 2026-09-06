@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import api from "../api/api"; 
 import { message } from "antd";
-import type { Supplier, DashboardStats, User as AdminUser } from "../../../../Downloads/Telegram Desktop/new yosti/src/pages/Admin/adminTypesDashboard";
+import type { Supplier, DashboardStats, User as AdminUser } from "../../pages/Admin/adminTypesDashboard";
 
 export const useAdminDashboard = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);

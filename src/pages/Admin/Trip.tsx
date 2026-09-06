@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Table, Select } from "antd";
 import dayjs from "dayjs";
-import { useTripAdmin, type BusinessTrip, type TripStatus } from "../../hooks/useTripAdmin";
+import { useTripAdmin, type BusinessTrip, type TripStatus } from "../../VisitorPublicUser/hooks/useTripAdmin";
 
 const { Option } = Select;
 

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Form, Input, Button, message } from "antd";
 import { useNavigate } from "react-router-dom";
-import AuthLayout from "../components/BackgroundLayout";
+import AuthLayout from "../VisitorPublicUser/components/BackgroundLayout";
 
 const ForgotPassword: React.FC = () => {
   const [loading, setLoading] = useState(false);

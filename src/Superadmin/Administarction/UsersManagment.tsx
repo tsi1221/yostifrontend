@@ -29,7 +29,9 @@ import {
   X,
 } from "lucide-react";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL.replace(/\/+$/, "");
+const API_BASE_URL = (
+  import.meta.env.VITE_API_URL || "https://yosti.nedhigibe.com/api"
+).replace(/\/+$/, "");
 
 type User = {
   id: string | number;

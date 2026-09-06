@@ -11,23 +11,36 @@ import ForgotPassword from "./shared/Auth/ForgotPassword";
 import TwoFA from "./shared/Auth/TwoFA";
 
 import SuperAdminRouting from "./Superadmin/Content/Routing/SuperAdminRouting";
+import DashboardApp from "./dashboard/DashboardApp";
+import {
+  RequireAuth,
+  getRoleDashboardPath,
+  getStoredAuthUser,
+  hasValidAccessToken,
+  roleFromAuthUser,
+} from "./dashboard/auth";
 
-import Navbar from "./Pages/Home/Navbar";
-import Footer from "./Pages/Home/Footer";
+import Navbar from "./pages/Home/Navbar";
+import Footer from "./pages/Home/Footer";
 
-import HeroSection from "./Pages/Home/HeroSection";
-import AboutSection from "./Pages/Home/AboutSection";
-import ServicesSection from "./Pages/Home/ServicesSection";
-import ContactSection from "./Pages/Home/ContactSection";
-import Blog from "./Pages/Home/Blog";
-import WhyChoose from "./Pages/Home/Whychoose";
-import OurProject from "./Pages/Home/Ourproject";
-import Statics from "./Pages/Home/Statics";
-import TestimonialsPage from "./Pages/Home/TestimonialsSection";
-import ProductsSection from "./Pages/Home/ExportProductsSection";
-import Staff from "./Pages/Home/Staff";
+import HeroSection from "./pages/Home/HeroSection";
+import AboutSection from "./pages/Home/AboutSection";
+import ServicesSection from "./pages/Home/ServicesSection";
+import ContactSection from "./pages/Home/ContactSection";
+import Blog from "./pages/Home/Blog";
+import WhyChoose from "./pages/Home/Whychoose";
+import OurProject from "./pages/Home/Ourproject";
+import Statics from "./pages/Home/Statics";
+import TestimonialsPage from "./pages/Home/TestimonialsSection";
+import ProductsSection from "./pages/Home/ExportProductsSection";
+import Staff from "./pages/Home/Staff";
 
-import ProductPage from "./Pages/Home/product";
+import ProductPage from "./pages/Home/product";
+import PublicBlogDetail from "./dashboard/blogs/PublicBlogDetail";
+import PublicBlogsPage from "./dashboard/blogs/PublicBlogsPage";
+import PublicProjectDetail from "./dashboard/projects/PublicProjectDetail";
+import PublicProjectsPage from "./dashboard/projects/PublicProjectsPage";
+import PublicContactForm from "./dashboard/contacts/PublicContactForm";
 
 import type { UserRole } from "./shared/layout/Sidebar";
 
@@ -102,29 +115,8 @@ const normalizeRole = (
    ROLE HOME
 ========================================================= */
 
-const getRoleHome = (
-  role: UserRole | null
-) => {
-  switch (role) {
-    case "SUPER_ADMIN":
-      return "/superadmin/dashboard";
-
-    case "STAFF":
-      return "/staff/dashboard";
-
-    case "BUYER":
-      return "/buyer/dashboard";
-
-    case "SUPPLIER":
-      return "/supplier/dashboard";
-
-    case "LOGISTICS_PARTNER":
-      return "/logistics/dashboard";
-
-    default:
-      return "/";
-  }
-};
+const getRoleHome = (role: UserRole | null) =>
+  role ? getRoleDashboardPath(role) : "/";
 
 /* =========================================================
    PUBLIC LAYOUT
@@ -150,33 +142,39 @@ function PublicLayout({
    APP
 ========================================================= */
 
+const readStoredRole = (): UserRole | null => {
+  if (!hasValidAccessToken()) {
+    return null;
+  }
+
+  const authUser = getStoredAuthUser();
+  if (authUser) {
+    return roleFromAuthUser(authUser);
+  }
+
+  return normalizeRole(
+    localStorage.getItem("role") ?? sessionStorage.getItem("role")
+  );
+};
+
+const readStoredEmail = (): string | null =>
+  localStorage.getItem("email") ??
+  sessionStorage.getItem("email");
+
 export default function App() {
   const [role, setRole] =
-    useState<UserRole | null>(null);
+    useState<UserRole | null>(readStoredRole);
 
   const [, setEmail] =
-    useState<string | null>(null);
+    useState<string | null>(readStoredEmail);
 
   /* =======================================================
      LOAD AUTH
   ======================================================= */
 
   useEffect(() => {
-    const storedRole =
-      localStorage.getItem("role") ??
-      sessionStorage.getItem("role");
-
-    const storedEmail =
-      localStorage.getItem("email") ??
-      sessionStorage.getItem("email");
-
-    setRole(
-      normalizeRole(storedRole)
-    );
-
-    setEmail(
-      storedEmail ?? null
-    );
+    setRole(readStoredRole());
+    setEmail(readStoredEmail());
   }, []);
 
   return (
@@ -256,6 +254,15 @@ export default function App() {
         }
       />
 
+      <Route
+        path="/contacts"
+        element={
+          <PublicLayout>
+            <PublicContactForm />
+          </PublicLayout>
+        }
+      />
+
       {/* =================================================
           BLOG
       ================================================= */}
@@ -265,6 +272,42 @@ export default function App() {
         element={
           <PublicLayout>
             <Blog />
+          </PublicLayout>
+        }
+      />
+
+      <Route
+        path="/blogs/:blogId"
+        element={
+          <PublicLayout>
+            <PublicBlogDetail />
+          </PublicLayout>
+        }
+      />
+
+      <Route
+        path="/blogs"
+        element={
+          <PublicLayout>
+            <PublicBlogsPage />
+          </PublicLayout>
+        }
+      />
+
+      <Route
+        path="/projects/:projectId"
+        element={
+          <PublicLayout>
+            <PublicProjectDetail />
+          </PublicLayout>
+        }
+      />
+
+      <Route
+        path="/projects"
+        element={
+          <PublicLayout>
+            <PublicProjectsPage />
           </PublicLayout>
         }
       />
@@ -362,96 +405,47 @@ export default function App() {
       <Route
         path="/superadmin/*"
         element={
-          role === "SUPER_ADMIN" ? (
+          <RequireAuth allow={["SUPER_ADMIN", "STAFF"]}>
             <SuperAdminRouting />
-          ) : (
-            <Navigate
-              to="/login"
-              replace
-            />
-          )
+          </RequireAuth>
         }
       />
 
-      {/* =================================================
-          FUTURE STAFF
-      ================================================= */}
-
-      {/*
       <Route
         path="/staff/*"
         element={
-          role === "STAFF" ? (
-            <AdminRouting />
-          ) : (
-            <Navigate
-              to="/login"
-              replace
-            />
-          )
+          <RequireAuth allow={["STAFF", "SUPER_ADMIN"]}>
+            <DashboardApp role="STAFF" />
+          </RequireAuth>
         }
       />
-      */}
 
-      {/* =================================================
-          FUTURE BUYER
-      ================================================= */}
-
-      {/*
       <Route
         path="/buyer/*"
         element={
-          role === "BUYER" ? (
-            <BuyerRouting />
-          ) : (
-            <Navigate
-              to="/login"
-              replace
-            />
-          )
+          <RequireAuth allow={["BUYER", "SUPER_ADMIN"]}>
+            <DashboardApp role="BUYER" />
+          </RequireAuth>
         }
       />
-      */}
 
-      {/* =================================================
-          FUTURE SUPPLIER
-      ================================================= */}
-
-      {/*
       <Route
         path="/supplier/*"
         element={
-          role === "SUPPLIER" ? (
-            <SupplierRouting />
-          ) : (
-            <Navigate
-              to="/login"
-              replace
-            />
-          )
+          <RequireAuth allow={["SUPPLIER", "SUPER_ADMIN"]}>
+            <DashboardApp role="SUPPLIER" />
+          </RequireAuth>
         }
       />
-      */}
 
-      {/* =================================================
-          FUTURE LOGISTICS
-      ================================================= */}
-
-      {/*
       <Route
         path="/logistics/*"
         element={
-          role === "LOGISTICS_PARTNER" ? (
-            <LogisticsRouting />
-          ) : (
-            <Navigate
-              to="/login"
-              replace
-            />
-          )
+          <RequireAuth allow={["LOGISTICS_PARTNER", "SUPER_ADMIN"]}>
+            <DashboardApp role="LOGISTICS_PARTNER" />
+          </RequireAuth>
         }
       />
-      */}
 
       {/* =================================================
           GLOBAL FALLBACK

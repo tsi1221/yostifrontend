@@ -16,7 +16,7 @@ import {
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import { useSupportBuyer, type SupportRequest } from "../../hooks/useSupportBuyer";
+import { useSupportBuyer, type SupportRequest } from "../../VisitorPublicUser/hooks/useSupportBuyer";
 
 const { Title } = Typography;
 

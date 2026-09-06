@@ -1,0 +1,240 @@
+{
+  "nav": {
+    "home": "首页",
+    "about": "关于我们",
+    "industries": "行业",
+    "services": "服务",
+    "projects": "我们的项目",
+    "staff": "团队",
+    "blog": "博客",
+    "contact": "联系我们",
+    "login": "登录",
+    "selectLanguage": "选择语言",
+    "openMenu": "打开导航菜单",
+    "goHome": "返回首页",
+    "brand": "Yosti"
+  },
+  "languages": {
+    "en": "English",
+    "am": "አማርኛ",
+    "zh": "中文"
+  },
+  "hero": {
+    "title": "通往全球市场的桥梁",
+    "description": "Yosti进出口贸易有限公司为全球客户提供一站式采购与物流解决方案。",
+    "startNow": "立即开始",
+    "contactUs": "联系我们",
+    "prevSlide": "上一张",
+    "nextSlide": "下一张",
+    "goToSlide": "前往第 {{number}} 张"
+  },
+  "inventory": {
+    "title": "实时库存",
+    "subtitle": "来自中国物流枢纽的直接出口报价。",
+    "categoriesTitle": "库存分类",
+    "clearAll": "清除全部",
+    "units": "{{count}} 台",
+    "view": "查看",
+    "modelYear": "{{year}} 款",
+    "location": "地点",
+    "status": "状态",
+    "helpTitle": "找不到特定型号？",
+    "helpBody": "我们的顾问可在 48 小时内从中国定位任何机械或挂车。",
+    "requestSourcing": "申请采购",
+    "requestQuote": "申请报价",
+    "chatWithAgent": "联系顾问",
+    "condition": {
+      "New": "全新",
+      "Refurbished": "翻新",
+      "Used": "二手"
+    },
+    "statusLabel": {
+      "Export-Ready": "可出口",
+      "In Transit": "运输中"
+    },
+    "categories": {
+      "Asphalt Mixing Plants": "沥青搅拌站",
+      "Concrete Batching Plants": "混凝土搅拌站",
+      "Asphalt Pavers": "沥青摊铺机",
+      "Road Rollers": "压路机",
+      "Motor Graders": "平地机",
+      "Wheel Loaders": "轮式装载机",
+      "Excavators": "挖掘机",
+      "Bulldozers": "推土机",
+      "Backhoe Loaders": "挖掘装载机",
+      "Crushing & Screening Plants": "破碎筛分设备",
+      "Mobile Crushers": "移动破碎机",
+      "Stone Crushers": "碎石机",
+      "Semi-Trailers": "半挂车",
+      "Lowbed / Lowboy Trailers": "低平板挂车",
+      "Dump Trailers": "自卸挂车",
+      "Fuel Tanker Trailers": "油罐挂车",
+      "Cement Bulk Trailers": "散装水泥挂车"
+    }
+  },
+  "services": {
+    "title": "我们的服务",
+    "items": [
+      {
+        "title": "端到端客户服务",
+        "desc": [
+          "远程注册并完成客户入驻",
+          "为中国签证申请出具邀请函",
+          "通过咨询收集详细需求"
+        ]
+      },
+      {
+        "title": "供应商与工厂协调",
+        "desc": [
+          "调研并筛选制造商",
+          "核实供应商资质与信誉",
+          "安排市场考察与工厂预约",
+          "陪同客户进行现场验厂"
+        ]
+      },
+      {
+        "title": "差旅与接待支持",
+        "desc": [
+          "预订航班、接机及国内交通",
+          "按预算与偏好安排酒店",
+          "提供餐饮安排与向导",
+          "协助文化适应"
+        ]
+      },
+      {
+        "title": "商务谈判与交易",
+        "desc": [
+          "协商价格、起订量与包装",
+          "通过安全渠道处理付款",
+          "起草并翻译采购合同"
+        ]
+      },
+      {
+        "title": "检验与质量控制",
+        "desc": [
+          "进行装运前检验",
+          "提供照片、视频和文件",
+          "走访工厂核实生产情况"
+        ]
+      },
+      {
+        "title": "物流、单证与海关",
+        "desc": [
+          "准备发票、装箱单和 HS 编码",
+          "安排海运/空运/快递",
+          "追踪货物并及时告知客户",
+          "提供关税与进口法规建议"
+        ]
+      },
+      {
+        "title": "售后服务与咨询",
+        "desc": [
+          "处理投诉与换货",
+          "与供应商保持沟通",
+          "提供市场趋势报告",
+          "安排线上工厂参观"
+        ]
+      }
+    ]
+  },
+  "whyChoose": {
+    "title": "为什么选择我们？",
+    "subtitle": "可信工厂、实地支持，以及从始至终的顺畅协调。",
+    "items": [
+      {
+        "title": "端到端支持",
+        "description": "从签证邀请到最终交付，我们覆盖贸易流程的每一步，帮您消除物流麻烦并节省时间。"
+      },
+      {
+        "title": "75+ 家可信工厂",
+        "description": "我们只与经过核实的可靠制造商合作，确保您获得优质产品和极具竞争力的出厂价。"
+      },
+      {
+        "title": "持证合规、公开透明",
+        "description": "作为在中国合法注册的企业，我们的所有业务都公开透明，让您安心放心。"
+      },
+      {
+        "title": "非洲企业视角",
+        "description": "作为在华运营的非洲企业，我们提供贴合您市场的独特文化理解与商务视角。"
+      },
+      {
+        "title": "多语种团队",
+        "description": "团队精通英语、阿姆哈拉语和中文，无需第三方翻译即可完成顺畅沟通与谈判。"
+      },
+      {
+        "title": "实地专家",
+        "description": "我们在上海和义乌设有办事处，可就近进行质检、验厂并即时解决问题。"
+      },
+      {
+        "title": "安全支付处理",
+        "description": "所有款项均通过已核实的公司银行账户安全处理，保护您的资金免受欺诈风险。"
+      },
+      {
+        "title": "售后承诺",
+        "description": "我们的服务不止于发货；团队会持续协助单证与问题排查，直到货物顺利送达。"
+      }
+    ]
+  },
+  "stats": {
+    "ordersProcessed": "已处理订单",
+    "totalCustomers": "客户总数",
+    "activeShipments": "在途货运",
+    "totalSuppliers": "供应商总数"
+  },
+  "testimonials": {
+    "title": "客户评价",
+    "items": [
+      {
+        "position": "企业主",
+        "text": "Yosti 帮我以更优价格采购到高质量机械，整个过程高效且专业。"
+      },
+      {
+        "position": "创业者",
+        "text": "多亏 Yosti 的安排，我很快拜访了可靠供应商并敲定合作，支持非常到位。"
+      },
+      {
+        "position": "进口商",
+        "text": "我以前用过其他代理，但 Yosti 做到了全程透明、视频验货和及时更新。"
+      },
+      {
+        "position": "零售经理",
+        "text": "服务专业、沟通顺畅，让我的采购流程轻松许多。"
+      },
+      {
+        "position": "经销商",
+        "text": "可靠、快速、透明。我非常推荐他们的国际采购团队。"
+      }
+    ]
+  },
+  "footer": {
+    "brand": "Yosti 进出口贸易",
+    "tagline": "以信任、效率和透明弥合进出口差距。您通往可靠全球贸易的门户。",
+    "stayUpdated": "保持更新",
+    "newsletter": "获取最新贸易、法规与产品资讯。",
+    "emailPlaceholder": "输入您的邮箱",
+    "subscribe": "订阅",
+    "company": "公司",
+    "aboutUs": "关于我们",
+    "ourProjects": "我们的项目",
+    "whyChooseUs": "为什么选择我们",
+    "contact": "联系我们",
+    "ourServices": "我们的服务",
+    "allServices": "全部服务",
+    "importServices": "进口服务",
+    "exportServices": "出口服务",
+    "consulting": "咨询",
+    "resources": "资源",
+    "blogNews": "博客与新闻",
+    "pdfForms": "PDF 表格与模板",
+    "licenseVerification": "执照核验",
+    "developerSdk": "开发者 SDK",
+    "questions": "有问题？联系我们：",
+    "responseTime": "响应时间：24 小时",
+    "followUs": "关注我们：",
+    "copyright": "© {{year}} Yosti Trading Co., Ltd. 保留所有权利。",
+    "privacy": "隐私政策",
+    "terms": "服务条款",
+    "cookies": "Cookie 政策",
+    "accessibility": "无障碍"
+  }
+}

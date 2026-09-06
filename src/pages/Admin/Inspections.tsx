@@ -22,7 +22,7 @@ import {
   type Inspection,
   type InspectionStatus,
   useInspectionsAdmin,
-} from "../../hooks/useInspectionsAdmin";
+} from "../../VisitorPublicUser/hooks/useInspectionsAdmin";
 
 /* ================= COMPONENT ================= */
 

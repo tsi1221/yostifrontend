@@ -4,7 +4,7 @@ import type {
     SourcingRequest,
     Shipment,
     CreateSourcingPayload,
-} from "../../../../Downloads/Telegram Desktop/new yosti/src/pages/buyer/sourcing";
+} from "../../pages/buyer/sourcing";
 
 interface Stats {
   activeRequests: number;

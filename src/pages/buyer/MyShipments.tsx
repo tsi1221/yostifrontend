@@ -1,5 +1,5 @@
 import  { useState } from "react";
-import useShipments, { type Shipment, type CreateShipmentInput } from "../../hooks/useShipmentBuyer";
+import useShipments, { type Shipment, type CreateShipmentInput } from "../../VisitorPublicUser/hooks/useShipmentBuyer";
 import { Modal, Button, Form, Input, Select, message, Spin } from "antd";
 
 const { Option } = Select;

@@ -11,7 +11,7 @@ import {
   Switch,
 } from "antd";
 import dayjs from "dayjs";
-import { useTrips, type BusinessTrip } from "../../hooks/useTrips";
+import { useTrips, type BusinessTrip } from "../../VisitorPublicUser/hooks/useTrips";
 
 interface TripFormValues {
   arrival_city: string;
