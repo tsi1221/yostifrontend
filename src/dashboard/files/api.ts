@@ -165,7 +165,7 @@ export function resolveFileUrl(url: string) {
   if (!value) {
     return "";
   }
-  if (/^https?:\/\//i.test(value)) {
+  if (/^(https?:|data:|blob:)/i.test(value)) {
     return value;
   }
   const origin = AUTH_API_BASE.replace(/\/api\/?$/, "");
