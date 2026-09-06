@@ -5,7 +5,7 @@ import {
   ShopOutlined, SafetyOutlined, DollarOutlined, PhoneOutlined, 
   GlobalOutlined 
 } from "@ant-design/icons";
-import { useAdminDashboard } from "../../hooks/useAdminDashboard";
+import { useAdminDashboard } from "../../VisitorPublicUser/hooks/useAdminDashboard";
 import type { Supplier, User } from "./adminTypesDashboard";
 
 const { Column } = Table;

@@ -1,5 +1,5 @@
 import  { type JSX } from "react";
-import { useSupplierStore } from "../../store/useSupplierStore";
+import { useSupplierStore } from "../../VisitorPublicUser/store/useSupplierStore";
 import {
   FileTextOutlined,
   EditOutlined,

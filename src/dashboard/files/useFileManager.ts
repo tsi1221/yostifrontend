@@ -153,10 +153,11 @@ export function useFileManager() {
       return true;
     } catch (cause) {
       if (removed) {
+        const restored = removed;
         setFiles((current) =>
-          current.some((item) => item.filename === removed?.filename)
+          current.some((item) => item.filename === restored.filename)
             ? current
-            : [removed, ...current]
+            : [restored, ...current]
         );
       }
       if (handleAuth(cause)) {

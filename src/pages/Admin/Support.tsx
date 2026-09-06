@@ -2,7 +2,7 @@
 import React from "react";
 import { Table, Tag, Empty, Spin } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { useSupportAdmin, type SupportItem, type SupportStatus, type Urgency, type IssueType } from "../../hooks/useSupportAdmin";
+import { useSupportAdmin, type SupportItem, type SupportStatus, type Urgency, type IssueType } from "../../VisitorPublicUser/hooks/useSupportAdmin";
 
 const statusColors: Record<SupportStatus, string> = {
   open: "blue",

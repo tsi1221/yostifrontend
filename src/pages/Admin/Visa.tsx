@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Table, Tag, Spin, Button, Space } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { useVisaAdmin, type Invitation, type InvitationStatus } from "../../hooks/useVisaAdmin";
+import { useVisaAdmin, type Invitation, type InvitationStatus } from "../../VisitorPublicUser/hooks/useVisaAdmin";
 
 const Visa: React.FC = () => {
   const { invitations, loading, fetchAllInvitations, updateInvitationStatus } = useVisaAdmin();
