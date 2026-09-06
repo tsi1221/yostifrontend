@@ -40,7 +40,8 @@ export type DashboardPageKey =
   | "payments"
   | "services"
   | "supports"
-  | "blogs";
+  | "blogs"
+  | "projects";
 
 export interface NavItem {
   key: DashboardPageKey;
@@ -95,6 +96,7 @@ export const getNavigation = (role: UserRole): NavGroup[] => {
             item(slug, "services", "Services"),
             item(slug, "supports", "Support Tickets"),
             item(slug, "blogs", "Blogs"),
+            item(slug, "projects", "Projects"),
           ],
         },
       ];
@@ -120,6 +122,7 @@ export const getNavigation = (role: UserRole): NavGroup[] => {
             item(slug, "services", "Services"),
             item(slug, "supports", "Support Tickets"),
             item(slug, "blogs", "Blogs"),
+            item(slug, "projects", "Projects"),
           ],
         },
       ];

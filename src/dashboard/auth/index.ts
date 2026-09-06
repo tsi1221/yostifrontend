@@ -13,6 +13,7 @@ export {
   SUPPORTS_URL,
   SERVICES_URL,
   BLOGS_URL,
+  PROJECTS_URL,
 } from "./endpoints";
 export { loginWithPassword } from "./loginService";
 export {

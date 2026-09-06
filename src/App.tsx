@@ -38,6 +38,8 @@ import Staff from "./pages/Home/Staff";
 import ProductPage from "./pages/Home/product";
 import PublicBlogDetail from "./dashboard/blogs/PublicBlogDetail";
 import PublicBlogsPage from "./dashboard/blogs/PublicBlogsPage";
+import PublicProjectDetail from "./dashboard/projects/PublicProjectDetail";
+import PublicProjectsPage from "./dashboard/projects/PublicProjectsPage";
 
 import type { UserRole } from "./shared/layout/Sidebar";
 
@@ -278,6 +280,24 @@ export default function App() {
         element={
           <PublicLayout>
             <PublicBlogsPage />
+          </PublicLayout>
+        }
+      />
+
+      <Route
+        path="/projects/:projectId"
+        element={
+          <PublicLayout>
+            <PublicProjectDetail />
+          </PublicLayout>
+        }
+      />
+
+      <Route
+        path="/projects"
+        element={
+          <PublicLayout>
+            <PublicProjectsPage />
           </PublicLayout>
         }
       />

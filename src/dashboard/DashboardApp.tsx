@@ -30,6 +30,9 @@ import ServicesPage from "./views/ServicesPage";
 import BlogDetailView from "./blogs/BlogDetailView";
 import CreateBlogForm from "./blogs/CreateBlogForm";
 import BlogsPage from "./views/BlogsPage";
+import CreateProjectForm from "./projects/CreateProjectForm";
+import ProjectDetailView from "./projects/ProjectDetailView";
+import ProjectsPage from "./views/ProjectsPage";
 
 interface DashboardAppProps {
   role: UserRole;
@@ -227,6 +230,30 @@ function DashboardRoutes({ role }: DashboardAppProps) {
           element={
             <Guard role={role} page="blogs">
               <BlogsPage />
+            </Guard>
+          }
+        />
+        <Route
+          path="projects/new"
+          element={
+            <Guard role={role} page="projects">
+              <CreateProjectForm />
+            </Guard>
+          }
+        />
+        <Route
+          path="projects/:projectId"
+          element={
+            <Guard role={role} page="projects">
+              <ProjectDetailView />
+            </Guard>
+          }
+        />
+        <Route
+          path="projects"
+          element={
+            <Guard role={role} page="projects">
+              <ProjectsPage />
             </Guard>
           }
         />
