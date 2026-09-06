@@ -36,6 +36,8 @@ import ProductsSection from "./pages/Home/ExportProductsSection";
 import Staff from "./pages/Home/Staff";
 
 import ProductPage from "./pages/Home/product";
+import PublicBlogDetail from "./dashboard/blogs/PublicBlogDetail";
+import PublicBlogsPage from "./dashboard/blogs/PublicBlogsPage";
 
 import type { UserRole } from "./shared/layout/Sidebar";
 
@@ -258,6 +260,24 @@ export default function App() {
         element={
           <PublicLayout>
             <Blog />
+          </PublicLayout>
+        }
+      />
+
+      <Route
+        path="/blogs/:blogId"
+        element={
+          <PublicLayout>
+            <PublicBlogDetail />
+          </PublicLayout>
+        }
+      />
+
+      <Route
+        path="/blogs"
+        element={
+          <PublicLayout>
+            <PublicBlogsPage />
           </PublicLayout>
         }
       />

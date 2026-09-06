@@ -36,3 +36,6 @@ export const SUPPORTS_URL = `${AUTH_API_BASE}/supports`;
 
 /** GET paginated catalog services / POST create / PATCH :id update / DELETE :id */
 export const SERVICES_URL = `${AUTH_API_BASE}/services`;
+
+/** GET paginated blogs / POST create / GET :id / PATCH :id / DELETE :id */
+export const BLOGS_URL = `${AUTH_API_BASE}/blogs`;

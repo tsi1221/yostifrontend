@@ -27,6 +27,9 @@ import SupportTicketDetailView from "./tickets/SupportTicketDetailView";
 import SupportPage from "./views/SupportPage";
 import CreateServiceForm from "./services/CreateServiceForm";
 import ServicesPage from "./views/ServicesPage";
+import BlogDetailView from "./blogs/BlogDetailView";
+import CreateBlogForm from "./blogs/CreateBlogForm";
+import BlogsPage from "./views/BlogsPage";
 
 interface DashboardAppProps {
   role: UserRole;
@@ -200,6 +203,30 @@ function DashboardRoutes({ role }: DashboardAppProps) {
           element={
             <Guard role={role} page="services">
               <ServicesPage />
+            </Guard>
+          }
+        />
+        <Route
+          path="blogs/new"
+          element={
+            <Guard role={role} page="blogs">
+              <CreateBlogForm />
+            </Guard>
+          }
+        />
+        <Route
+          path="blogs/:blogId"
+          element={
+            <Guard role={role} page="blogs">
+              <BlogDetailView />
+            </Guard>
+          }
+        />
+        <Route
+          path="blogs"
+          element={
+            <Guard role={role} page="blogs">
+              <BlogsPage />
             </Guard>
           }
         />

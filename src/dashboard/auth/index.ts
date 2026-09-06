@@ -12,6 +12,7 @@ export {
   SUPPORT_URL,
   SUPPORTS_URL,
   SERVICES_URL,
+  BLOGS_URL,
 } from "./endpoints";
 export { loginWithPassword } from "./loginService";
 export {
