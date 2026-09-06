@@ -175,12 +175,6 @@ export async function fetchUsersList(query: UsersListQuery): Promise<UsersListRe
   if (response.status === 401) {
     throw new UsersRequestError("Unauthorized", 401);
   }
-  if (response.status === 403) {
-    throw new UsersRequestError(
-      "Access Denied: You do not have the required permissions to view this resource.",
-      403
-    );
-  }
   if (!response.ok) {
     throw new UsersRequestError(
       `Unable to load users. Server returned ${response.status}.`,

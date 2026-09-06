@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -11,7 +11,13 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { clearAuthSession, getStoredAuthUser, roleFromAuthUser } from "../auth";
+import {
+  clearAuthSession,
+  getStoredAuthUser,
+  installSuperAdminAccessFixes,
+  recoverSuperAdminAccess,
+  roleFromAuthUser,
+} from "../auth";
 import { ROLE_LABEL, ROLE_SLUG, getNavigation } from "../roles";
 import { useDashboard } from "../store";
 import type { UserRole } from "../types";
@@ -25,6 +31,11 @@ export default function DashboardShell({ role, children }: DashboardShellProps) 
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, snapshot } = useDashboard();
+
+  useEffect(() => {
+    installSuperAdminAccessFixes();
+    void recoverSuperAdminAccess();
+  }, []);
   const alerts =
     snapshot.support_requests.filter((row) => row.status === "open").length +
     snapshot.verifications.filter((row) => row.status === "pending").length;

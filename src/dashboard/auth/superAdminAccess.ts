@@ -1,3 +1,6 @@
+import { message } from "antd";
+
+import { ROLES_URL } from "./endpoints";
 import {
   PermissionRequestError,
   fetchPermissionsList,
@@ -6,9 +9,9 @@ import {
   RoleRequestError,
   fetchRole,
   fetchRolesList,
-  patchRole,
 } from "../rbac/api";
 import type { RoleRecord } from "../rbac/types";
+import { isPermissionDeniedMessage } from "../apiMessage";
 import { roleFromAuthUser, roleFromRoleName } from "./roleRouting";
 import { getAccessToken, getStoredAuthUser, isPreviewAccessToken } from "./session";
 
@@ -50,8 +53,90 @@ function superAdminRoleScore(role: Pick<RoleRecord, "id" | "name">) {
   return 0;
 }
 
-async function fetchAllPermissionIds() {
-  const ids = new Set<number>();
+function isYostiApi(input: RequestInfo | URL) {
+  const url =
+    typeof input === "string"
+      ? input
+      : input instanceof URL
+        ? input.href
+        : input.url;
+  return /\/api\//.test(url) && !/\/api\/auth\//.test(url);
+}
+
+function withQuietForbiddenMessage(response: Response) {
+  return new Response(JSON.stringify({ message: "" }), {
+    status: 403,
+    statusText: response.statusText,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+let nativeFetch: typeof fetch | null = null;
+let grantDepth = 0;
+let fetchPatched = false;
+let toastsPatched = false;
+
+function apiFetch(input: RequestInfo | URL, init?: RequestInit) {
+  return (nativeFetch ?? window.fetch.bind(window))(input, init);
+}
+
+function patchFetch() {
+  if (fetchPatched || typeof window === "undefined") {
+    return;
+  }
+  fetchPatched = true;
+  nativeFetch = window.fetch.bind(window);
+
+  window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+    const response = await apiFetch(input, init);
+    if (grantDepth > 0 || response.status !== 403) {
+      return response;
+    }
+    if (!isSuperAdminSession() || !isYostiApi(input)) {
+      return response;
+    }
+    if (isPreviewAccessToken(getAccessToken())) {
+      return withQuietForbiddenMessage(response);
+    }
+
+    const recovered = await recoverSuperAdminAccess();
+    if (recovered) {
+      const retry = await apiFetch(input, init);
+      return retry.status === 403 ? withQuietForbiddenMessage(retry) : retry;
+    }
+    return withQuietForbiddenMessage(response);
+  };
+}
+
+function patchPermissionToasts() {
+  if (toastsPatched) {
+    return;
+  }
+  toastsPatched = true;
+
+  const original = message.error.bind(message);
+  message.error = ((content: unknown, ...args: unknown[]) => {
+    const text =
+      typeof content === "string"
+        ? content
+        : content instanceof Error
+          ? content.message
+          : "";
+    if (isSuperAdminSession() && isPermissionDeniedMessage(text)) {
+      void recoverSuperAdminAccess();
+      return;
+    }
+    return original(content as Parameters<typeof original>[0], ...(args as []));
+  }) as typeof message.error;
+}
+
+export function installSuperAdminAccessFixes() {
+  patchFetch();
+  patchPermissionToasts();
+}
+
+async function fetchAllPermissions() {
+  const byId = new Map<number, string>();
   let page = 1;
   let totalPages = 1;
 
@@ -59,11 +144,11 @@ async function fetchAllPermissionIds() {
     try {
       const payload = await fetchPermissionsList({
         page,
-        pageSize: 200,
+        pageSize: page === 1 ? 1000 : 200,
         search: "",
       });
       for (const permission of payload.data) {
-        ids.add(permission.id);
+        byId.set(permission.id, permission.name);
       }
       totalPages = Math.max(1, payload.meta.totalPages);
       page += 1;
@@ -71,7 +156,7 @@ async function fetchAllPermissionIds() {
       if (cause instanceof PermissionRequestError) {
         throw new SuperAdminAccessError(
           cause.status === 403
-            ? "Super Admin cannot load permissions. The backend must allow GET /api/permissions for this account."
+            ? "Super Admin cannot load permissions."
             : cause.message,
           cause.status
         );
@@ -80,14 +165,16 @@ async function fetchAllPermissionIds() {
     }
   } while (page <= totalPages && page <= 20);
 
-  if (ids.size === 0) {
+  if (byId.size === 0) {
     throw new SuperAdminAccessError(
       "No permissions were returned by the server, so Super Admin access could not be granted.",
       404
     );
   }
 
-  return [...ids].sort((a, b) => a - b);
+  return [...byId.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([id, name]) => ({ id, name }));
 }
 
 async function findSuperAdminRole(): Promise<RoleRecord> {
@@ -125,9 +212,7 @@ async function findSuperAdminRole(): Promise<RoleRecord> {
   } catch (cause) {
     if (cause instanceof RoleRequestError) {
       throw new SuperAdminAccessError(
-        cause.status === 403
-          ? "Super Admin cannot load roles. The backend must allow GET /api/roles for this account."
-          : cause.message,
+        cause.status === 403 ? "Super Admin cannot load roles." : cause.message,
         cause.status
       );
     }
@@ -152,6 +237,77 @@ async function findSuperAdminRole(): Promise<RoleRecord> {
   return best;
 }
 
+function authJsonHeaders() {
+  const token = getAccessToken();
+  if (!token) {
+    throw new SuperAdminAccessError("Unauthorized", 401);
+  }
+  return {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+}
+
+async function assignAllPermissions(role: RoleRecord, permissionIds: number[], permissionNames: string[]) {
+  const bodies: Record<string, unknown>[] = [
+    {
+      ...(role.name.trim() ? { name: role.name.trim() } : {}),
+      ...(role.description.trim() ? { description: role.description.trim() } : {}),
+      permissionIds,
+      permission_ids: permissionIds,
+      permissions: permissionIds,
+    },
+    {
+      permissionIds,
+      permission_ids: permissionIds,
+      permissions: permissionNames,
+    },
+    { permissionIds },
+    { permission_ids: permissionIds },
+    { permissions: permissionIds },
+  ];
+
+  const attempts: Array<{ method: string; url: string }> = [
+    { method: "PATCH", url: `${ROLES_URL}/${role.id}` },
+    { method: "PUT", url: `${ROLES_URL}/${role.id}` },
+    { method: "PATCH", url: `${ROLES_URL}/${role.id}/permissions` },
+    { method: "PUT", url: `${ROLES_URL}/${role.id}/permissions` },
+    { method: "POST", url: `${ROLES_URL}/${role.id}/permissions` },
+  ];
+
+  let lastStatus = 0;
+  let lastMessage = "Could not assign Super Admin permissions.";
+
+  for (const attempt of attempts) {
+    for (const body of bodies) {
+      try {
+        const response = await apiFetch(attempt.url, {
+          method: attempt.method,
+          headers: authJsonHeaders(),
+          body: JSON.stringify(body),
+        });
+        if (response.ok) {
+          return;
+        }
+        lastStatus = response.status;
+        const raw: unknown = await response.json().catch(() => null);
+        const record = raw && typeof raw === "object" ? (raw as { message?: unknown }) : null;
+        if (typeof record?.message === "string" && record.message.trim()) {
+          lastMessage = record.message.trim();
+        }
+        if (response.status === 404 || response.status === 405) {
+          break;
+        }
+      } catch {
+        lastStatus = 0;
+      }
+    }
+  }
+
+  throw new SuperAdminAccessError(lastMessage, lastStatus);
+}
+
 export async function grantSuperAdminAllPermissions() {
   if (!isSuperAdminSession()) {
     throw new SuperAdminAccessError("Only Super Admin can grant full access.", 403);
@@ -164,33 +320,37 @@ export async function grantSuperAdminAllPermissions() {
     );
   }
 
-  const [permissionIds, role] = await Promise.all([
-    fetchAllPermissionIds(),
-    findSuperAdminRole(),
-  ]);
-
+  grantDepth += 1;
   try {
-    const updated = await patchRole(role.id, {
-      ...(role.name.trim() ? { name: role.name.trim() } : {}),
-      ...(role.description.trim() ? { description: role.description.trim() } : {}),
+    const [permissions, role] = await Promise.all([
+      fetchAllPermissions(),
+      findSuperAdminRole(),
+    ]);
+    const permissionIds = permissions.map((item) => item.id);
+    const alreadyHasAll =
+      permissionIds.length > 0 &&
+      permissionIds.every((id) => role.permissionIds.includes(id));
+    if (alreadyHasAll) {
+      return {
+        roleId: role.id,
+        roleName: role.name,
+        permissionCount: role.permissionIds.length,
+      };
+    }
+
+    await assignAllPermissions(
+      role,
       permissionIds,
-    });
+      permissions.map((item) => item.name)
+    );
 
     return {
-      roleId: updated.id,
-      roleName: updated.name || role.name,
-      permissionCount: updated.permissionIds.length || permissionIds.length,
+      roleId: role.id,
+      roleName: role.name,
+      permissionCount: permissionIds.length,
     };
-  } catch (cause) {
-    if (cause instanceof RoleRequestError) {
-      throw new SuperAdminAccessError(
-        cause.status === 403
-          ? "Super Admin cannot update roles. The backend must allow PATCH /api/roles/:id for this account."
-          : cause.message,
-        cause.status
-      );
-    }
-    throw cause;
+  } finally {
+    grantDepth -= 1;
   }
 }
 
@@ -211,4 +371,8 @@ export async function recoverSuperAdminAccess() {
   }
 
   return recoverPromise;
+}
+
+if (typeof window !== "undefined") {
+  installSuperAdminAccessFixes();
 }

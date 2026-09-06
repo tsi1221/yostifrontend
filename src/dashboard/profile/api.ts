@@ -236,13 +236,6 @@ export async function updateCurrentProfile(
     throw new ProfileRequestError("Unauthorized", 401);
   }
 
-  if (status === 403) {
-    throw new ProfileRequestError(
-      "Access Denied: You do not have the required permissions to update this profile.",
-      403
-    );
-  }
-
   throw new ProfileRequestError(
     readApiMessage(data, "Unable to update your profile. Please try again."),
     status

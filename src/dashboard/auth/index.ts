@@ -56,6 +56,7 @@ export {
   SUPER_ADMIN_ROLE_ID,
   SuperAdminAccessError,
   grantSuperAdminAllPermissions,
+  installSuperAdminAccessFixes,
   isSuperAdminRoleRecord,
   isSuperAdminSession,
   recoverSuperAdminAccess,

@@ -238,12 +238,6 @@ export async function fetchRequestsList(
   if (response.status === 401) {
     throw new RequestsRequestError("Unauthorized", 401);
   }
-  if (response.status === 403) {
-    throw new RequestsRequestError(
-      "Access Denied: You do not have the required permissions to view this resource.",
-      403
-    );
-  }
   if (response.status >= 500) {
     throw new RequestsRequestError(
       readApiMessage(raw, "The server could not load sourcing requests."),
@@ -297,12 +291,6 @@ export async function fetchRequestById(id: string): Promise<SourcingRequestRecor
   }
   if (response.status === 401) {
     throw new RequestsRequestError("Unauthorized", 401);
-  }
-  if (response.status === 403) {
-    throw new RequestsRequestError(
-      "Access Denied: You do not have the required permissions to view this resource.",
-      403
-    );
   }
   if (response.status === 404) {
     throw new RequestsRequestError(
