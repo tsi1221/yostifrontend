@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 
+import { SessionLoading } from "../components/AccessState";
 import type { UserRole } from "../types";
-import { getRoleDashboardPath, roleFromAuthUser } from "./roleRouting";
-import { getStoredAuthUser, hasValidAccessToken } from "./session";
+import { useAuth } from "./AuthProvider";
+import { getRoleDashboardPath } from "./roleRouting";
 
 interface RequireAuthProps {
   allow: UserRole | UserRole[];
@@ -11,16 +12,16 @@ interface RequireAuthProps {
 }
 
 export default function RequireAuth({ allow, children }: RequireAuthProps) {
-  if (!hasValidAccessToken()) {
+  const { ready, access, isAuthenticated, role } = useAuth();
+
+  if (!ready || (isAuthenticated && !access)) {
+    return <SessionLoading />;
+  }
+
+  if (!isAuthenticated || !role) {
     return <Navigate to="/login" replace />;
   }
 
-  const user = getStoredAuthUser();
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  const role = roleFromAuthUser(user);
   const allowed = Array.isArray(allow) ? allow : [allow];
 
   if (role === "SUPER_ADMIN") {

@@ -1,6 +1,7 @@
 import axios, { type AxiosError } from "axios";
 
 import { getAccessToken } from "../dashboard/auth/session";
+import { sanitizeApiMessage } from "../dashboard/apiMessage";
 import {
   expireSession,
   FORBIDDEN_MESSAGE,
@@ -53,7 +54,7 @@ function messageForStatus(status?: number) {
     case 403:
       return FORBIDDEN_MESSAGE;
     case 404:
-      return "The requested resource was not found.";
+      return "We couldn't find that information.";
     case 422:
       return "Please correct the highlighted fields.";
     case 500:
@@ -63,22 +64,29 @@ function messageForStatus(status?: number) {
   }
 }
 
-export function readApiError(error: unknown, fallback = "Request failed.") {
+export function readApiError(
+  error: unknown,
+  fallback = "We couldn't complete that request. Please try again.",
+) {
   if (axios.isAxiosError(error)) {
     const fromBody = messageFromPayload(error.response?.data);
     if (fromBody) {
-      return fromBody;
+      return sanitizeApiMessage(fromBody, fallback);
     }
     const fromStatus = messageForStatus(error.response?.status);
     if (fromStatus) {
       return fromStatus;
     }
-    if (error.message && error.message !== "Network Error") {
-      return error.message;
+    if (
+      error.message &&
+      error.message !== "Network Error" &&
+      !/status code/i.test(error.message)
+    ) {
+      return sanitizeApiMessage(error.message, fallback);
     }
   }
   if (error instanceof Error && error.message.trim()) {
-    return error.message.trim();
+    return sanitizeApiMessage(error.message, fallback);
   }
   return fallback;
 }

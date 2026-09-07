@@ -10,9 +10,8 @@ export default function ForgotPassword() {
         <div className="px-6 pb-3 pt-8 text-center sm:px-8">
           <h1 className="text-2xl font-bold text-[#0F3952]">Forgot Password</h1>
           <p className="mt-2 text-sm text-slate-500">
-            Password reset is not available on the live Yosti API. There is no
-            forgot-password or reset-password route. Contact Yosti support if
-            you cannot sign in, or try again with your current password.
+            Password reset is not available here. Contact Yosti support if you
+            cannot sign in, or try again with your current password.
           </p>
         </div>
 

@@ -11,7 +11,7 @@ interface RoleEmptyStateProps {
 
 export default function RoleEmptyState({
   title = "No roles yet",
-  description = "Create the first role and assign permission IDs. The directory stays in sync after each save.",
+  description = "Create the first role and choose what it can access. The directory stays in sync after each save.",
   actionLabel = "Create First Role",
   onAction,
 }: RoleEmptyStateProps) {

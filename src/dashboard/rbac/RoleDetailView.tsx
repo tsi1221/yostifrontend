@@ -37,7 +37,7 @@ export default function RoleDetailView() {
     <div>
       <PageHeader
         title={record?.name || "Role"}
-        description="Review assigned permission IDs, then sync updates without a full refresh."
+        description="Review assigned access, then save updates without a full refresh."
         actions={
           <div className="flex flex-wrap gap-2">
             <ActionButton tone="ghost" onClick={() => navigate(listPath)}>
@@ -118,7 +118,7 @@ export default function RoleDetailView() {
       <SideDrawer
         open={Boolean(record) && editing}
         title={record ? `Edit role #${record.id}` : "Edit role"}
-        description="Update the name, description, and assigned permission IDs."
+        description="Update the name, description, and assigned access."
         onClose={() => setSearchParams({})}
       >
         {record ? (

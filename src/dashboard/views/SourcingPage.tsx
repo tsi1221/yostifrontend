@@ -6,7 +6,7 @@ export default function SourcingPage() {
     <div>
       <PageHeader
         title="Requests Management"
-        description="Search, filter, and page through live sourcing requests from the Yosti API."
+        description="Search and filter sourcing requests."
       />
       <RequestsTable />
     </div>

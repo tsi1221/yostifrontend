@@ -193,7 +193,7 @@ export default function RolesTable() {
       <SideDrawer
         open={Boolean(editing)}
         title={editing ? `Edit role #${editing.id}` : "Edit role"}
-        description="Update the name, description, and assigned permission IDs."
+        description="Update the name, description, and assigned access."
         onClose={() => setEditing(null)}
       >
         {editing ? (

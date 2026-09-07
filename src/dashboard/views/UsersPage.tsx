@@ -6,7 +6,7 @@ export default function UsersPage() {
     <div>
       <PageHeader
         title="User Account Management"
-        description="Search, filter, and page through live accounts from the Yosti users API."
+        description="Search and filter registered accounts."
       />
       <UsersTable />
     </div>

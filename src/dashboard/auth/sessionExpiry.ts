@@ -5,7 +5,7 @@ import { clearAuthSession } from "./session";
 export const SESSION_EXPIRED_MESSAGE =
   "Your session has expired. Please sign in again.";
 export const FORBIDDEN_MESSAGE =
-  "You do not have permission to perform this action.";
+  "You don't have access to this information.";
 
 type NavigateFn = (path: string, options?: { replace?: boolean }) => void;
 

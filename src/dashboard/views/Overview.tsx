@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import {
   ClipboardCheck,
   FileCheck,
@@ -10,9 +11,12 @@ import {
   Wallet,
 } from "lucide-react";
 
+import { useAuth } from "../auth/AuthProvider";
+import type { ResourceAccess } from "../auth/access";
 import ActionCard from "../components/ActionCard";
 import PageHeader from "../components/PageHeader";
 import StatCard from "../components/StatCard";
+import type { DashboardPageKey } from "../roles";
 import { ROLE_LABEL, ROLE_SLUG } from "../roles";
 import { useDashboard } from "../store";
 import {
@@ -62,6 +66,55 @@ function RoleBanner({
   );
 }
 
+function VisibleStat({
+  loading,
+  stat,
+  title,
+  okHint,
+  icon,
+}: {
+  loading: boolean;
+  stat: ResourceAccess;
+  title: string;
+  okHint: string;
+  icon: LucideIcon;
+}) {
+  if (!loading && stat.forbidden) {
+    return null;
+  }
+
+  return (
+    <StatCard
+      title={title}
+      value={loading ? "…" : formatStat(stat)}
+      hint={loading ? "Loading" : formatStatHint(stat, okHint)}
+      icon={icon}
+    />
+  );
+}
+
+function VisibleAction({
+  page,
+  to,
+  icon,
+  title,
+  description,
+}: {
+  page: DashboardPageKey;
+  to: string;
+  icon: LucideIcon;
+  title: string;
+  description: string;
+}) {
+  const { canAccessPage } = useAuth();
+  if (!canAccessPage(page)) {
+    return null;
+  }
+  return (
+    <ActionCard to={to} icon={icon} title={title} description={description} />
+  );
+}
+
 function BuyerWorkspace() {
   const { role } = useDashboard();
   const stats = useLiveDashboardStats();
@@ -75,64 +128,74 @@ function BuyerWorkspace() {
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
+        <VisibleStat
+          loading={stats.loading}
+          stat={stats.requests}
           title="My RFQs"
-          value={stats.loading ? "…" : formatStat(stats.requests)}
-          hint={formatStatHint(stats.requests, "Live sourcing requests")}
+          okHint="Open sourcing requests"
           icon={Package}
         />
-        <StatCard
+        <VisibleStat
+          loading={stats.loading}
+          stat={stats.shipments}
           title="Shipments"
-          value={stats.loading ? "…" : formatStat(stats.shipments)}
-          hint={formatStatHint(stats.shipments, "Cargo tracking")}
+          okHint="Cargo tracking"
           icon={Truck}
         />
-        <StatCard
+        <VisibleStat
+          loading={stats.loading}
+          stat={stats.inspections}
           title="Inspections"
-          value={stats.loading ? "…" : formatStat(stats.inspections)}
-          hint={formatStatHint(stats.inspections, "Quality bookings")}
+          okHint="Quality bookings"
           icon={ClipboardCheck}
         />
-        <StatCard
+        <VisibleStat
+          loading={stats.loading}
+          stat={stats.payments}
           title="Payments"
-          value={stats.loading ? "…" : formatStat(stats.payments)}
-          hint={formatStatHint(stats.payments, "Invoice records")}
+          okHint="Invoice records"
           icon={Wallet}
         />
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <ActionCard
+        <VisibleAction
+          page="sourcing"
           to={`/${slug}/sourcing`}
           icon={Package}
           title="Submit Sourcing Request"
-          description="Browse live sourcing requests from the Yosti API."
+          description="Create and review sourcing requests."
         />
-        <ActionCard
+        <VisibleAction
+          page="logistics"
           to={`/${slug}/logistics`}
           icon={Truck}
           title="Cargo Tracking System"
-          description="Step-by-step timeline for active shipments."
+          description="Follow active shipments from booking to delivery."
         />
-        <ActionCard
+        <VisibleAction
+          page="quality-control"
           to={`/${slug}/quality-control`}
           icon={ClipboardCheck}
           title="Request Quality Inspection"
           description="Book sample, pre-shipment, or factory-visit checks."
         />
-        <ActionCard
+        <VisibleAction
+          page="trips"
           to={`/${slug}/trips`}
           icon={Plane}
           title="Submit Visa / Business Trip"
           description="Arrival city, passport, hotel, and translator."
         />
-        <ActionCard
+        <VisibleAction
+          page="payments"
           to={`/${slug}/payments`}
           icon={Wallet}
           title="Payments & Invoices"
-          description="Review live payment records."
+          description="Review payment records."
         />
-        <ActionCard
+        <VisibleAction
+          page="supports"
           to={`/${slug}/supports`}
           icon={LifeBuoy}
           title="Support requests"
@@ -156,40 +219,46 @@ function SupplierWorkspace() {
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard
+        <VisibleStat
+          loading={stats.loading}
+          stat={stats.requests}
           title="Open RFQs"
-          value={stats.loading ? "…" : formatStat(stats.requests)}
-          hint={formatStatHint(stats.requests, "Live sourcing requests")}
+          okHint="Open sourcing requests"
           icon={FileText}
         />
-        <StatCard
+        <VisibleStat
+          loading={stats.loading}
+          stat={stats.inspections}
           title="Inspections"
-          value={stats.loading ? "…" : formatStat(stats.inspections)}
-          hint={formatStatHint(stats.inspections, "Assigned factory windows")}
+          okHint="Assigned factory windows"
           icon={ClipboardCheck}
         />
-        <StatCard
+        <VisibleStat
+          loading={stats.loading}
+          stat={stats.supports}
           title="Support"
-          value={stats.loading ? "…" : formatStat(stats.supports)}
-          hint={formatStatHint(stats.supports, "Live tickets")}
+          okHint="Open tickets"
           icon={LifeBuoy}
         />
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <ActionCard
+        <VisibleAction
+          page="verifications"
           to={`/${slug}/verifications`}
           icon={FileCheck}
           title="Onboarding Verification"
-          description="Current verification block and company profile form."
+          description="Company profile and onboarding status."
         />
-        <ActionCard
+        <VisibleAction
+          page="sourcing"
           to={`/${slug}/sourcing`}
           icon={FileText}
           title="Open RFQs"
-          description="Review live sourcing requests."
+          description="Review sourcing requests."
         />
-        <ActionCard
+        <VisibleAction
+          page="quality-control"
           to={`/${slug}/quality-control`}
           icon={ClipboardCheck}
           title="Assigned Inspections"
@@ -213,40 +282,46 @@ function LogisticsWorkspace() {
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
+        <VisibleStat
+          loading={stats.loading}
+          stat={stats.shipments}
           title="Bookings"
-          value={stats.loading ? "…" : formatStat(stats.shipments)}
-          hint={formatStatHint(stats.shipments, "Live cargo records")}
+          okHint="Cargo records"
           icon={Truck}
         />
-        <StatCard
+        <VisibleStat
+          loading={stats.loading}
+          stat={stats.requests}
           title="Requests"
-          value={stats.loading ? "…" : formatStat(stats.requests)}
-          hint={formatStatHint(stats.requests, "Sourcing volume")}
+          okHint="Sourcing volume"
           icon={Package}
         />
-        <StatCard
+        <VisibleStat
+          loading={stats.loading}
+          stat={stats.inspections}
           title="Inspections"
-          value={stats.loading ? "…" : formatStat(stats.inspections)}
-          hint={formatStatHint(stats.inspections, "Quality bookings")}
+          okHint="Quality bookings"
           icon={ClipboardCheck}
         />
-        <StatCard
+        <VisibleStat
+          loading={stats.loading}
+          stat={stats.supports}
           title="Support"
-          value={stats.loading ? "…" : formatStat(stats.supports)}
-          hint={formatStatHint(stats.supports, "Open tickets")}
+          okHint="Open tickets"
           icon={LifeBuoy}
         />
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <ActionCard
+        <VisibleAction
+          page="logistics"
           to={`/${slug}/logistics`}
           icon={Truck}
           title="Shipment Bookings"
-          description="Queue grid with Update Cargo Status and document uploads."
+          description="Update cargo status and attach shipping documents."
         />
-        <ActionCard
+        <VisibleAction
+          page="supports"
           to={`/${slug}/supports`}
           icon={LifeBuoy}
           title="Support"
@@ -270,58 +345,67 @@ function StaffWorkspace() {
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
+        <VisibleStat
+          loading={stats.loading}
+          stat={stats.requests}
           title="Requests"
-          value={stats.loading ? "…" : formatStat(stats.requests)}
-          hint={formatStatHint(stats.requests, "Live sourcing volume")}
+          okHint="Sourcing volume"
           icon={FileText}
         />
-        <StatCard
+        <VisibleStat
+          loading={stats.loading}
+          stat={stats.users}
           title="Users"
-          value={stats.loading ? "…" : formatStat(stats.users)}
-          hint={formatStatHint(stats.users, "Directory")}
+          okHint="Directory"
           icon={Users}
         />
-        <StatCard
+        <VisibleStat
+          loading={stats.loading}
+          stat={stats.trips}
           title="Visa files"
-          value={stats.loading ? "…" : formatStat(stats.trips)}
-          hint={formatStatHint(stats.trips, "Business trips")}
+          okHint="Business trips"
           icon={Plane}
         />
-        <StatCard
+        <VisibleStat
+          loading={stats.loading}
+          stat={stats.supports}
           title="Open tickets"
-          value={stats.loading ? "…" : formatStat(stats.supports)}
-          hint={formatStatHint(stats.supports, "Client support")}
+          okHint="Client support"
           icon={LifeBuoy}
         />
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <ActionCard
+        <VisibleAction
+          page="verifications"
           to={`/${slug}/verifications`}
           icon={FileCheck}
           title="Supplier Verification Queue"
           description="Review profiles and approve or reject onboarding."
         />
-        <ActionCard
+        <VisibleAction
+          page="sourcing"
           to={`/${slug}/sourcing`}
           icon={FileText}
           title="Sourcing Assignment Board"
           description="Dispatch open RFQs to qualified factories."
         />
-        <ActionCard
+        <VisibleAction
+          page="quality-control"
           to={`/${slug}/quality-control`}
           icon={ClipboardCheck}
           title="Quality reports"
-          description="Verify inspection outcomes and report URLs."
+          description="Verify inspection outcomes."
         />
-        <ActionCard
+        <VisibleAction
+          page="trips"
           to={`/${slug}/trips`}
           icon={Plane}
           title="Visa parameters"
           description="Update business-trip visa status."
         />
-        <ActionCard
+        <VisibleAction
+          page="supports"
           to={`/${slug}/supports`}
           icon={LifeBuoy}
           title="Support tickets"
@@ -341,56 +425,64 @@ function BusinessIntelligenceHub() {
     <div className="space-y-6">
       <PageHeader
         title="Business Intelligence Hub"
-        description={`Live totals from the Yosti API for ${user.full_name || user.email}. Values come from each resource list meta.total.`}
+        description={`Welcome back, ${user.full_name || user.email}. Totals below reflect live records you can access.`}
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
+        <VisibleStat
+          loading={stats.loading}
+          stat={stats.users}
           title="Users"
-          value={stats.loading ? "…" : formatStat(stats.users)}
-          hint={formatStatHint(stats.users, "GET /users")}
+          okHint="Registered accounts"
           icon={Users}
         />
-        <StatCard
+        <VisibleStat
+          loading={stats.loading}
+          stat={stats.payments}
           title="Payments"
-          value={stats.loading ? "…" : formatStat(stats.payments)}
-          hint={formatStatHint(stats.payments, "GET /payments")}
+          okHint="Payment records"
           icon={Wallet}
         />
-        <StatCard
+        <VisibleStat
+          loading={stats.loading}
+          stat={stats.shipments}
           title="Shipments"
-          value={stats.loading ? "…" : formatStat(stats.shipments)}
-          hint={formatStatHint(stats.shipments, "GET /shipments")}
+          okHint="Cargo bookings"
           icon={Truck}
         />
-        <StatCard
+        <VisibleStat
+          loading={stats.loading}
+          stat={stats.requests}
           title="Requests"
-          value={stats.loading ? "…" : formatStat(stats.requests)}
-          hint={formatStatHint(stats.requests, "GET /requests")}
+          okHint="Sourcing requests"
           icon={FileText}
         />
-        <StatCard
+        <VisibleStat
+          loading={stats.loading}
+          stat={stats.services}
           title="Services"
-          value={stats.loading ? "…" : formatStat(stats.services)}
-          hint={formatStatHint(stats.services, "GET /services")}
+          okHint="Published services"
           icon={Package}
         />
-        <StatCard
+        <VisibleStat
+          loading={stats.loading}
+          stat={stats.supports}
           title="Support"
-          value={stats.loading ? "…" : formatStat(stats.supports)}
-          hint={formatStatHint(stats.supports, "GET /supports")}
+          okHint="Support tickets"
           icon={LifeBuoy}
         />
-        <StatCard
+        <VisibleStat
+          loading={stats.loading}
+          stat={stats.projects}
           title="Projects"
-          value={stats.loading ? "…" : formatStat(stats.projects)}
-          hint={formatStatHint(stats.projects, "GET /projects")}
+          okHint="Project records"
           icon={FileCheck}
         />
-        <StatCard
+        <VisibleStat
+          loading={stats.loading}
+          stat={stats.contacts}
           title="Contacts"
-          value={stats.loading ? "…" : formatStat(stats.contacts)}
-          hint={formatStatHint(stats.contacts, "GET /contacts")}
+          okHint="Inbox messages"
           icon={Users}
         />
       </div>
@@ -434,41 +526,47 @@ function BusinessIntelligenceHub() {
       </section>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <ActionCard
+        <VisibleAction
+          page="users"
           to={`/${slug}/users`}
           icon={Users}
           title="User Account Management"
-          description="Live user directory with search and pagination."
+          description="Search and page through registered accounts."
         />
-        <ActionCard
-          to={`/${slug}/verifications`}
-          icon={FileCheck}
-          title="Supplier Verification Queue"
-          description="No dedicated verification API is published yet."
+        <VisibleAction
+          page="payments"
+          to={`/${slug}/payments`}
+          icon={Wallet}
+          title="Payments"
+          description="Review payment and invoice records."
         />
-        <ActionCard
+        <VisibleAction
+          page="sourcing"
           to={`/${slug}/sourcing`}
           icon={FileText}
           title="Requests Management"
-          description="Search and page live sourcing requests by region and deadline."
+          description="Search sourcing requests by region and deadline."
         />
-        <ActionCard
+        <VisibleAction
+          page="logistics"
+          to={`/${slug}/logistics`}
+          icon={Truck}
+          title="Shipments"
+          description="Track cargo bookings and status updates."
+        />
+        <VisibleAction
+          page="quality-control"
           to={`/${slug}/quality-control`}
           icon={ClipboardCheck}
           title="Quality reports"
-          description="Live inspection requests from the API."
+          description="Review inspection requests and outcomes."
         />
-        <ActionCard
-          to={`/${slug}/trips`}
-          icon={Plane}
-          title="Visa parameters"
-          description="Live business-trip records."
-        />
-        <ActionCard
+        <VisibleAction
+          page="supports"
           to={`/${slug}/supports`}
           icon={LifeBuoy}
           title="Support tickets"
-          description="Live support tickets from /api/supports."
+          description="Review and close client support tickets."
         />
       </div>
     </div>

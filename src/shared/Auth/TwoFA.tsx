@@ -20,8 +20,8 @@ export default function TwoFA() {
             Two-Factor Authentication
           </h1>
           <p className="mt-2 text-sm text-slate-500">
-            The live Yosti API does not expose a two-factor verification
-            endpoint. Sign-in uses email and password only.
+            Extra sign-in verification is not available. Please sign in with
+            your email and password.
           </p>
         </div>
 

@@ -22,7 +22,7 @@ export default function CreateRoleForm() {
     <div>
       <PageHeader
         title="Create role"
-        description="Name the role, describe it, and assign permission IDs."
+        description="Name the role, describe it, and choose what it can access."
         actions={
           <ActionButton tone="ghost" onClick={() => navigate(listPath)}>
             Back to roles

@@ -23,7 +23,7 @@ export function roleFromRoleName(
     case "admin":
     case "staff":
     case "yosti_staff":
-      return "STAFF";
+      return "SUPER_ADMIN";
     case "buyer":
     case "customer":
     case "importer":

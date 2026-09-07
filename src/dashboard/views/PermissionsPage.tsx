@@ -6,7 +6,7 @@ export default function PermissionsPage() {
     <div>
       <PageHeader
         title="Permissions"
-        description="Read-only master list of system permissions. Use this catalog as lookup data when assigning permission IDs to a role."
+        description="Browse the access catalog used when configuring roles."
       />
       <PermissionsTable />
     </div>

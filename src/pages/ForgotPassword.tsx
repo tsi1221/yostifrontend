@@ -12,8 +12,8 @@ const ForgotPassword: React.FC = () => {
           Forgot Password
         </h2>
         <p className="mb-6 text-center text-sm text-slate-500">
-          Password reset is not available on the live Yosti API. Contact Yosti
-          support if you cannot sign in.
+          Password reset is not available here. Contact Yosti support if you
+          cannot sign in.
         </p>
         <Button
           type="primary"

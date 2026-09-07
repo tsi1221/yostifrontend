@@ -50,8 +50,8 @@ export function buildListQueryVariants(
   const size = String(pageSize || 10);
 
   return unique([
-    `page=${currentPage}&limit=${size}${suffix}`,
     `page=${currentPage}&pageSize=${size}${suffix}`,
+    `page=${currentPage}&limit=${size}${suffix}`,
     extraText,
     "",
   ]);

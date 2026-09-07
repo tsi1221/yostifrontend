@@ -1,6 +1,7 @@
 import { USERS_URL } from "../auth/endpoints";
 import { backendRoleNameFromId } from "../auth/backendRoles";
 import { getAccessToken } from "../auth/session";
+import { sanitizeApiMessage } from "../apiMessage";
 import {
   buildListQueryVariants,
   fetchAuthorizedList,
@@ -185,9 +186,9 @@ export async function fetchUsersList(
   }
   if (!result.ok) {
     throw new UsersRequestError(
-      readJsonMessage(
-        result.data,
-        `Unable to load users. Server returned ${result.status}.`,
+      sanitizeApiMessage(
+        readJsonMessage(result.data, ""),
+        "We couldn't load this information. Please try again.",
       ),
       result.status,
     );

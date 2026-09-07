@@ -103,6 +103,7 @@ export const getNavigation = (role: UserRole): NavGroup[] => {
             item(slug, "verifications", "Supplier Verifications"),
             item(slug, "sourcing", "Requests Management"),
             item(slug, "logistics", "Shipments"),
+            item(slug, "payments", "Payments"),
             item(slug, "quality-control", "Quality Reports"),
             item(slug, "trips", "Visa Parameters"),
             item(slug, "services", "Services"),
@@ -222,3 +223,35 @@ export const roleCanAccess = (role: UserRole, page: DashboardPageKey) => {
     return group.children?.some((child) => child.key === page) ?? false;
   });
 };
+
+export function pageKeyFromPath(path: string): DashboardPageKey | null {
+  const segment = path.split("/").filter(Boolean)[1];
+  if (!segment) {
+    return null;
+  }
+  if (segment === "dashboard") {
+    return "dashboard";
+  }
+  return segment as DashboardPageKey;
+}
+
+export function filterNavigation(
+  groups: NavGroup[],
+  canOpen: (page: DashboardPageKey) => boolean,
+): NavGroup[] {
+  return groups.flatMap((group) => {
+    if (group.path) {
+      const key = pageKeyFromPath(group.path);
+      if (key && !canOpen(key)) {
+        return [];
+      }
+      return [group];
+    }
+
+    const children = group.children?.filter((child) => canOpen(child.key));
+    if (!children?.length) {
+      return [];
+    }
+    return [{ ...group, children }];
+  });
+}

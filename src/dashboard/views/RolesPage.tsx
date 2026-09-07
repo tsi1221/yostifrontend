@@ -14,7 +14,7 @@ export default function RolesPage() {
     <div>
       <PageHeader
         title="Roles"
-        description="Search, page, and configure system roles and their permission IDs."
+        description="Review and update role names, descriptions, and assigned access."
         actions={
           <ActionButton
             onClick={() => navigate(`/${ROLE_SLUG[role]}/roles/new`)}

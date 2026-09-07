@@ -12,7 +12,8 @@ import {
 import type { ReactNode } from "react";
 
 import { clearAuthSession, getStoredAuthUser, roleFromAuthUser } from "../auth";
-import { ROLE_LABEL, ROLE_SLUG, getNavigation } from "../roles";
+import { useAuth } from "../auth/AuthProvider";
+import { ROLE_LABEL, ROLE_SLUG, filterNavigation, getNavigation } from "../roles";
 import { useDashboard } from "../store";
 import type { UserRole } from "../types";
 
@@ -163,7 +164,8 @@ function Sidebar({
   onMobileClose: () => void;
 }) {
   const location = useLocation();
-  const groups = getNavigation(role);
+  const { canAccessPage } = useAuth();
+  const groups = filterNavigation(getNavigation(role), canAccessPage);
   const [openGroup, setOpenGroup] = useState<string | null>(
     groups[1]?.label ?? null,
   );

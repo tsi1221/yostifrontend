@@ -1,4 +1,5 @@
 import ActionButton from "../components/ActionButton";
+import AccessState from "../components/AccessState";
 import { SelectInput, TextInput } from "../components/FormField";
 import type { ManagedUser } from "./types";
 import { USER_ROLE_FILTERS } from "./types";
@@ -48,12 +49,12 @@ export default function UsersTable() {
 
   if (forbidden || restricted) {
     return (
-      <section className="rounded-2xl border border-red-200 bg-red-50 px-6 py-16 text-center">
-        <p className="text-lg font-semibold text-red-700">Access Denied</p>
-        <p className="mt-2 text-sm text-red-600">
-          You do not have the required permissions to view this resource.
-        </p>
-      </section>
+      <AccessState
+        title="You don't have access to this section."
+        description="Your account cannot view these records."
+        actionLabel="Try again"
+        onAction={retry}
+      />
     );
   }
 

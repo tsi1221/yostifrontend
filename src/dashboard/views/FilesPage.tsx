@@ -6,7 +6,7 @@ export default function FilesPage() {
     <div>
       <PageHeader
         title="File Library"
-        description="Manage and upload files for use across the Yosti Trading platform."
+        description="Upload documents for use across the trading workspace."
       />
       <FileUploadManager />
     </div>

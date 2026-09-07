@@ -54,7 +54,8 @@ export {
   notifyLiveDataReload,
   useLiveDataReload,
 } from "./liveDataReload";
-export { SUPER_ADMIN_ROLE_ID, isSuperAdminSession } from "./superAdminAccess";
+export { SUPER_ADMIN_ROLE_ID, ADMIN_ROLE_ID } from "./backendRoles";
+export { isSuperAdminSession } from "./superAdminAccess";
 export {
   expireSession,
   FORBIDDEN_MESSAGE,

@@ -2,6 +2,8 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import type { ReactNode } from "react";
 
 import { hasValidAccessToken } from "./auth/session";
+import { useAuth } from "./auth/AuthProvider";
+import AccessState, { SessionLoading } from "./components/AccessState";
 import DashboardShell from "./layout/DashboardShell";
 import { ROLE_SLUG, roleCanAccess, type DashboardPageKey } from "./roles";
 import { DashboardProvider } from "./store";
@@ -55,8 +57,18 @@ function Guard({
   page: DashboardPageKey;
   children: ReactNode;
 }) {
+  const { ready, access, canAccessPage } = useAuth();
+
+  if (!ready || !access) {
+    return <SessionLoading label="Loading this page…" />;
+  }
+
   if (!roleCanAccess(role, page)) {
     return <Navigate to={`/${ROLE_SLUG[role]}/dashboard`} replace />;
+  }
+
+  if (!canAccessPage(page)) {
+    return <AccessState />;
   }
 
   return children;

@@ -12,8 +12,8 @@ const TwoFA: React.FC = () => {
           Two-Factor Authentication
         </h2>
         <p className="mb-6 text-center text-sm text-slate-500">
-          The live Yosti API does not expose a two-factor verification
-          endpoint. Sign-in uses email and password only.
+          Extra sign-in verification is not available. Please sign in with your
+          email and password.
         </p>
         <Button
           type="primary"
