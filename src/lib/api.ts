@@ -1,7 +1,11 @@
 import axios, { type AxiosError } from "axios";
 
 import { getAccessToken } from "../dashboard/auth/session";
-import { expireSession } from "../dashboard/auth/sessionExpiry";
+import {
+  expireSession,
+  FORBIDDEN_MESSAGE,
+  SESSION_EXPIRED_MESSAGE,
+} from "../dashboard/auth/sessionExpiry";
 
 const DEFAULT_API_BASE = "https://yosti.nedhigibe.com/api";
 
@@ -23,20 +27,51 @@ function isAuthRoute(url?: string) {
   return /\/auth\/(login|register)\b/i.test(url);
 }
 
+function messageFromPayload(data: unknown) {
+  if (!data || typeof data !== "object") {
+    return "";
+  }
+  const message = (data as { message?: unknown }).message;
+  if (typeof message === "string" && message.trim()) {
+    return message.trim();
+  }
+  if (Array.isArray(message)) {
+    const text = message
+      .filter((item) => typeof item === "string")
+      .join(", ");
+    if (text.trim()) {
+      return text.trim();
+    }
+  }
+  return "";
+}
+
+function messageForStatus(status?: number) {
+  switch (status) {
+    case 401:
+      return SESSION_EXPIRED_MESSAGE;
+    case 403:
+      return FORBIDDEN_MESSAGE;
+    case 404:
+      return "The requested resource was not found.";
+    case 422:
+      return "Please correct the highlighted fields.";
+    case 500:
+      return "The server encountered an error. Please try again.";
+    default:
+      return "";
+  }
+}
+
 export function readApiError(error: unknown, fallback = "Request failed.") {
   if (axios.isAxiosError(error)) {
-    const data = error.response?.data as { message?: unknown } | undefined;
-    const message = data?.message;
-    if (typeof message === "string" && message.trim()) {
-      return message.trim();
+    const fromBody = messageFromPayload(error.response?.data);
+    if (fromBody) {
+      return fromBody;
     }
-    if (Array.isArray(message)) {
-      const text = message
-        .filter((item) => typeof item === "string")
-        .join(", ");
-      if (text.trim()) {
-        return text.trim();
-      }
+    const fromStatus = messageForStatus(error.response?.status);
+    if (fromStatus) {
+      return fromStatus;
     }
     if (error.message && error.message !== "Network Error") {
       return error.message;

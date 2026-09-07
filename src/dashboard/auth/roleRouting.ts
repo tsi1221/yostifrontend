@@ -18,11 +18,7 @@ export function roleFromRoleName(
     case "super_admin":
     case "superadmin":
     case "super_administrator":
-    case "administrator":
     case "admin":
-    case "system_admin":
-    case "owner":
-    case "root":
       return "SUPER_ADMIN";
     case "staff":
     case "yosti_staff":
@@ -45,9 +41,10 @@ export function roleFromRoleName(
 }
 
 /**
- * Prefer the API / register role name. Fall back to roleId.
+ * Prefer the API role name. Fall back to roleId.
  * Public register IDs: 1 Buyer, 2 Supplier, 3 Logistics Partner.
- * Named roles win, so Admin Dagi (`role: admin`, roleId 2) still opens Super Admin.
+ * Super Admin is role name admin/super_admin or roleId 5 — never inferred
+ * from the URL or a local grant.
  */
 export function roleFromRoleId(roleId: number): UserRole {
   switch (roleId) {

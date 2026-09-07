@@ -405,7 +405,7 @@ export default function App() {
       <Route
         path="/superadmin/*"
         element={
-          <RequireAuth allow={["SUPER_ADMIN", "STAFF"]}>
+          <RequireAuth allow="SUPER_ADMIN">
             <SuperAdminRouting />
           </RequireAuth>
         }
