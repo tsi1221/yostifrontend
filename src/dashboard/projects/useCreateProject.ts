@@ -2,14 +2,18 @@ import { useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
-import type { ProjectFieldErrors, ProjectFormValues, ProjectRecord } from "./types";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
+import type {
+  ProjectFieldErrors,
+  ProjectFormValues,
+  ProjectRecord,
+} from "./types";
 import {
   PROJECT_TITLE_IN_USE_MESSAGE,
   ProjectRequestError,
   createProject,
   formValuesToPayload,
-  isPreviewAccessToken,
   validateProjectForm,
 } from "./api";
 
@@ -21,7 +25,7 @@ export function useCreateProject() {
   const [fieldErrors, setFieldErrors] = useState<ProjectFieldErrors>({});
 
   const submitProject = async (
-    values: ProjectFormValues
+    values: ProjectFormValues,
   ): Promise<ProjectRecord | null> => {
     const clientErrors = validateProjectForm(values);
     if (Object.keys(clientErrors).length > 0) {
@@ -46,27 +50,28 @@ export function useCreateProject() {
       }
 
       if (cause instanceof ProjectRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          const previewMessage = "Sign in with a live account to create a project.";
-          setAuthError(previewMessage);
-          message.error(previewMessage);
-          return null;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
+        return null;
+      }
+
+      if (cause instanceof ProjectRequestError && cause.status === 403) {
+        setAuthError(FORBIDDEN_MESSAGE);
+        message.error(FORBIDDEN_MESSAGE);
         return null;
       }
 
       if (cause instanceof ProjectRequestError && cause.status === 409) {
         setConflict(cause.message);
-        setFieldErrors({ title: cause.fields?.title || PROJECT_TITLE_IN_USE_MESSAGE });
+        setFieldErrors({
+          title: cause.fields?.title || PROJECT_TITLE_IN_USE_MESSAGE,
+        });
         return null;
       }
 
       message.error(
         cause instanceof Error
           ? cause.message
-          : "Server error occurred. Could not create project."
+          : "Server error occurred. Could not create project.",
       );
       return null;
     } finally {

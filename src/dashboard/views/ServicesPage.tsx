@@ -17,7 +17,9 @@ export default function ServicesPage() {
         title="Services"
         description="Search and page through catalog offerings by title, tier, and support."
         actions={
-          <ActionButton onClick={() => navigate(createPath)}>New service</ActionButton>
+          <ActionButton onClick={() => navigate(createPath)}>
+            New service
+          </ActionButton>
         }
       />
       <ServicesGrid />

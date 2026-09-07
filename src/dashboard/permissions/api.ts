@@ -1,7 +1,6 @@
 import { PERMISSIONS_URL } from "../auth/endpoints";
 import { buildListQueryVariants, fetchAuthorizedList } from "../http";
 import { extractListRows, pickEntityId } from "../listResponse";
-import { isPreviewAccessToken } from "../users/usersService";
 import type {
   Permission,
   PermissionOption,
@@ -9,13 +8,15 @@ import type {
   PermissionsListResponse,
 } from "./types";
 
-export { isPreviewAccessToken };
-
 export class PermissionRequestError extends Error {
   status: number;
   code?: "UNAUTHORIZED" | "VALIDATION" | "NETWORK";
 
-  constructor(message: string, status: number, code?: PermissionRequestError["code"]) {
+  constructor(
+    message: string,
+    status: number,
+    code?: PermissionRequestError["code"],
+  ) {
     super(message);
     this.name = "PermissionRequestError";
     this.status = status;
@@ -30,7 +31,9 @@ export function invalidatePermissionsCache() {
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : null;
 }
 
 function pickString(...values: unknown[]) {
@@ -80,19 +83,32 @@ export function normalizePermission(raw: unknown): Permission | null {
     return null;
   }
 
-  const id = pickEntityId(record.id, record.permissionId, record.permission_id, record._id);
+  const id = pickEntityId(
+    record.id,
+    record.permissionId,
+    record.permission_id,
+    record._id,
+  );
   if (id === undefined) {
     return null;
   }
 
   return {
     id,
-    name: pickString(record.name, record.key, record.slug, record.code, `Permission #${id}`),
+    name: pickString(
+      record.name,
+      record.key,
+      record.slug,
+      record.code,
+      `Permission #${id}`,
+    ),
     description: pickString(record.description, record.details, record.label),
   };
 }
 
-export function toPermissionOptions(permissions: Permission[]): PermissionOption[] {
+export function toPermissionOptions(
+  permissions: Permission[],
+): PermissionOption[] {
   return permissions.map((permission) => ({
     value: permission.id,
     label: permission.name,
@@ -115,7 +131,7 @@ export function buildPermissionsQueryString(query: PermissionsListQuery) {
 
 function normalizePermissionsResponse(
   raw: unknown,
-  query: PermissionsListQuery
+  query: PermissionsListQuery,
 ): PermissionsListResponse {
   const record = asRecord(raw);
   const nested = asRecord(record?.data);
@@ -126,11 +142,16 @@ function normalizePermissionsResponse(
     .map((row) => normalizePermission(row))
     .filter((row): row is Permission => Boolean(row));
 
-  const total = pickNumber(meta?.total, record?.total, nested?.total) ?? data.length;
+  const total =
+    pickNumber(meta?.total, record?.total, nested?.total) ?? data.length;
   const page = pickNumber(meta?.page, record?.page, nested?.page) ?? query.page;
   const pageSize =
-    pickNumber(meta?.pageSize, record?.pageSize, record?.limit, nested?.pageSize) ??
-    query.pageSize;
+    pickNumber(
+      meta?.pageSize,
+      record?.pageSize,
+      record?.limit,
+      nested?.pageSize,
+    ) ?? query.pageSize;
   const totalPages =
     pickNumber(meta?.totalPages, record?.totalPages, nested?.totalPages) ??
     Math.max(1, Math.ceil(total / Math.max(pageSize, 1)));
@@ -142,20 +163,20 @@ function normalizePermissionsResponse(
 }
 
 export async function fetchPermissionsList(
-  query: PermissionsListQuery
+  query: PermissionsListQuery,
 ): Promise<PermissionsListResponse> {
   const result = await fetchAuthorizedList(
     PERMISSIONS_URL,
     buildListQueryVariants(query.page, query.pageSize, {
       search: query.search.trim() || undefined,
-    })
+    }),
   );
 
   if (result.status === 400) {
     throw new PermissionRequestError(
       readApiMessage(result.data, "Invalid permission filters."),
       400,
-      "VALIDATION"
+      "VALIDATION",
     );
   }
   if (result.status === 401) {
@@ -165,7 +186,7 @@ export async function fetchPermissionsList(
     throw new PermissionRequestError(
       readApiMessage(result.data, "The server could not load permissions."),
       result.status,
-      result.status === 0 ? "NETWORK" : undefined
+      result.status === 0 ? "NETWORK" : undefined,
     );
   }
 

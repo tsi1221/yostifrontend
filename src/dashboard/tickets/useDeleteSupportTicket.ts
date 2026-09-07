@@ -2,7 +2,8 @@ import { useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
 import { ROLE_SLUG } from "../roles";
 import { useDashboard } from "../store";
 import type { TicketDeletionPhase } from "./types";
@@ -11,7 +12,6 @@ import {
   deleteSupportTicket,
   invalidateSupportsCache,
   invalidateTicketsCache,
-  isPreviewAccessToken,
 } from "./ticketsService";
 
 export function useDeleteSupportTicket() {
@@ -39,21 +39,18 @@ export function useDeleteSupportTicket() {
       }
 
       if (cause instanceof TicketsRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          message.error(
-            "Sign in with a live account to delete this support ticket."
-          );
-          setPhase("confirming");
-          return false;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
+        return false;
+      }
+
+      if (cause instanceof TicketsRequestError && cause.status === 403) {
+        message.error(FORBIDDEN_MESSAGE);
         return false;
       }
 
       if (cause instanceof TicketsRequestError && cause.status === 404) {
         message.warning(
-          "This support ticket could not be found or has been removed."
+          "This support ticket could not be found or has been removed.",
         );
         setPhase("confirming");
         return false;
@@ -62,7 +59,7 @@ export function useDeleteSupportTicket() {
       message.error(
         cause instanceof Error
           ? cause.message
-          : "Server error occurred. Could not delete support ticket."
+          : "Server error occurred. Could not delete support ticket.",
       );
       setPhase("confirming");
       return false;

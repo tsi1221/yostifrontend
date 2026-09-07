@@ -18,7 +18,9 @@ function FileCard({
 }) {
   const [broken, setBroken] = useState(false);
   const image =
-    !broken && Boolean(file.url) && isImageMime(file.mimetype, file.originalname || file.filename);
+    !broken &&
+    Boolean(file.url) &&
+    isImageMime(file.mimetype, file.originalname || file.filename);
 
   return (
     <article className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
@@ -29,7 +31,11 @@ function FileCard({
         disabled={deleting}
         onClick={onDelete}
       >
-        {deleting ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
+        {deleting ? (
+          <Loader2 size={14} className="animate-spin" />
+        ) : (
+          <X size={14} />
+        )}
       </button>
       {image ? (
         <img
@@ -48,7 +54,9 @@ function FileCard({
       </h3>
       <p className="mt-1 text-xs text-slate-500">{formatFileSize(file.size)}</p>
       {file.description ? (
-        <p className="mt-2 line-clamp-2 text-xs text-slate-600">{file.description}</p>
+        <p className="mt-2 line-clamp-2 text-xs text-slate-600">
+          {file.description}
+        </p>
       ) : null}
     </article>
   );
@@ -92,7 +100,10 @@ export default function FileUploadManager() {
       {authError ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           <p>{authError}</p>
-          <ActionButton onClick={() => void retry()} disabled={uploading || Boolean(deleting)}>
+          <ActionButton
+            onClick={() => void retry()}
+            disabled={uploading || Boolean(deleting)}
+          >
             Retry
           </ActionButton>
         </div>
@@ -102,8 +113,8 @@ export default function FileUploadManager() {
         <div>
           <h2 className="text-lg font-semibold text-[#0F3952]">Upload Files</h2>
           <p className="mt-1 text-sm text-slate-500">
-            Upload images and documents to the platform. Files are securely processed and remain
-            available during your current session.
+            Upload images and documents to the platform. Files are securely
+            processed and remain available during your current session.
           </p>
         </div>
 
@@ -155,7 +166,8 @@ export default function FileUploadManager() {
               Drop files here or click to browse
             </p>
             <p className="mt-1 max-w-xl text-xs text-slate-500">
-              Supported formats: JPEG, PNG, WebP, GIF, PDF, TXT, DOC, DOCX, XLS, XLSX, and CSV.
+              Supported formats: JPEG, PNG, WebP, GIF, PDF, TXT, DOC, DOCX, XLS,
+              XLSX, and CSV.
             </p>
             <p className="mt-1 text-xs text-slate-500">
               Files of unsupported types will be blocked automatically.
@@ -174,7 +186,9 @@ export default function FileUploadManager() {
             />
           </div>
           {fieldErrors.file ? (
-            <p className="mt-1.5 text-xs font-medium text-red-600">{fieldErrors.file}</p>
+            <p className="mt-1.5 text-xs font-medium text-red-600">
+              {fieldErrors.file}
+            </p>
           ) : null}
         </div>
       </section>
@@ -196,16 +210,19 @@ export default function FileUploadManager() {
 
       <section className="space-y-4">
         <div>
-          <h2 className="text-lg font-semibold text-[#0F3952]">Uploaded Files</h2>
+          <h2 className="text-lg font-semibold text-[#0F3952]">
+            Uploaded Files
+          </h2>
           <p className="mt-1 text-sm text-slate-500">
-            Uploaded files are available in this session only. After uploading, you can preview each
-            file, view its size, and remove it when needed.
+            Uploaded files are available in this session only. After uploading,
+            you can preview each file, view its size, and remove it when needed.
           </p>
         </div>
 
         {files.length === 0 && !uploading ? (
           <p className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-500">
-            No files in this session yet. Drop several at once — allowed types upload together.
+            No files in this session yet. Drop several at once — allowed types
+            upload together.
           </p>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">

@@ -7,9 +7,12 @@ import { useProjectDetail } from "./useProjectDetail";
 export default function PublicProjectDetail() {
   const navigate = useNavigate();
   const { projectId } = useParams();
-  const { project, loading, notFound, serverError, retry } = useProjectDetail(projectId, {
-    publicFeed: true,
-  });
+  const { project, loading, notFound, serverError, retry } = useProjectDetail(
+    projectId,
+    {
+      publicFeed: true,
+    },
+  );
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
@@ -26,7 +29,9 @@ export default function PublicProjectDetail() {
 
       {!loading && notFound ? (
         <div className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-6">
-          <h1 className="text-xl font-semibold text-red-800">Project Not Found</h1>
+          <h1 className="text-xl font-semibold text-red-800">
+            Project Not Found
+          </h1>
           <p className="mt-2 text-sm text-red-700">
             This project could not be found or has been removed.
           </p>
@@ -52,7 +57,9 @@ export default function PublicProjectDetail() {
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#FDC700]">
             Project #{project.id}
           </p>
-          <h1 className="mt-2 text-3xl font-semibold text-[#0F3952]">{project.title}</h1>
+          <h1 className="mt-2 text-3xl font-semibold text-[#0F3952]">
+            {project.title}
+          </h1>
           <p className="mt-6 whitespace-pre-wrap text-base leading-7 text-slate-700">
             {project.details}
           </p>

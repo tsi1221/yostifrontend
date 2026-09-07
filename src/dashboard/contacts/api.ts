@@ -2,7 +2,6 @@ import { CONTACTS_URL } from "../auth/endpoints";
 import { getAccessToken } from "../auth/session";
 import { buildListQueryVariants, fetchAuthorizedList } from "../http";
 import { extractListRows, pickEntityId } from "../listResponse";
-import { isPreviewAccessToken } from "../users/usersService";
 import type {
   ContactFieldErrors,
   ContactFormValues,
@@ -14,8 +13,6 @@ import type {
   UpdateContactPayload,
 } from "./types";
 
-export { isPreviewAccessToken };
-
 export class ContactRequestError extends Error {
   status: number;
   fields?: ContactFieldErrors;
@@ -25,7 +22,7 @@ export class ContactRequestError extends Error {
     message: string,
     status: number,
     fields?: ContactFieldErrors,
-    code?: ContactRequestError["code"]
+    code?: ContactRequestError["code"],
   ) {
     super(message);
     this.name = "ContactRequestError";
@@ -46,7 +43,9 @@ export function invalidateContactsCache() {
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : null;
 }
 
 function pickString(...values: unknown[]) {
@@ -94,7 +93,10 @@ const FIELD_KEYS: Array<keyof ContactFieldErrors> = [
 function parseFieldErrors(raw: unknown): ContactFieldErrors {
   const record = asRecord(raw);
   const fields: ContactFieldErrors = {};
-  const nested = asRecord(record?.fields) ?? asRecord(record?.errors) ?? asRecord(record?.message);
+  const nested =
+    asRecord(record?.fields) ??
+    asRecord(record?.errors) ??
+    asRecord(record?.message);
 
   if (nested) {
     for (const key of Object.keys(nested)) {
@@ -143,7 +145,9 @@ export function snippet(details: string, length = 90) {
   return `${text.slice(0, length).trim()}…`;
 }
 
-export function validateContactForm(values: ContactFormValues): ContactFieldErrors {
+export function validateContactForm(
+  values: ContactFormValues,
+): ContactFieldErrors {
   const errors: ContactFieldErrors = {};
   if (!values.fullname.trim()) {
     errors.fullname = "Full name is required.";
@@ -167,7 +171,9 @@ export function validateContactForm(values: ContactFormValues): ContactFieldErro
   return errors;
 }
 
-export function formValuesToPayload(values: ContactFormValues): CreateContactPayload {
+export function formValuesToPayload(
+  values: ContactFormValues,
+): CreateContactPayload {
   return {
     fullname: values.fullname.trim(),
     phoneWhatsapp: values.phoneWhatsapp.trim(),
@@ -193,7 +199,12 @@ export function normalizeContact(raw: unknown): ContactRecord | null {
     return null;
   }
 
-  const id = pickEntityId(record.id, record.contactId, record.contact_id, record._id);
+  const id = pickEntityId(
+    record.id,
+    record.contactId,
+    record.contact_id,
+    record._id,
+  );
   if (id === undefined) {
     return null;
   }
@@ -205,7 +216,7 @@ export function normalizeContact(raw: unknown): ContactRecord | null {
       record.phoneWhatsapp,
       record.phone_whatsapp,
       record.phone,
-      record.whatsapp
+      record.whatsapp,
     ),
     email: pickString(record.email),
     topic: pickString(record.topic, record.subject),
@@ -224,7 +235,12 @@ function contactFromResponse(raw: unknown): ContactRecord | null {
 function requireToken() {
   const token = getAccessToken();
   if (!token) {
-    throw new ContactRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
+    throw new ContactRequestError(
+      "Unauthorized",
+      401,
+      undefined,
+      "UNAUTHORIZED",
+    );
   }
   return token;
 }
@@ -235,7 +251,12 @@ function authHeaders(required: boolean): HeadersInit {
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   } else if (required) {
-    throw new ContactRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
+    throw new ContactRequestError(
+      "Unauthorized",
+      401,
+      undefined,
+      "UNAUTHORIZED",
+    );
   }
   return headers;
 }
@@ -264,7 +285,7 @@ export function buildContactsQueryString(query: ContactsListQuery) {
 
 function normalizeContactsResponse(
   raw: unknown,
-  query: ContactsListQuery
+  query: ContactsListQuery,
 ): ContactsListResponse {
   const record = asRecord(raw);
   const nested = asRecord(record?.data);
@@ -275,11 +296,16 @@ function normalizeContactsResponse(
     .map((row) => normalizeContact(row))
     .filter((row): row is ContactRecord => Boolean(row));
 
-  const total = pickNumber(meta?.total, record?.total, nested?.total) ?? data.length;
+  const total =
+    pickNumber(meta?.total, record?.total, nested?.total) ?? data.length;
   const page = pickNumber(meta?.page, record?.page, nested?.page) ?? query.page;
   const pageSize =
-    pickNumber(meta?.pageSize, record?.pageSize, record?.limit, nested?.pageSize) ??
-    query.pageSize;
+    pickNumber(
+      meta?.pageSize,
+      record?.pageSize,
+      record?.limit,
+      nested?.pageSize,
+    ) ?? query.pageSize;
   const totalPages =
     pickNumber(meta?.totalPages, record?.totalPages, nested?.totalPages) ??
     Math.max(1, Math.ceil(total / Math.max(pageSize, 1)));
@@ -291,7 +317,7 @@ function normalizeContactsResponse(
 }
 
 export async function submitContact(
-  payload: CreateContactPayload
+  payload: CreateContactPayload,
 ): Promise<CreateContactResult> {
   let response: Response;
   try {
@@ -308,7 +334,7 @@ export async function submitContact(
       "Unable to reach the server. Check your connection and try again.",
       0,
       undefined,
-      "NETWORK"
+      "NETWORK",
     );
   }
 
@@ -316,16 +342,22 @@ export async function submitContact(
 
   if (response.status === 400) {
     throw new ContactRequestError(
-      readApiMessage(raw, "Unable to send this message. Check the highlighted fields."),
+      readApiMessage(
+        raw,
+        "Unable to send this message. Check the highlighted fields.",
+      ),
       400,
       parseFieldErrors(raw),
-      "VALIDATION"
+      "VALIDATION",
     );
   }
   if (response.status !== 200 && response.status !== 201) {
     throw new ContactRequestError(
-      readApiMessage(raw, "Server error occurred. Could not send your message."),
-      response.status
+      readApiMessage(
+        raw,
+        "Server error occurred. Could not send your message.",
+      ),
+      response.status,
     );
   }
 
@@ -341,7 +373,7 @@ export async function submitContact(
 }
 
 export async function fetchContactsList(
-  query: ContactsListQuery
+  query: ContactsListQuery,
 ): Promise<ContactsListResponse> {
   requireToken();
 
@@ -352,7 +384,7 @@ export async function fetchContactsList(
       fullname: query.fullname.trim() || undefined,
       email: query.email.trim() || undefined,
       topic: query.topic.trim() || undefined,
-    })
+    }),
   );
 
   if (result.status === 400) {
@@ -360,18 +392,26 @@ export async function fetchContactsList(
       readApiMessage(result.data, "Invalid contact filters."),
       400,
       undefined,
-      "VALIDATION"
+      "VALIDATION",
     );
   }
   if (result.status === 401) {
-    throw new ContactRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
+    throw new ContactRequestError(
+      "Unauthorized",
+      401,
+      undefined,
+      "UNAUTHORIZED",
+    );
   }
   if (!result.ok) {
     throw new ContactRequestError(
-      readApiMessage(result.data, "The server could not load contact submissions."),
+      readApiMessage(
+        result.data,
+        "The server could not load contact submissions.",
+      ),
       result.status,
       undefined,
-      result.status === 0 ? "NETWORK" : undefined
+      result.status === 0 ? "NETWORK" : undefined,
     );
   }
 
@@ -381,7 +421,12 @@ export async function fetchContactsList(
 export async function fetchContact(id: number): Promise<ContactRecord> {
   requireToken();
   if (asContactId(id) === undefined) {
-    throw new ContactRequestError(CONTACT_NOT_FOUND_MESSAGE, 404, undefined, "NOT_FOUND");
+    throw new ContactRequestError(
+      CONTACT_NOT_FOUND_MESSAGE,
+      404,
+      undefined,
+      "NOT_FOUND",
+    );
   }
 
   let response: Response;
@@ -395,39 +440,57 @@ export async function fetchContact(id: number): Promise<ContactRecord> {
       "Unable to reach the server. Check your connection and try again.",
       0,
       undefined,
-      "NETWORK"
+      "NETWORK",
     );
   }
 
   const raw: unknown = await response.json().catch(() => null);
 
   if (response.status === 401) {
-    throw new ContactRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
+    throw new ContactRequestError(
+      "Unauthorized",
+      401,
+      undefined,
+      "UNAUTHORIZED",
+    );
   }
   if (response.status === 404) {
-    throw new ContactRequestError(CONTACT_NOT_FOUND_MESSAGE, 404, undefined, "NOT_FOUND");
+    throw new ContactRequestError(
+      CONTACT_NOT_FOUND_MESSAGE,
+      404,
+      undefined,
+      "NOT_FOUND",
+    );
   }
   if (!response.ok) {
     throw new ContactRequestError(
       readApiMessage(raw, "The server could not load this contact submission."),
-      response.status
+      response.status,
     );
   }
 
   const contact = contactFromResponse(raw);
   if (!contact) {
-    throw new ContactRequestError("The server returned an incomplete contact submission.", 500);
+    throw new ContactRequestError(
+      "The server returned an incomplete contact submission.",
+      500,
+    );
   }
   return contact;
 }
 
 export async function patchContact(
   id: number,
-  payload: UpdateContactPayload
+  payload: UpdateContactPayload,
 ): Promise<ContactRecord> {
   const token = requireToken();
   if (asContactId(id) === undefined) {
-    throw new ContactRequestError(CONTACT_NOT_FOUND_MESSAGE, 404, undefined, "NOT_FOUND");
+    throw new ContactRequestError(
+      CONTACT_NOT_FOUND_MESSAGE,
+      404,
+      undefined,
+      "NOT_FOUND",
+    );
   }
 
   let response: Response;
@@ -446,7 +509,7 @@ export async function patchContact(
       "Unable to reach the server. Check your connection and try again.",
       0,
       undefined,
-      "NETWORK"
+      "NETWORK",
     );
   }
 
@@ -454,28 +517,44 @@ export async function patchContact(
 
   if (response.status === 400) {
     throw new ContactRequestError(
-      readApiMessage(raw, "Unable to save this contact. Check the highlighted fields."),
+      readApiMessage(
+        raw,
+        "Unable to save this contact. Check the highlighted fields.",
+      ),
       400,
       parseFieldErrors(raw),
-      "VALIDATION"
+      "VALIDATION",
     );
   }
   if (response.status === 401) {
-    throw new ContactRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
+    throw new ContactRequestError(
+      "Unauthorized",
+      401,
+      undefined,
+      "UNAUTHORIZED",
+    );
   }
   if (response.status === 404) {
-    throw new ContactRequestError(CONTACT_NOT_FOUND_MESSAGE, 404, undefined, "NOT_FOUND");
+    throw new ContactRequestError(
+      CONTACT_NOT_FOUND_MESSAGE,
+      404,
+      undefined,
+      "NOT_FOUND",
+    );
   }
   if (!response.ok) {
     throw new ContactRequestError(
       readApiMessage(raw, "Server error occurred. Could not update contact."),
-      response.status
+      response.status,
     );
   }
 
   const updated = contactFromResponse(raw);
   if (!updated) {
-    throw new ContactRequestError("The server returned an incomplete contact submission.", 500);
+    throw new ContactRequestError(
+      "The server returned an incomplete contact submission.",
+      500,
+    );
   }
 
   invalidateContactsCache();
@@ -485,7 +564,12 @@ export async function patchContact(
 export async function deleteContact(id: number): Promise<string> {
   const token = requireToken();
   if (asContactId(id) === undefined) {
-    throw new ContactRequestError(CONTACT_NOT_FOUND_MESSAGE, 404, undefined, "NOT_FOUND");
+    throw new ContactRequestError(
+      CONTACT_NOT_FOUND_MESSAGE,
+      404,
+      undefined,
+      "NOT_FOUND",
+    );
   }
 
   let response: Response;
@@ -502,22 +586,32 @@ export async function deleteContact(id: number): Promise<string> {
       "Unable to reach the server. Check your connection and try again.",
       0,
       undefined,
-      "NETWORK"
+      "NETWORK",
     );
   }
 
   const raw: unknown = await response.json().catch(() => null);
 
   if (response.status === 401) {
-    throw new ContactRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
+    throw new ContactRequestError(
+      "Unauthorized",
+      401,
+      undefined,
+      "UNAUTHORIZED",
+    );
   }
   if (response.status === 404) {
-    throw new ContactRequestError(CONTACT_NOT_FOUND_MESSAGE, 404, undefined, "NOT_FOUND");
+    throw new ContactRequestError(
+      CONTACT_NOT_FOUND_MESSAGE,
+      404,
+      undefined,
+      "NOT_FOUND",
+    );
   }
   if (response.status !== 200) {
     throw new ContactRequestError(
       readApiMessage(raw, "Server error occurred. Could not delete contact."),
-      response.status
+      response.status,
     );
   }
 

@@ -1,14 +1,11 @@
 import { USERS_ME_URL, USERS_URL } from "../auth/endpoints";
 import { normalizeAuthUser } from "../auth/loginService";
-import { roleFromAuthUser } from "../auth/roleRouting";
 import {
   getAccessToken,
   getStoredAuthUser,
-  isPreviewAccessToken,
   mergeAuthUser,
   persistAuthUser,
 } from "../auth/session";
-import type { UserRole } from "../types";
 import { sanitizeApiMessage } from "../apiMessage";
 import type { AuthUser } from "../types/auth";
 import type {
@@ -30,7 +27,9 @@ export class ProfileRequestError extends Error {
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : null;
 }
 
 function readApiMessage(data: unknown, fallback: string) {
@@ -42,7 +41,7 @@ function readApiMessage(data: unknown, fallback: string) {
   if (Array.isArray(message)) {
     return sanitizeApiMessage(
       message.filter((item) => typeof item === "string").join(", "),
-      fallback
+      fallback,
     );
   }
   return fallback;
@@ -56,7 +55,12 @@ function readFieldErrors(data: unknown): ProfileFieldErrors | undefined {
   }
 
   const fields: ProfileFieldErrors = {};
-  for (const key of ["fullname", "companyName", "country", "phoneWhatsapp"] as const) {
+  for (const key of [
+    "fullname",
+    "companyName",
+    "country",
+    "phoneWhatsapp",
+  ] as const) {
     const value = raw[key];
     if (typeof value === "string" && value.trim()) {
       fields[key] = value.trim();
@@ -80,7 +84,7 @@ function unwrapUser(raw: unknown): AuthUser | null {
 
 async function authorizedJson(
   url: string,
-  init: RequestInit
+  init: RequestInit,
 ): Promise<{ status: number; data: unknown }> {
   const token = getAccessToken();
   if (!token) {
@@ -101,7 +105,7 @@ async function authorizedJson(
   } catch {
     throw new ProfileRequestError(
       "Unable to reach the server. Check your connection and try again.",
-      0
+      0,
     );
   }
 
@@ -109,7 +113,9 @@ async function authorizedJson(
   return { status: response.status, data };
 }
 
-export function validateProfileForm(values: ProfileFormValues): ProfileFieldErrors {
+export function validateProfileForm(
+  values: ProfileFormValues,
+): ProfileFieldErrors {
   const errors: ProfileFieldErrors = {};
   if (!values.fullname.trim()) {
     errors.fullname = "Full name is required.";
@@ -138,7 +144,9 @@ export function profileFormFromUser(user: AuthUser | null): ProfileFormValues {
 
 export async function fetchCurrentProfile(): Promise<AuthUser | null> {
   const stored = getStoredAuthUser();
-  const { status, data } = await authorizedJson(USERS_ME_URL, { method: "GET" });
+  const { status, data } = await authorizedJson(USERS_ME_URL, {
+    method: "GET",
+  });
 
   if (status === 200 || status === 201) {
     return unwrapUser(data);
@@ -164,27 +172,6 @@ export async function fetchCurrentProfile(): Promise<AuthUser | null> {
   return stored;
 }
 
-const ROLE_RANK: Record<UserRole, number> = {
-  BUYER: 1,
-  SUPPLIER: 2,
-  LOGISTICS_PARTNER: 3,
-  STAFF: 4,
-  SUPER_ADMIN: 5,
-};
-
-function keepPrivilegedRole(stored: AuthUser, remote: AuthUser): AuthUser {
-  const storedRole = roleFromAuthUser(stored);
-  const remoteRole = roleFromAuthUser(remote);
-  if ((ROLE_RANK[storedRole] ?? 0) > (ROLE_RANK[remoteRole] ?? 0)) {
-    return {
-      ...remote,
-      role: stored.role || remote.role,
-      roleId: stored.roleId || remote.roleId,
-    };
-  }
-  return remote;
-}
-
 export async function refreshStoredAuthProfile(): Promise<AuthUser | null> {
   const stored = getStoredAuthUser();
   if (!stored) {
@@ -196,23 +183,19 @@ export async function refreshStoredAuthProfile(): Promise<AuthUser | null> {
     if (!remote) {
       return stored;
     }
-    const next = mergeAuthUser(stored, keepPrivilegedRole(stored, remote));
+    const next = mergeAuthUser(stored, remote);
     persistAuthUser(next);
     return next;
   } catch (cause) {
-    if (
-      cause instanceof ProfileRequestError &&
-      cause.status === 401 &&
-      isPreviewAccessToken()
-    ) {
-      return stored;
+    if (cause instanceof ProfileRequestError && cause.status === 401) {
+      throw cause;
     }
     return stored;
   }
 }
 
 export async function updateCurrentProfile(
-  payload: ProfileUpdatePayload
+  payload: ProfileUpdatePayload,
 ): Promise<AuthUser> {
   const stored = getStoredAuthUser();
   if (!stored) {
@@ -251,7 +234,7 @@ export async function updateCurrentProfile(
     throw new ProfileRequestError(
       readApiMessage(data, "Please correct the highlighted fields."),
       400,
-      readFieldErrors(data)
+      readFieldErrors(data),
     );
   }
 
@@ -261,17 +244,6 @@ export async function updateCurrentProfile(
 
   throw new ProfileRequestError(
     readApiMessage(data, "Unable to update your profile. Please try again."),
-    status
+    status,
   );
-}
-
-export function saveProfileLocally(values: ProfileFormValues): AuthUser {
-  const stored = getStoredAuthUser();
-  if (!stored) {
-    throw new ProfileRequestError("Unauthorized", 401);
-  }
-
-  const next = mergeAuthUser(stored, values);
-  persistAuthUser(next);
-  return next;
 }

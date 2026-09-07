@@ -3,7 +3,12 @@ import { Loader2, Plus, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
-import { CheckboxRow, Field, SelectInput, TextInput } from "../components/FormField";
+import {
+  CheckboxRow,
+  Field,
+  SelectInput,
+  TextInput,
+} from "../components/FormField";
 import PageHeader from "../components/PageHeader";
 import { ROLE_SLUG } from "../roles";
 import { useDashboard } from "../store";
@@ -21,7 +26,7 @@ export default function CreateServiceForm() {
 
   const setField = <K extends keyof ServiceFormValues>(
     key: K,
-    value: ServiceFormValues[K]
+    value: ServiceFormValues[K],
   ) => {
     setValues((current) => ({ ...current, [key]: value }));
   };
@@ -30,7 +35,7 @@ export default function CreateServiceForm() {
     setValues((current) => ({
       ...current,
       features: current.features.map((feature, featureIndex) =>
-        featureIndex === index ? value : feature
+        featureIndex === index ? value : feature,
       ),
     }));
   };
@@ -44,7 +49,9 @@ export default function CreateServiceForm() {
 
   const removeFeature = (index: number) => {
     setValues((current) => {
-      const next = current.features.filter((_, featureIndex) => featureIndex !== index);
+      const next = current.features.filter(
+        (_, featureIndex) => featureIndex !== index,
+      );
       return {
         ...current,
         features: next.length > 0 ? next : [""],
@@ -91,7 +98,10 @@ export default function CreateServiceForm() {
           </div>
         ) : null}
 
-        <fieldset disabled={saving} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <fieldset
+          disabled={saving}
+          className="grid grid-cols-1 gap-4 md:grid-cols-2"
+        >
           <div className="md:col-span-2">
             <Field label="Title" error={fieldErrors.title}>
               <TextInput
@@ -110,7 +120,8 @@ export default function CreateServiceForm() {
                 onChange={(event) => setField("logo", event.target.value)}
               />
               <p className="text-xs text-slate-400">
-                Must be a full http(s) URL. File uploads are not sent to storage.
+                Must be a full http(s) URL. File uploads are not sent to
+                storage.
               </p>
             </Field>
           </div>
@@ -142,7 +153,10 @@ export default function CreateServiceForm() {
             </span>
             <div className="space-y-2">
               {values.features.map((feature, index) => (
-                <div key={`feature-${index}`} className="flex items-center gap-2">
+                <div
+                  key={`feature-${index}`}
+                  className="flex items-center gap-2"
+                >
                   <TextInput
                     placeholder="Register and onboard clients remotely"
                     value={feature}
@@ -171,14 +185,19 @@ export default function CreateServiceForm() {
               </span>
             ) : (
               <p className="text-xs text-slate-400">
-                Blank rows are dropped before submit. At least one feature is required.
+                Blank rows are dropped before submit. At least one feature is
+                required.
               </p>
             )}
           </div>
         </fieldset>
 
         <div className="flex justify-end gap-2">
-          <ActionButton tone="ghost" disabled={saving} onClick={() => navigate(listPath)}>
+          <ActionButton
+            tone="ghost"
+            disabled={saving}
+            onClick={() => navigate(listPath)}
+          >
             Cancel
           </ActionButton>
           <ActionButton type="submit" disabled={saving}>

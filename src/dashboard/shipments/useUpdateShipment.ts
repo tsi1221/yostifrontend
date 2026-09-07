@@ -2,11 +2,11 @@ import { useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
 import type { ShipmentFieldErrors, UpdateShipmentFormValues } from "./types";
 import {
   ShipmentsRequestError,
-  isPreviewAccessToken,
   patchShipment,
   updateFormValuesToPayload,
   validateUpdateShipmentForm,
@@ -28,7 +28,10 @@ export function useUpdateShipment(id: number) {
     setFieldErrors({});
 
     try {
-      const updated = await patchShipment(id, updateFormValuesToPayload(values));
+      const updated = await patchShipment(
+        id,
+        updateFormValuesToPayload(values),
+      );
       message.success("Shipment updated successfully.");
       return updated;
     } catch (cause) {
@@ -39,18 +42,18 @@ export function useUpdateShipment(id: number) {
       }
 
       if (cause instanceof ShipmentsRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          message.error("Sign in with a live account to update this shipment.");
-          return null;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
+        return null;
+      }
+
+      if (cause instanceof ShipmentsRequestError && cause.status === 403) {
+        message.error(FORBIDDEN_MESSAGE);
         return null;
       }
 
       if (cause instanceof ShipmentsRequestError && cause.status === 404) {
         message.warning(
-          "This shipment could not be found or has been removed."
+          "This shipment could not be found or has been removed.",
         );
         return null;
       }
@@ -58,7 +61,7 @@ export function useUpdateShipment(id: number) {
       message.error(
         cause instanceof Error
           ? cause.message
-          : "Server error occurred. Could not update shipment."
+          : "Server error occurred. Could not update shipment.",
       );
       return null;
     } finally {

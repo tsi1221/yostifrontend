@@ -1,17 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { isQuietListFailure, liveListFailureMessage } from "../apiMessage";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
+import { liveListFailureMessage } from "../apiMessage";
 import { LIVE_DATA_RELOAD_EVENT } from "../auth/liveDataReload";
-import { isSuperAdminSession, recoverSuperAdminAccess } from "../auth/superAdminAccess";
-import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { PermissionsListQuery, PermissionsListResponse } from "./types";
 import { DEFAULT_PERMISSIONS_QUERY, LOOKUP_PERMISSIONS_QUERY } from "./types";
 import {
   PERMISSIONS_INVALIDATE_EVENT,
   PermissionRequestError,
   fetchPermissionsList,
-  isPreviewAccessToken,
   toPermissionOptions,
 } from "./api";
 
@@ -31,14 +30,20 @@ function useDebouncedValue<T>(value: T, delay: number) {
   return debounced;
 }
 
-export function usePermissionsList(options?: { lookup?: boolean; pageSize?: number }) {
+export function usePermissionsList(options?: {
+  lookup?: boolean;
+  pageSize?: number;
+}) {
   const navigate = useNavigate();
   const lookup = options?.lookup === true;
   const [filters, setFilters] = useState<PermissionsListQuery>(() => ({
     ...(lookup ? LOOKUP_PERMISSIONS_QUERY : DEFAULT_PERMISSIONS_QUERY),
-    pageSize: options?.pageSize ?? (lookup ? LOOKUP_PERMISSIONS_QUERY.pageSize : 10),
+    pageSize:
+      options?.pageSize ?? (lookup ? LOOKUP_PERMISSIONS_QUERY.pageSize : 10),
   }));
-  const [response, setResponse] = useState<PermissionsListResponse | null>(null);
+  const [response, setResponse] = useState<PermissionsListResponse | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [serverError, setServerError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
@@ -51,7 +56,7 @@ export function usePermissionsList(options?: { lookup?: boolean; pageSize?: numb
       pageSize: filters.pageSize,
       search,
     }),
-    [filters.page, filters.pageSize, search]
+    [filters.page, filters.pageSize, search],
   );
 
   const load = useCallback(async () => {
@@ -62,37 +67,14 @@ export function usePermissionsList(options?: { lookup?: boolean; pageSize?: numb
       const payload = await fetchPermissionsList(query);
       setResponse(payload);
     } catch (cause) {
-      if (cause instanceof PermissionRequestError && cause.status === 403 && isSuperAdminSession()) {
-        const recovered = await recoverSuperAdminAccess();
-        if (recovered) {
-          try {
-            const payload = await fetchPermissionsList(query);
-            setResponse(payload);
-            return;
-          } catch {
-            // Super Admin still cannot read permissions after the grant.
-          }
-          setResponse(EMPTY_RESPONSE);
-          setServerError(liveListFailureMessage(cause, "permissions"));
-          return;
-        }
+      if (cause instanceof PermissionRequestError && cause.status === 403) {
         setResponse(EMPTY_RESPONSE);
+        setServerError(FORBIDDEN_MESSAGE);
         return;
       }
 
       if (cause instanceof PermissionRequestError && cause.status === 401) {
-        setResponse(null);
-        if (isPreviewAccessToken(getAccessToken())) {
-          setServerError("Sign in with a live account to load permissions.");
-          return;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
-        return;
-      }
-
-      if (isQuietListFailure(cause)) {
-        setResponse(EMPTY_RESPONSE);
+        expireSession(navigate);
         return;
       }
 
@@ -118,15 +100,19 @@ export function usePermissionsList(options?: { lookup?: boolean; pageSize?: numb
   }, []);
 
   const permissions = useMemo(() => response?.data ?? [], [response]);
-  const optionsList = useMemo(() => toPermissionOptions(permissions), [permissions]);
+  const optionsList = useMemo(
+    () => toPermissionOptions(permissions),
+    [permissions],
+  );
   const byId = useMemo(
     () => new Map(permissions.map((permission) => [permission.id, permission])),
-    [permissions]
+    [permissions],
   );
 
   return {
     filters,
-    setSearch: (value: string) => setFilters((current) => ({ ...current, page: 1, search: value })),
+    setSearch: (value: string) =>
+      setFilters((current) => ({ ...current, page: 1, search: value })),
     setPage: (page: number) => setFilters((current) => ({ ...current, page })),
     setPageSize: (pageSize: number) =>
       setFilters((current) => ({ ...current, page: 1, pageSize })),

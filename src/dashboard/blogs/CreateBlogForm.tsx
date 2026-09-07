@@ -15,10 +15,14 @@ export default function CreateBlogForm() {
   const navigate = useNavigate();
   const { role } = useDashboard();
   const listPath = `/${ROLE_SLUG[role]}/blogs`;
-  const { submitBlog, saving, conflict, authError, fieldErrors } = useCreateBlog();
+  const { submitBlog, saving, conflict, authError, fieldErrors } =
+    useCreateBlog();
   const [values, setValues] = useState<BlogFormValues>(EMPTY_BLOG_FORM);
 
-  const setField = <K extends keyof BlogFormValues>(key: K, value: BlogFormValues[K]) => {
+  const setField = <K extends keyof BlogFormValues>(
+    key: K,
+    value: BlogFormValues[K],
+  ) => {
     setValues((current) => ({ ...current, [key]: value }));
   };
 
@@ -87,7 +91,11 @@ export default function CreateBlogForm() {
         </fieldset>
 
         <div className="flex justify-end gap-2">
-          <ActionButton tone="ghost" disabled={saving} onClick={() => navigate(listPath)}>
+          <ActionButton
+            tone="ghost"
+            disabled={saving}
+            onClick={() => navigate(listPath)}
+          >
             Cancel
           </ActionButton>
           <ActionButton type="submit" disabled={saving}>

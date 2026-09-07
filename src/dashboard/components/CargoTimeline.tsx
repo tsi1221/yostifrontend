@@ -24,7 +24,8 @@ export default function CargoTimeline({ shipment }: { shipment: Shipment }) {
           </h3>
           <p className="text-sm text-slate-500">
             {shipment.pickup_location} → {shipment.destination_country} ·{" "}
-            {shipment.shipping_method} · {shipment.weight}kg / {shipment.volume} m³
+            {shipment.shipping_method} · {shipment.weight}kg / {shipment.volume}{" "}
+            m³
           </p>
         </div>
         <p className="text-sm text-slate-500">
@@ -48,7 +49,10 @@ export default function CargoTimeline({ shipment }: { shipment: Shipment }) {
           const done = index <= current;
           const active = index === current;
           return (
-            <li key={step} className="relative z-10 flex flex-col items-center text-center">
+            <li
+              key={step}
+              className="relative z-10 flex flex-col items-center text-center"
+            >
               <span
                 className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
                   active

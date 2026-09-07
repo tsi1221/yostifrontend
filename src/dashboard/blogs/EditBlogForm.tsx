@@ -13,16 +13,25 @@ interface EditBlogFormProps {
   onSaved: (updated: BlogPost) => void;
 }
 
-export default function EditBlogForm({ blog, onCancel, onSaved }: EditBlogFormProps) {
+export default function EditBlogForm({
+  blog,
+  onCancel,
+  onSaved,
+}: EditBlogFormProps) {
   const blogId = asBlogId(blog.id) ?? 0;
   const { updateBlog, saving, notFound, fieldErrors } = useUpdateBlog(blogId);
-  const [values, setValues] = useState<BlogFormValues>(() => blogToFormValues(blog));
+  const [values, setValues] = useState<BlogFormValues>(() =>
+    blogToFormValues(blog),
+  );
 
   useEffect(() => {
     setValues(blogToFormValues(blog));
   }, [blog]);
 
-  const setField = <K extends keyof BlogFormValues>(key: K, value: BlogFormValues[K]) => {
+  const setField = <K extends keyof BlogFormValues>(
+    key: K,
+    value: BlogFormValues[K],
+  ) => {
     setValues((current) => ({ ...current, [key]: value }));
   };
 
@@ -61,8 +70,8 @@ export default function EditBlogForm({ blog, onCancel, onSaved }: EditBlogFormPr
           />
         </Field>
         <Field label="Details" error={fieldErrors.details}>
-            <TextArea
-              placeholder="Write the article body..."
+          <TextArea
+            placeholder="Write the article body..."
             value={values.details}
             onChange={(event) => setField("details", event.target.value)}
           />

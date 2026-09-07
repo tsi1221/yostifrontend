@@ -61,7 +61,8 @@ export default function ProjectsTable() {
 
   const detailPath = (id: number) => `/${ROLE_SLUG[role]}/projects/${id}`;
   const filtersEmpty = !filters.search.trim() && !filters.title.trim();
-  const showFirstEmpty = !loading && !serverError && meta.total === 0 && filtersEmpty;
+  const showFirstEmpty =
+    !loading && !serverError && meta.total === 0 && filtersEmpty;
 
   return (
     <div className="space-y-4">
@@ -114,7 +115,10 @@ export default function ProjectsTable() {
                 {loading ? <SkeletonRows /> : null}
                 {!loading && projects.length === 0 ? (
                   <tr>
-                    <td colSpan={COLUMNS} className="px-4 py-10 text-center text-slate-500">
+                    <td
+                      colSpan={COLUMNS}
+                      className="px-4 py-10 text-center text-slate-500"
+                    >
                       No projects match these filters.
                     </td>
                   </tr>
@@ -126,8 +130,12 @@ export default function ProjectsTable() {
                         className="cursor-pointer hover:bg-slate-50"
                         onClick={() => navigate(detailPath(project.id))}
                       >
-                        <td className="px-4 py-3 font-medium text-[#0F3952]">{project.id}</td>
-                        <td className="px-4 py-3 font-semibold text-[#0F3952]">{project.title}</td>
+                        <td className="px-4 py-3 font-medium text-[#0F3952]">
+                          {project.id}
+                        </td>
+                        <td className="px-4 py-3 font-semibold text-[#0F3952]">
+                          {project.title}
+                        </td>
                         <td className="px-4 py-3">
                           {project.image ? (
                             <img
@@ -229,7 +237,11 @@ export default function ProjectsTable() {
         projectId={pendingDelete}
         onClose={() => setPendingDelete(null)}
         onDeleted={() => {
-          if (editing && pendingDelete !== null && editing.id === pendingDelete) {
+          if (
+            editing &&
+            pendingDelete !== null &&
+            editing.id === pendingDelete
+          ) {
             setEditing(null);
           }
           setPendingDelete(null);

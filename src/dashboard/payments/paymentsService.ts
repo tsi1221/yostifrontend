@@ -2,7 +2,6 @@ import { PAYMENTS_URL } from "../auth/endpoints";
 import { getAccessToken } from "../auth/session";
 import { buildListQueryVariants, fetchAuthorizedList } from "../http";
 import { extractListRows, pickEntityId } from "../listResponse";
-import { isPreviewAccessToken } from "../users/usersService";
 import type {
   CreatePaymentPayload,
   PaymentFieldErrors,
@@ -22,8 +21,6 @@ import {
   PAYMENT_UPDATE_STATUS_VALUES,
 } from "./types";
 
-export { isPreviewAccessToken };
-
 export class PaymentsRequestError extends Error {
   status: number;
   fields?: PaymentFieldErrors;
@@ -37,7 +34,9 @@ export class PaymentsRequestError extends Error {
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : null;
 }
 
 function pickString(...values: unknown[]) {
@@ -102,7 +101,12 @@ export function normalizePayment(raw: unknown): PaymentRecord | null {
     return null;
   }
 
-  const id = pickEntityId(record.id, record.paymentId, record.payment_id, record._id);
+  const id = pickEntityId(
+    record.id,
+    record.paymentId,
+    record.payment_id,
+    record._id,
+  );
   if (id === undefined) {
     return null;
   }
@@ -112,17 +116,30 @@ export function normalizePayment(raw: unknown): PaymentRecord | null {
   return {
     id,
     userId:
-      pickNumber(record.userId, record.user_id, user?.id, user?.userId, user?.user_id) ??
-      0,
-    service: pickString(record.service, record.serviceType, record.service_type),
-    method: pickString(record.method, record.paymentMethod, record.payment_method),
+      pickNumber(
+        record.userId,
+        record.user_id,
+        user?.id,
+        user?.userId,
+        user?.user_id,
+      ) ?? 0,
+    service: pickString(
+      record.service,
+      record.serviceType,
+      record.service_type,
+    ),
+    method: pickString(
+      record.method,
+      record.paymentMethod,
+      record.payment_method,
+    ),
     status: pickString(record.status),
   };
 }
 
 function normalizePaymentsResponse(
   raw: unknown,
-  query: PaymentsListQuery
+  query: PaymentsListQuery,
 ): PaymentsListResponse {
   const record = asRecord(raw);
   const nested = asRecord(record?.data);
@@ -133,11 +150,16 @@ function normalizePaymentsResponse(
     .map((row) => normalizePayment(row))
     .filter((row): row is PaymentRecord => Boolean(row));
 
-  const total = pickNumber(meta?.total, record?.total, nested?.total) ?? data.length;
+  const total =
+    pickNumber(meta?.total, record?.total, nested?.total) ?? data.length;
   const page = pickNumber(meta?.page, record?.page, nested?.page) ?? query.page;
   const pageSize =
-    pickNumber(meta?.pageSize, record?.pageSize, record?.limit, nested?.pageSize) ??
-    query.pageSize;
+    pickNumber(
+      meta?.pageSize,
+      record?.pageSize,
+      record?.limit,
+      nested?.pageSize,
+    ) ?? query.pageSize;
   const totalPages =
     pickNumber(meta?.totalPages, record?.totalPages, nested?.totalPages) ??
     Math.max(1, Math.ceil(total / Math.max(pageSize, 1)));
@@ -149,7 +171,7 @@ function normalizePaymentsResponse(
 }
 
 export async function fetchPaymentsList(
-  query: PaymentsListQuery
+  query: PaymentsListQuery,
 ): Promise<PaymentsListResponse> {
   if (!getAccessToken()) {
     throw new PaymentsRequestError("Unauthorized", 401);
@@ -162,11 +184,14 @@ export async function fetchPaymentsList(
       service: query.service || undefined,
       method: query.method || undefined,
       status: query.status || undefined,
-    })
+    }),
   );
 
   if (result.status === 400) {
-    throw new PaymentsRequestError(readApiMessage(result.data, "Invalid payment filters."), 400);
+    throw new PaymentsRequestError(
+      readApiMessage(result.data, "Invalid payment filters."),
+      400,
+    );
   }
   if (result.status === 401) {
     throw new PaymentsRequestError("Unauthorized", 401);
@@ -174,13 +199,16 @@ export async function fetchPaymentsList(
   if (result.status >= 500) {
     throw new PaymentsRequestError(
       readApiMessage(result.data, "The server could not load payments."),
-      result.status
+      result.status,
     );
   }
   if (!result.ok) {
     throw new PaymentsRequestError(
-      readApiMessage(result.data, `Unable to load payments. Server returned ${result.status}.`),
-      result.status
+      readApiMessage(
+        result.data,
+        `Unable to load payments. Server returned ${result.status}.`,
+      ),
+      result.status,
     );
   }
 
@@ -214,7 +242,7 @@ function parseFieldErrors(raw: unknown): PaymentFieldErrors {
 
   for (const item of items) {
     const key = PAYMENT_FIELD_KEYS.find((field) =>
-      item.toLowerCase().includes(field.toLowerCase())
+      item.toLowerCase().includes(field.toLowerCase()),
     );
     if (key && !fields[key]) {
       fields[key] = item;
@@ -227,7 +255,9 @@ function parseFieldErrors(raw: unknown): PaymentFieldErrors {
 export const PENDING_PAYMENT_CONFLICT_MESSAGE =
   "An active pending payment record already exists for this service. Please check your transaction history before attempting another payment.";
 
-export function validatePaymentForm(values: PaymentFormValues): PaymentFieldErrors {
+export function validatePaymentForm(
+  values: PaymentFormValues,
+): PaymentFieldErrors {
   const errors: PaymentFieldErrors = {};
   if (!PAYMENT_SERVICE_VALUES.includes(values.service as PaymentServiceValue)) {
     errors.service = "Choose a service.";
@@ -238,7 +268,9 @@ export function validatePaymentForm(values: PaymentFormValues): PaymentFieldErro
   return errors;
 }
 
-export function formValuesToPayload(values: PaymentFormValues): CreatePaymentPayload {
+export function formValuesToPayload(
+  values: PaymentFormValues,
+): CreatePaymentPayload {
   return {
     service: values.service as PaymentServiceValue,
     method: values.method as PaymentMethodValue,
@@ -246,7 +278,9 @@ export function formValuesToPayload(values: PaymentFormValues): CreatePaymentPay
   };
 }
 
-export async function createPayment(payload: CreatePaymentPayload): Promise<PaymentRecord> {
+export async function createPayment(
+  payload: CreatePaymentPayload,
+): Promise<PaymentRecord> {
   const token = getAccessToken();
   if (!token) {
     throw new PaymentsRequestError("Unauthorized", 401);
@@ -266,7 +300,7 @@ export async function createPayment(payload: CreatePaymentPayload): Promise<Paym
   } catch {
     throw new PaymentsRequestError(
       "Unable to reach the server. Check your connection and try again.",
-      0
+      0,
     );
   }
 
@@ -274,9 +308,12 @@ export async function createPayment(payload: CreatePaymentPayload): Promise<Paym
 
   if (response.status === 400) {
     throw new PaymentsRequestError(
-      readApiMessage(raw, "Unable to initiate this payment. Check the highlighted fields."),
+      readApiMessage(
+        raw,
+        "Unable to initiate this payment. Check the highlighted fields.",
+      ),
       400,
-      parseFieldErrors(raw)
+      parseFieldErrors(raw),
     );
   }
   if (response.status === 401) {
@@ -288,13 +325,16 @@ export async function createPayment(payload: CreatePaymentPayload): Promise<Paym
   if (response.status >= 500) {
     throw new PaymentsRequestError(
       readApiMessage(raw, "Server error occurred. Could not initiate payment."),
-      response.status
+      response.status,
     );
   }
   if (response.status !== 200 && response.status !== 201) {
     throw new PaymentsRequestError(
-      readApiMessage(raw, `Unable to initiate payment. Server returned ${response.status}.`),
-      response.status
+      readApiMessage(
+        raw,
+        `Unable to initiate payment. Server returned ${response.status}.`,
+      ),
+      response.status,
     );
   }
 
@@ -304,7 +344,10 @@ export async function createPayment(payload: CreatePaymentPayload): Promise<Paym
     normalizePayment(asRecord(raw)?.payment);
 
   if (!created) {
-    throw new PaymentsRequestError("The server returned an incomplete payment.", 500);
+    throw new PaymentsRequestError(
+      "The server returned an incomplete payment.",
+      500,
+    );
   }
 
   invalidatePaymentsCache();
@@ -373,7 +416,7 @@ export async function fetchPayment(id: number): Promise<PaymentRecord> {
   if (!Number.isInteger(id) || id <= 0) {
     throw new PaymentsRequestError(
       "This transaction record could not be found or does not exist,",
-      404
+      404,
     );
   }
 
@@ -389,7 +432,7 @@ export async function fetchPayment(id: number): Promise<PaymentRecord> {
   } catch {
     throw new PaymentsRequestError(
       "Unable to reach the server. Check your connection and try again.",
-      0
+      0,
     );
   }
 
@@ -398,7 +441,7 @@ export async function fetchPayment(id: number): Promise<PaymentRecord> {
   if (response.status === 400) {
     throw new PaymentsRequestError(
       readApiMessage(raw, "The payment ID format is invalid."),
-      400
+      400,
     );
   }
   if (response.status === 401) {
@@ -407,22 +450,22 @@ export async function fetchPayment(id: number): Promise<PaymentRecord> {
   if (response.status === 404) {
     throw new PaymentsRequestError(
       "This transaction record could not be found or does not exist,",
-      404
+      404,
     );
   }
   if (response.status >= 500) {
     throw new PaymentsRequestError(
       readApiMessage(raw, "The server could not load this transaction record."),
-      response.status
+      response.status,
     );
   }
   if (!response.ok) {
     throw new PaymentsRequestError(
       readApiMessage(
         raw,
-        `Unable to load this transaction record. Server returned ${response.status}.`
+        `Unable to load this transaction record. Server returned ${response.status}.`,
       ),
-      response.status
+      response.status,
     );
   }
 
@@ -435,14 +478,17 @@ export async function fetchPayment(id: number): Promise<PaymentRecord> {
   if (!payload) {
     throw new PaymentsRequestError(
       "The server returned an incomplete transaction record.",
-      500
+      500,
     );
   }
 
   return payload;
 }
 
-function matchEnum<T extends string>(value: string, options: readonly T[]): T | undefined {
+function matchEnum<T extends string>(
+  value: string,
+  options: readonly T[],
+): T | undefined {
   const key = value.trim().toLowerCase();
   return options.find((option) => option.toLowerCase() === key);
 }
@@ -459,7 +505,9 @@ export function asPaymentUpdateStatus(value: string): PaymentUpdateStatusValue {
   return matchEnum(value, PAYMENT_UPDATE_STATUS_VALUES) ?? "Pending";
 }
 
-export function paymentToFormValues(payment: PaymentRecord): UpdatePaymentFormValues {
+export function paymentToFormValues(
+  payment: PaymentRecord,
+): UpdatePaymentFormValues {
   return {
     service: asPaymentService(payment.service),
     method: asPaymentMethod(payment.method),
@@ -468,7 +516,7 @@ export function paymentToFormValues(payment: PaymentRecord): UpdatePaymentFormVa
 }
 
 export function validateUpdatePaymentForm(
-  values: UpdatePaymentFormValues
+  values: UpdatePaymentFormValues,
 ): PaymentFieldErrors {
   const errors: PaymentFieldErrors = {};
   if (!PAYMENT_SERVICE_VALUES.includes(values.service)) {
@@ -484,7 +532,7 @@ export function validateUpdatePaymentForm(
 }
 
 export function updateFormValuesToPayload(
-  values: UpdatePaymentFormValues
+  values: UpdatePaymentFormValues,
 ): UpdatePaymentPayload {
   return {
     service: values.service,
@@ -495,7 +543,7 @@ export function updateFormValuesToPayload(
 
 export async function patchPayment(
   id: number,
-  payload: UpdatePaymentPayload
+  payload: UpdatePaymentPayload,
 ): Promise<PaymentRecord> {
   const token = getAccessToken();
   if (!token) {
@@ -520,7 +568,7 @@ export async function patchPayment(
   } catch {
     throw new PaymentsRequestError(
       "Unable to reach the server. Check your connection and try again.",
-      0
+      0,
     );
   }
 
@@ -528,9 +576,12 @@ export async function patchPayment(
 
   if (response.status === 400) {
     throw new PaymentsRequestError(
-      readApiMessage(raw, "Unable to save this payment. Check the highlighted fields."),
+      readApiMessage(
+        raw,
+        "Unable to save this payment. Check the highlighted fields.",
+      ),
       400,
-      parseFieldErrors(raw)
+      parseFieldErrors(raw),
     );
   }
   if (response.status === 401) {
@@ -539,19 +590,22 @@ export async function patchPayment(
   if (response.status === 404) {
     throw new PaymentsRequestError(
       "This payment could not be found or has been removed.",
-      404
+      404,
     );
   }
   if (response.status >= 500) {
     throw new PaymentsRequestError(
       readApiMessage(raw, "Server error occurred. Could not update payment."),
-      response.status
+      response.status,
     );
   }
   if (!response.ok) {
     throw new PaymentsRequestError(
-      readApiMessage(raw, `Unable to update payment. Server returned ${response.status}.`),
-      response.status
+      readApiMessage(
+        raw,
+        `Unable to update payment. Server returned ${response.status}.`,
+      ),
+      response.status,
     );
   }
 
@@ -561,7 +615,10 @@ export async function patchPayment(
     normalizePayment(asRecord(raw)?.payment);
 
   if (!updated) {
-    throw new PaymentsRequestError("The server returned an incomplete payment.", 500);
+    throw new PaymentsRequestError(
+      "The server returned an incomplete payment.",
+      500,
+    );
   }
 
   invalidatePaymentsCache();
@@ -592,7 +649,7 @@ export async function deletePayment(id: number): Promise<string> {
   } catch {
     throw new PaymentsRequestError(
       "Unable to reach the server. Check your connection and try again.",
-      0
+      0,
     );
   }
 
@@ -601,7 +658,7 @@ export async function deletePayment(id: number): Promise<string> {
   if (response.status === 400) {
     throw new PaymentsRequestError(
       readApiMessage(raw, "The payment ID format is invalid."),
-      400
+      400,
     );
   }
   if (response.status === 401) {
@@ -610,22 +667,22 @@ export async function deletePayment(id: number): Promise<string> {
   if (response.status === 404) {
     throw new PaymentsRequestError(
       "This payment record does not exist or has already been removed.",
-      404
+      404,
     );
   }
   if (response.status >= 500) {
     throw new PaymentsRequestError(
       readApiMessage(raw, "Server error occurred. Could not delete payment."),
-      response.status
+      response.status,
     );
   }
   if (response.status !== 200) {
     throw new PaymentsRequestError(
       readApiMessage(
         raw,
-        `Unable to delete this payment record. Server returned ${response.status}.`
+        `Unable to delete this payment record. Server returned ${response.status}.`,
       ),
-      response.status
+      response.status,
     );
   }
 

@@ -2,14 +2,18 @@ import { useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
-import type { ProjectFieldErrors, ProjectFormValues, ProjectRecord } from "./types";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
+import type {
+  ProjectFieldErrors,
+  ProjectFormValues,
+  ProjectRecord,
+} from "./types";
 import {
   PROJECT_NOT_FOUND_MESSAGE,
   PROJECT_TITLE_IN_USE_MESSAGE,
   ProjectRequestError,
   formValuesToPayload,
-  isPreviewAccessToken,
   patchProject,
   validateProjectForm,
 } from "./api";
@@ -21,7 +25,7 @@ export function useUpdateProject(id: number) {
   const [fieldErrors, setFieldErrors] = useState<ProjectFieldErrors>({});
 
   const updateProject = async (
-    values: ProjectFormValues
+    values: ProjectFormValues,
   ): Promise<ProjectRecord | null> => {
     const clientErrors = validateProjectForm(values);
     if (Object.keys(clientErrors).length > 0) {
@@ -45,12 +49,12 @@ export function useUpdateProject(id: number) {
       }
 
       if (cause instanceof ProjectRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          message.error("Sign in with a live account to update this project.");
-          return null;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
+        return null;
+      }
+
+      if (cause instanceof ProjectRequestError && cause.status === 403) {
+        message.error(FORBIDDEN_MESSAGE);
         return null;
       }
 
@@ -61,14 +65,16 @@ export function useUpdateProject(id: number) {
       }
 
       if (cause instanceof ProjectRequestError && cause.status === 409) {
-        setFieldErrors({ title: cause.fields?.title || PROJECT_TITLE_IN_USE_MESSAGE });
+        setFieldErrors({
+          title: cause.fields?.title || PROJECT_TITLE_IN_USE_MESSAGE,
+        });
         return null;
       }
 
       message.error(
         cause instanceof Error
           ? cause.message
-          : "Server error occurred. Could not update project."
+          : "Server error occurred. Could not update project.",
       );
       return null;
     } finally {

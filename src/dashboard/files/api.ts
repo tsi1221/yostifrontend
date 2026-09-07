@@ -1,6 +1,5 @@
 import { AUTH_API_BASE, FILES_UPLOAD_URL, FILES_URL } from "../auth/endpoints";
 import { getAccessToken } from "../auth/session";
-import { isPreviewAccessToken } from "../users/usersService";
 import type {
   DeleteFileResponse,
   FileFieldErrors,
@@ -8,8 +7,6 @@ import type {
   UploadFileResult,
   UploadedFile,
 } from "./types";
-
-export { isPreviewAccessToken };
 
 export class FileRequestError extends Error {
   status: number;
@@ -20,7 +17,7 @@ export class FileRequestError extends Error {
     message: string,
     status: number,
     fields?: FileFieldErrors,
-    code?: FileRequestError["code"]
+    code?: FileRequestError["code"],
   ) {
     super(message);
     this.name = "FileRequestError";
@@ -71,14 +68,20 @@ const ALLOWED_EXT = new Set([
 
 const IMAGE_EXT = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif"]);
 
-const FIELD_KEYS: Array<keyof FileFieldErrors> = ["file", "description", "filename"];
+const FIELD_KEYS: Array<keyof FileFieldErrors> = [
+  "file",
+  "description",
+  "filename",
+];
 
 export function invalidateFilesCache() {
   window.dispatchEvent(new CustomEvent(FILES_INVALIDATE_EVENT));
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : null;
 }
 
 function pickString(...values: unknown[]) {
@@ -118,7 +121,10 @@ function readApiMessage(raw: unknown, fallback: string) {
 function parseFieldErrors(raw: unknown): FileFieldErrors {
   const record = asRecord(raw);
   const fields: FileFieldErrors = {};
-  const nested = asRecord(record?.fields) ?? asRecord(record?.errors) ?? asRecord(record?.message);
+  const nested =
+    asRecord(record?.fields) ??
+    asRecord(record?.errors) ??
+    asRecord(record?.message);
 
   if (nested) {
     for (const key of Object.keys(nested)) {
@@ -139,11 +145,15 @@ export function fileExtension(name: string) {
 }
 
 export function isAllowedFile(file: File) {
-  return ALLOWED_MIME.has(file.type) || ALLOWED_EXT.has(fileExtension(file.name));
+  return (
+    ALLOWED_MIME.has(file.type) || ALLOWED_EXT.has(fileExtension(file.name))
+  );
 }
 
 export function isImageMime(mimetype: string, filename = "") {
-  return mimetype.startsWith("image/") || IMAGE_EXT.has(fileExtension(filename));
+  return (
+    mimetype.startsWith("image/") || IMAGE_EXT.has(fileExtension(filename))
+  );
 }
 
 export function formatFileSize(bytes: number) {
@@ -188,8 +198,18 @@ export function normalizeUploadedFile(raw: unknown): UploadedFile | null {
 
   return {
     filename: filename || resolved.split("/").pop() || "file",
-    originalname: pickString(record.originalname, record.originalName, record.original_name, filename),
-    mimetype: pickString(record.mimetype, record.mimeType, record.mime_type, record.type),
+    originalname: pickString(
+      record.originalname,
+      record.originalName,
+      record.original_name,
+      filename,
+    ),
+    mimetype: pickString(
+      record.mimetype,
+      record.mimeType,
+      record.mime_type,
+      record.type,
+    ),
     size: pickNumber(record.size, record.bytes) ?? 0,
     url: resolved,
     description: pickString(record.description),
@@ -206,11 +226,16 @@ function requireToken() {
 
 export function uploadFile(
   payload: UploadFilePayload,
-  onProgress?: (percent: number) => void
+  onProgress?: (percent: number) => void,
 ): Promise<UploadFileResult> {
   if (!payload.file) {
     return Promise.reject(
-      new FileRequestError(FILE_MISSING_MESSAGE, 400, { file: FILE_MISSING_MESSAGE }, "VALIDATION")
+      new FileRequestError(
+        FILE_MISSING_MESSAGE,
+        400,
+        { file: FILE_MISSING_MESSAGE },
+        "VALIDATION",
+      ),
     );
   }
   if (!isAllowedFile(payload.file)) {
@@ -219,8 +244,8 @@ export function uploadFile(
         FILE_INVALID_FORMAT_MESSAGE,
         400,
         { file: "This file type is not allowed." },
-        "VALIDATION"
-      )
+        "VALIDATION",
+      ),
     );
   }
 
@@ -250,8 +275,8 @@ export function uploadFile(
           "Unable to reach the server. Check your connection and try again.",
           0,
           undefined,
-          "NETWORK"
-        )
+          "NETWORK",
+        ),
       );
     };
 
@@ -266,7 +291,10 @@ export function uploadFile(
 
       if (xhr.status === 400) {
         const fields = parseFieldErrors(raw);
-        const message = readApiMessage(raw, "Invalid file format or missing required payload.");
+        const message = readApiMessage(
+          raw,
+          "Invalid file format or missing required payload.",
+        );
         if (!fields.file && !fields.description) {
           fields.file = message;
         }
@@ -274,15 +302,20 @@ export function uploadFile(
         return;
       }
       if (xhr.status === 401) {
-        reject(new FileRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED"));
+        reject(
+          new FileRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED"),
+        );
         return;
       }
       if (xhr.status !== 200 && xhr.status !== 201) {
         reject(
           new FileRequestError(
-            readApiMessage(raw, "Server error occurred. Could not upload this file."),
-            xhr.status
-          )
+            readApiMessage(
+              raw,
+              "Server error occurred. Could not upload this file.",
+            ),
+            xhr.status,
+          ),
         );
         return;
       }
@@ -292,7 +325,12 @@ export function uploadFile(
         normalizeUploadedFile(asRecord(raw)?.data) ??
         normalizeUploadedFile(asRecord(raw)?.file);
       if (!record) {
-        reject(new FileRequestError("The server returned an incomplete file record.", 500));
+        reject(
+          new FileRequestError(
+            "The server returned an incomplete file record.",
+            500,
+          ),
+        );
         return;
       }
 
@@ -307,11 +345,18 @@ export function uploadFile(
   });
 }
 
-export async function deleteFileByFilename(filename: string): Promise<DeleteFileResponse> {
+export async function deleteFileByFilename(
+  filename: string,
+): Promise<DeleteFileResponse> {
   const token = requireToken();
   const name = filename.trim();
   if (!name) {
-    throw new FileRequestError(FILE_NOT_FOUND_MESSAGE, 400, { filename: FILE_NOT_FOUND_MESSAGE }, "VALIDATION");
+    throw new FileRequestError(
+      FILE_NOT_FOUND_MESSAGE,
+      400,
+      { filename: FILE_NOT_FOUND_MESSAGE },
+      "VALIDATION",
+    );
   }
 
   let response: Response;
@@ -328,7 +373,7 @@ export async function deleteFileByFilename(filename: string): Promise<DeleteFile
       "Unable to reach the server. Check your connection and try again.",
       0,
       undefined,
-      "NETWORK"
+      "NETWORK",
     );
   }
 
@@ -339,7 +384,7 @@ export async function deleteFileByFilename(filename: string): Promise<DeleteFile
       readApiMessage(raw, FILE_NOT_FOUND_MESSAGE),
       response.status,
       { filename: readApiMessage(raw, FILE_NOT_FOUND_MESSAGE) },
-      "NOT_FOUND"
+      "NOT_FOUND",
     );
   }
   if (response.status === 401) {
@@ -348,7 +393,7 @@ export async function deleteFileByFilename(filename: string): Promise<DeleteFile
   if (response.status !== 200) {
     throw new FileRequestError(
       readApiMessage(raw, "Server error occurred. Could not delete this file."),
-      response.status
+      response.status,
     );
   }
 

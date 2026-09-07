@@ -2,16 +2,16 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { isQuietListFailure, liveListFailureMessage } from "../apiMessage";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
+import { liveListFailureMessage } from "../apiMessage";
 import { LIVE_DATA_RELOAD_EVENT } from "../auth/liveDataReload";
-import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { InspectionsListQuery, InspectionsListResponse } from "./types";
 import { DEFAULT_INSPECTIONS_QUERY } from "./types";
 import {
   INSPECTIONS_INVALIDATE_EVENT,
   InspectionsRequestError,
   fetchInspectionsList,
-  isPreviewAccessToken,
 } from "./inspectionsService";
 
 const EMPTY_RESPONSE: InspectionsListResponse = {
@@ -37,8 +37,12 @@ function useDebouncedValue<T>(value: T, delay: number) {
 
 export function useInspectionsList() {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState<InspectionsListQuery>(DEFAULT_INSPECTIONS_QUERY);
-  const [response, setResponse] = useState<InspectionsListResponse | null>(null);
+  const [filters, setFilters] = useState<InspectionsListQuery>(
+    DEFAULT_INSPECTIONS_QUERY,
+  );
+  const [response, setResponse] = useState<InspectionsListResponse | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [serverError, setServerError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
@@ -64,7 +68,7 @@ export function useInspectionsList() {
       filters.type,
       productType,
       search,
-    ]
+    ],
   );
 
   const load = useCallback(async () => {
@@ -78,17 +82,13 @@ export function useInspectionsList() {
       setResponse(null);
 
       if (cause instanceof InspectionsRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          setServerError("Sign in with a live account to load inspections.");
-          return;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
         return;
       }
 
-      if (isQuietListFailure(cause)) {
+      if (cause instanceof InspectionsRequestError && cause.status === 403) {
         setResponse(EMPTY_RESPONSE);
+        setServerError(FORBIDDEN_MESSAGE);
         return;
       }
 
@@ -119,7 +119,7 @@ export function useInspectionsList() {
 
   const setFilter = <K extends keyof InspectionsListQuery>(
     key: K,
-    value: InspectionsListQuery[K]
+    value: InspectionsListQuery[K],
   ) => {
     setFilters((current) => ({
       ...current,

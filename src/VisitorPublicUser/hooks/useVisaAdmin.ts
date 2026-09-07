@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import axios, { AxiosError } from "axios";
 import { message as antdMessage } from "antd";
+import { API_BASE_URL } from "../../lib/api";
 
 export type InvitationStatus = "pending" | "approved" | "rejected";
 
@@ -22,7 +23,7 @@ interface ApiResponse<T> {
   data: T;
 }
 
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = API_BASE_URL;
 
 // Safe wrapper to show messages without warnings
 const showMessage = (msg: string, type: "success" | "error" = "success") => {
@@ -44,7 +45,7 @@ export const useVisaAdmin = () => {
     setLoading(true);
     try {
       const res = await axios.get<ApiResponse<Invitation[]>>(
-        `${BASE_URL}/api/trips/invitations`,
+        `${BASE_URL}/trips/invitations`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
@@ -67,7 +68,7 @@ export const useVisaAdmin = () => {
       setLoading(true);
       try {
         const res = await axios.get<ApiResponse<Invitation>>(
-          `${BASE_URL}/api/trips/invitations/${invitationId}`,
+          `${BASE_URL}/trips/invitations/${invitationId}`,
           {
             headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
           }
@@ -94,7 +95,7 @@ export const useVisaAdmin = () => {
       setLoading(true);
       try {
         const res = await axios.put<ApiResponse<Invitation>>(
-          `${BASE_URL}/api/trips/invitations/${invitationId}`,
+          `${BASE_URL}/trips/invitations/${invitationId}`,
           { status },
           {
             headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },

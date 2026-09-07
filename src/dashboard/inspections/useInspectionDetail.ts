@@ -2,13 +2,13 @@ import { useCallback, useEffect, useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
 import { isTechnicalApiMessage, sanitizeApiMessage } from "../apiMessage";
-import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { InspectionRecord } from "./types";
 import {
   InspectionsRequestError,
   fetchInspection,
-  isPreviewAccessToken,
   parseInspectionId,
 } from "./inspectionsService";
 
@@ -41,21 +41,22 @@ export function useInspectionDetail(id: string | undefined) {
       setInspection(null);
 
       if (cause instanceof InspectionsRequestError && cause.status === 400) {
-        const text = sanitizeApiMessage(cause.message, "Unable to load this inspection.");
+        const text = sanitizeApiMessage(
+          cause.message,
+          "Unable to load this inspection.",
+        );
         message.error(text);
         setServerError(text);
         return;
       }
 
       if (cause instanceof InspectionsRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          setServerError(
-            "Sign in with a live account to load this inspection request."
-          );
-          return;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
+        return;
+      }
+
+      if (cause instanceof InspectionsRequestError && cause.status === 403) {
+        setServerError(FORBIDDEN_MESSAGE);
         return;
       }
 

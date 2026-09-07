@@ -1,6 +1,10 @@
 import { USERS_URL } from "../auth/endpoints";
 import { getAccessToken } from "../auth/session";
-import { buildListQueryVariants, fetchAuthorizedList, readJsonMessage } from "../http";
+import {
+  buildListQueryVariants,
+  fetchAuthorizedList,
+  readJsonMessage,
+} from "../http";
 import { extractListRows, pickEntityId } from "../listResponse";
 import type {
   ManagedUser,
@@ -20,7 +24,9 @@ export class UsersRequestError extends Error {
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : null;
 }
 
 function pickString(...values: unknown[]) {
@@ -42,10 +48,6 @@ function pickNumber(...values: unknown[]) {
   return undefined;
 }
 
-export function isPreviewAccessToken(token: string | null) {
-  return Boolean(token && token.split(".").at(-1) === "preview");
-}
-
 const ROLE_QUERY_NAME: Record<number, string> = {
   1: "BUYER",
   2: "SUPPLIER",
@@ -55,7 +57,11 @@ const ROLE_QUERY_NAME: Record<number, string> = {
 };
 
 export function buildUsersQueryString(query: UsersListQuery) {
-  return buildListQueryVariants(query.page, query.pageSize, usersQueryExtras(query))[0];
+  return buildListQueryVariants(
+    query.page,
+    query.pageSize,
+    usersQueryExtras(query),
+  )[0];
 }
 
 function usersQueryExtras(query: UsersListQuery) {
@@ -99,12 +105,7 @@ function normalizeUser(raw: unknown): ManagedUser | null {
     return null;
   }
 
-  const id = pickEntityId(
-    record.id,
-    record.userId,
-    record.user_id,
-    record._id
-  );
+  const id = pickEntityId(record.id, record.userId, record.user_id, record._id);
   const email = pickString(record.email, record.userEmail, record.mail);
   if (id === undefined) {
     return null;
@@ -113,25 +114,39 @@ function normalizeUser(raw: unknown): ManagedUser | null {
   const roleId = pickNumber(
     record.roleId,
     record.role_id,
-    typeof record.role === "number" ? record.role : undefined
+    typeof record.role === "number" ? record.role : undefined,
   );
   return {
     id,
-    fullname: pickString(record.fullname, record.full_name, record.fullName, record.name) || "Unnamed user",
+    fullname:
+      pickString(
+        record.fullname,
+        record.full_name,
+        record.fullName,
+        record.name,
+      ) || "Unnamed user",
     email,
     companyName: pickString(record.companyName, record.company_name),
     country: pickString(record.country),
-    phoneWhatsapp: pickString(record.phoneWhatsapp, record.phone_whatsapp, record.phone),
-    language_preference: pickString(
-      record.language_preference,
-      record.languagePreference,
-      record.language
-    ) || "en",
+    phoneWhatsapp: pickString(
+      record.phoneWhatsapp,
+      record.phone_whatsapp,
+      record.phone,
+    ),
+    language_preference:
+      pickString(
+        record.language_preference,
+        record.languagePreference,
+        record.language,
+      ) || "en",
     role: normalizeRole(record.role, roleId ?? 0),
   };
 }
 
-function normalizeUsersResponse(raw: unknown, query: UsersListQuery): UsersListResponse {
+function normalizeUsersResponse(
+  raw: unknown,
+  query: UsersListQuery,
+): UsersListResponse {
   const record = asRecord(raw);
   const nested = asRecord(record?.data);
   const rows = extractListRows(raw);
@@ -141,12 +156,18 @@ function normalizeUsersResponse(raw: unknown, query: UsersListQuery): UsersListR
     .filter((row): row is ManagedUser => Boolean(row));
 
   const metaRecord = asRecord(record?.meta) ?? nested;
-  const total = pickNumber(metaRecord?.total, record?.total, nested?.total) ?? data.length;
+  const total =
+    pickNumber(metaRecord?.total, record?.total, nested?.total) ?? data.length;
   const page = pickNumber(metaRecord?.page, record?.page) ?? query.page;
-  const pageSize = pickNumber(metaRecord?.pageSize, metaRecord?.page_size, record?.pageSize) ?? query.pageSize;
+  const pageSize =
+    pickNumber(metaRecord?.pageSize, metaRecord?.page_size, record?.pageSize) ??
+    query.pageSize;
   const totalPages =
-    pickNumber(metaRecord?.totalPages, metaRecord?.total_pages, record?.totalPages) ??
-    Math.max(1, Math.ceil(total / Math.max(pageSize, 1)));
+    pickNumber(
+      metaRecord?.totalPages,
+      metaRecord?.total_pages,
+      record?.totalPages,
+    ) ?? Math.max(1, Math.ceil(total / Math.max(pageSize, 1)));
 
   return {
     data,
@@ -154,14 +175,16 @@ function normalizeUsersResponse(raw: unknown, query: UsersListQuery): UsersListR
   };
 }
 
-export async function fetchUsersList(query: UsersListQuery): Promise<UsersListResponse> {
+export async function fetchUsersList(
+  query: UsersListQuery,
+): Promise<UsersListResponse> {
   if (!getAccessToken()) {
     throw new UsersRequestError("Unauthorized", 401);
   }
 
   const result = await fetchAuthorizedList(
     USERS_URL,
-    buildListQueryVariants(query.page, query.pageSize, usersQueryExtras(query))
+    buildListQueryVariants(query.page, query.pageSize, usersQueryExtras(query)),
   );
 
   if (result.status === 401) {
@@ -169,8 +192,11 @@ export async function fetchUsersList(query: UsersListQuery): Promise<UsersListRe
   }
   if (!result.ok) {
     throw new UsersRequestError(
-      readJsonMessage(result.data, `Unable to load users. Server returned ${result.status}.`),
-      result.status
+      readJsonMessage(
+        result.data,
+        `Unable to load users. Server returned ${result.status}.`,
+      ),
+      result.status,
     );
   }
 

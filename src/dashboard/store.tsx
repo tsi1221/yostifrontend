@@ -11,10 +11,7 @@ import {
 /* eslint-disable react-refresh/only-export-components -- session store exports selectors with the provider */
 
 import { refreshStoredAuthProfile } from "./profile/api";
-import {
-  AUTH_PROFILE_UPDATED_EVENT,
-  getStoredAuthUser,
-} from "./auth/session";
+import { AUTH_PROFILE_UPDATED_EVENT, getStoredAuthUser } from "./auth/session";
 import { initialSnapshot } from "./mocks/data";
 import type {
   AccountType,
@@ -34,14 +31,6 @@ import type {
   VerificationStatus,
   VisaStatus,
 } from "./types";
-
-export const SESSION_USERS: Record<UserRole, string> = {
-  SUPER_ADMIN: "u-admin",
-  STAFF: "u-staff",
-  BUYER: "u-buyer-1",
-  SUPPLIER: "u-supplier-1",
-  LOGISTICS_PARTNER: "u-logistics-1",
-};
 
 export const SHIPMENT_PIPELINE: ShipmentStatus[] = [
   "booked",
@@ -63,7 +52,7 @@ const log = (
   actor_id: string,
   action: string,
   entity: string,
-  entity_id: string
+  entity_id: string,
 ): DashboardSnapshot => ({
   ...snapshot,
   activity: [
@@ -213,7 +202,7 @@ function reducer(state: DashboardSnapshot, action: Action): DashboardSnapshot {
         action.actorId,
         `Submitted sourcing request ${request.request_id}`,
         "sourcing_requests",
-        request.request_id
+        request.request_id,
       );
     }
     case "SUBMIT_QUOTE": {
@@ -228,13 +217,13 @@ function reducer(state: DashboardSnapshot, action: Action): DashboardSnapshot {
           sourcing_requests: state.sourcing_requests.map((row) =>
             row.request_id === action.input.request_id
               ? { ...row, status: "quoted" as const }
-              : row
+              : row,
           ),
         },
         action.actorId,
         `Submitted quote ${quote.quote_id} on ${quote.request_id}`,
         "quotes",
-        quote.quote_id
+        quote.quote_id,
       );
     }
     case "REQUEST_INSPECTION": {
@@ -250,7 +239,7 @@ function reducer(state: DashboardSnapshot, action: Action): DashboardSnapshot {
         action.actorId,
         `Requested ${inspection.inspection_type} inspection for ${inspection.product_type}`,
         "inspections",
-        inspection.inspection_id
+        inspection.inspection_id,
       );
     }
     case "SUBMIT_TRIP": {
@@ -265,7 +254,7 @@ function reducer(state: DashboardSnapshot, action: Action): DashboardSnapshot {
         action.actorId,
         `Submitted visa / business trip ${trip.trip_id} to ${trip.arrival_city}`,
         "trips",
-        trip.trip_id
+        trip.trip_id,
       );
     }
     case "SUBMIT_SUPPORT": {
@@ -283,7 +272,7 @@ function reducer(state: DashboardSnapshot, action: Action): DashboardSnapshot {
         action.actorId,
         `Opened support ${ticket.support_id} for ${ticket.order_reference}`,
         "support_requests",
-        ticket.support_id
+        ticket.support_id,
       );
     }
     case "PAY_INVOICE": {
@@ -297,18 +286,18 @@ function reducer(state: DashboardSnapshot, action: Action): DashboardSnapshot {
                   status: "completed",
                   payment_method: action.method,
                 }
-              : row
+              : row,
           ),
         },
         action.actorId,
         `Paid invoice ${action.paymentId}`,
         "payments",
-        action.paymentId
+        action.paymentId,
       );
     }
     case "UPDATE_VERIFICATION": {
       const verification = state.verifications.find(
-        (row) => row.verification_id === action.verificationId
+        (row) => row.verification_id === action.verificationId,
       );
       return log(
         {
@@ -320,20 +309,22 @@ function reducer(state: DashboardSnapshot, action: Action): DashboardSnapshot {
                   status: action.status,
                   concerns: action.concerns ?? row.concerns,
                   turnaround_time:
-                    action.status === "pending" ? row.turnaround_time : "Same day",
+                    action.status === "pending"
+                      ? row.turnaround_time
+                      : "Same day",
                 }
-              : row
+              : row,
           ),
           suppliers: state.suppliers.map((row) =>
             row.supplier_id === verification?.supplier_id
               ? { ...row, verified: action.status === "approved" }
-              : row
+              : row,
           ),
         },
         action.actorId,
         `${action.status === "approved" ? "Approved" : "Rejected"} supplier verification ${action.verificationId}`,
         "verifications",
-        action.verificationId
+        action.verificationId,
       );
     }
     case "UPDATE_SUPPLIER_PROFILE": {
@@ -343,13 +334,13 @@ function reducer(state: DashboardSnapshot, action: Action): DashboardSnapshot {
           suppliers: state.suppliers.map((row) =>
             row.supplier_id === action.supplierId
               ? { ...row, ...action.patch }
-              : row
+              : row,
           ),
         },
         action.actorId,
         `Updated company profile ${action.supplierId}`,
         "suppliers",
-        action.supplierId
+        action.supplierId,
       );
     }
     case "ASSIGN_SOURCING": {
@@ -359,13 +350,13 @@ function reducer(state: DashboardSnapshot, action: Action): DashboardSnapshot {
           sourcing_requests: state.sourcing_requests.map((row) =>
             row.request_id === action.requestId
               ? { ...row, assigned_supplier_ids: action.supplierIds }
-              : row
+              : row,
           ),
         },
         action.actorId,
         `Assigned ${action.requestId} to ${action.supplierIds.join(", ") || "no factories"}`,
         "sourcing_requests",
-        action.requestId
+        action.requestId,
       );
     }
     case "UPDATE_SHIPMENT_STATUS": {
@@ -375,13 +366,13 @@ function reducer(state: DashboardSnapshot, action: Action): DashboardSnapshot {
           shipments: state.shipments.map((row) =>
             row.shipment_id === action.shipmentId
               ? { ...row, status: action.status }
-              : row
+              : row,
           ),
         },
         action.actorId,
         `Updated cargo ${action.shipmentId} to ${action.status}`,
         "shipments",
-        action.shipmentId
+        action.shipmentId,
       );
     }
     case "UPLOAD_SHIPMENT_DOC": {
@@ -396,13 +387,13 @@ function reducer(state: DashboardSnapshot, action: Action): DashboardSnapshot {
                     ? row.documents
                     : [...row.documents, action.document],
                 }
-              : row
+              : row,
           ),
         },
         action.actorId,
         `Uploaded ${action.document} for ${action.shipmentId}`,
         "shipments",
-        action.shipmentId
+        action.shipmentId,
       );
     }
     case "UPDATE_TRIP_VISA": {
@@ -412,13 +403,13 @@ function reducer(state: DashboardSnapshot, action: Action): DashboardSnapshot {
           trips: state.trips.map((row) =>
             row.trip_id === action.tripId
               ? { ...row, visa_status: action.visaStatus }
-              : row
+              : row,
           ),
         },
         action.actorId,
         `Set visa status on ${action.tripId} to ${action.visaStatus}`,
         "trips",
-        action.tripId
+        action.tripId,
       );
     }
     case "UPDATE_INSPECTION": {
@@ -432,13 +423,13 @@ function reducer(state: DashboardSnapshot, action: Action): DashboardSnapshot {
                   status: action.status,
                   report_url: action.reportUrl ?? row.report_url,
                 }
-              : row
+              : row,
           ),
         },
         action.actorId,
         `Updated inspection ${action.inspectionId} to ${action.status}`,
         "inspections",
-        action.inspectionId
+        action.inspectionId,
       );
     }
     case "CLOSE_SUPPORT": {
@@ -448,13 +439,13 @@ function reducer(state: DashboardSnapshot, action: Action): DashboardSnapshot {
           support_requests: state.support_requests.map((row) =>
             row.support_id === action.supportId
               ? { ...row, status: action.status }
-              : row
+              : row,
           ),
         },
         action.actorId,
         `Marked support ${action.supportId} as ${action.status}`,
         "support_requests",
-        action.supportId
+        action.supportId,
       );
     }
     case "TOGGLE_USER_ACTIVE": {
@@ -463,13 +454,13 @@ function reducer(state: DashboardSnapshot, action: Action): DashboardSnapshot {
         {
           ...state,
           users: state.users.map((row) =>
-            row.id === action.userId ? { ...row, active: !row.active } : row
+            row.id === action.userId ? { ...row, active: !row.active } : row,
           ),
         },
         action.actorId,
         `${user?.active ? "Disabled" : "Enabled"} account ${action.userId}`,
         "users",
-        action.userId
+        action.userId,
       );
     }
     case "ASSIGN_USER_ROLE": {
@@ -487,13 +478,13 @@ function reducer(state: DashboardSnapshot, action: Action): DashboardSnapshot {
           users: state.users.map((row) =>
             row.id === action.userId
               ? { ...row, role: action.role, account_type: accountType }
-              : row
+              : row,
           ),
         },
         action.actorId,
         `Assigned role ${action.role} to ${action.userId}`,
         "users",
-        action.userId
+        action.userId,
       );
     }
     case "UPSERT_USER": {
@@ -503,14 +494,14 @@ function reducer(state: DashboardSnapshot, action: Action): DashboardSnapshot {
           ...state,
           users: exists
             ? state.users.map((row) =>
-                row.id === action.user.id ? action.user : row
+                row.id === action.user.id ? action.user : row,
               )
             : [action.user, ...state.users],
         },
         action.actorId,
         `${exists ? "Updated" : "Created"} user ${action.user.full_name}`,
         "users",
-        action.user.id
+        action.user.id,
       );
     }
     case "DELETE_USER": {
@@ -522,7 +513,7 @@ function reducer(state: DashboardSnapshot, action: Action): DashboardSnapshot {
         action.actorId,
         `Removed user ${action.userId}`,
         "users",
-        action.userId
+        action.userId,
       );
     }
     default:
@@ -540,7 +531,7 @@ export interface DashboardActions {
   updateVerification: (
     verificationId: string,
     status: VerificationStatus,
-    concerns?: string
+    concerns?: string,
   ) => void;
   updateSupplierProfile: (
     supplierId: string,
@@ -549,7 +540,7 @@ export interface DashboardActions {
         SupplierFactory,
         "name" | "contact_person" | "location_city" | "location_province"
       >
-    >
+    >,
   ) => void;
   assignSourcing: (requestId: string, supplierIds: string[]) => void;
   updateShipmentStatus: (shipmentId: string, status: ShipmentStatus) => void;
@@ -558,7 +549,7 @@ export interface DashboardActions {
   updateInspection: (
     inspectionId: string,
     status: InspectionStatus,
-    reportUrl?: string
+    reportUrl?: string,
   ) => void;
   closeSupport: (supportId: string, status: SupportStatus) => void;
   toggleUserActive: (userId: string) => void;
@@ -597,21 +588,42 @@ export function DashboardProvider({
     return () => window.removeEventListener(AUTH_PROFILE_UPDATED_EVENT, sync);
   }, []);
 
-  const user = useMemo(() => {
-    const workspaceUser =
-      snapshot.users.find((item) => item.id === SESSION_USERS[role]) ??
-      snapshot.users[0];
-    return authUser
-      ? {
-          ...workspaceUser,
-          full_name: authUser.fullname || workspaceUser.full_name,
-          email: authUser.email || workspaceUser.email,
-          company_name: authUser.companyName || workspaceUser.company_name,
-          country: authUser.country || workspaceUser.country,
-          phone: authUser.phoneWhatsapp || workspaceUser.phone,
-        }
-      : workspaceUser;
-  }, [authUser, role, snapshot.users]);
+  const user = useMemo((): UserAccount => {
+    const accountType: AccountType =
+      role === "SUPPLIER"
+        ? "supplier"
+        : role === "LOGISTICS_PARTNER"
+          ? "logistics"
+          : "business";
+
+    if (!authUser) {
+      return {
+        id: "",
+        full_name: "",
+        company_name: "",
+        country: "",
+        phone: "",
+        email: "",
+        account_type: accountType,
+        language_preference: "en",
+        role,
+        active: true,
+      };
+    }
+
+    return {
+      id: String(authUser.id),
+      full_name: authUser.fullname,
+      company_name: authUser.companyName ?? "",
+      country: authUser.country ?? "",
+      phone: authUser.phoneWhatsapp ?? "",
+      email: authUser.email,
+      account_type: accountType,
+      language_preference: authUser.languagePreference ?? "en",
+      role,
+      active: true,
+    };
+  }, [authUser, role]);
 
   const actor = user.id;
 
@@ -696,12 +708,12 @@ export function DashboardProvider({
       deleteUser: (userId) =>
         dispatch({ type: "DELETE_USER", actorId: actor, userId }),
     }),
-    [actor]
+    [actor],
   );
 
   const value = useMemo(
     () => ({ snapshot, role, user, actions }),
-    [snapshot, role, user, actions]
+    [snapshot, role, user, actions],
   );
 
   return (
@@ -731,13 +743,13 @@ export const findSupplierName = (snapshot: DashboardSnapshot, id: string) =>
 
 export const supplierForAccount = (
   snapshot: DashboardSnapshot,
-  accountId: string
+  accountId: string,
 ) => snapshot.suppliers.find((row) => row.account_id === accountId);
 
 export function getSourcingRequests(
   snapshot: DashboardSnapshot,
   role: UserRole,
-  userId: string
+  userId: string,
 ) {
   if (role === "SUPER_ADMIN" || role === "STAFF") {
     return snapshot.sourcing_requests;
@@ -756,7 +768,7 @@ export function getSourcingRequests(
       (row) =>
         row.status !== "completed" &&
         (row.assigned_supplier_ids.length === 0 ||
-          row.assigned_supplier_ids.includes(supplier.supplier_id))
+          row.assigned_supplier_ids.includes(supplier.supplier_id)),
     );
   }
 
@@ -766,7 +778,7 @@ export function getSourcingRequests(
 export function getQuotes(
   snapshot: DashboardSnapshot,
   role: UserRole,
-  userId: string
+  userId: string,
 ) {
   if (role === "SUPER_ADMIN" || role === "STAFF") {
     return snapshot.quotes;
@@ -775,7 +787,7 @@ export function getQuotes(
   if (role === "SUPPLIER") {
     const supplier = supplierForAccount(snapshot, userId);
     return snapshot.quotes.filter(
-      (row) => row.supplier_id === supplier?.supplier_id
+      (row) => row.supplier_id === supplier?.supplier_id,
     );
   }
 
@@ -792,7 +804,7 @@ export function getQuotes(
 export function getShipments(
   snapshot: DashboardSnapshot,
   role: UserRole,
-  userId: string
+  userId: string,
 ) {
   if (role === "SUPER_ADMIN" || role === "STAFF") {
     return snapshot.shipments;
@@ -803,7 +815,7 @@ export function getShipments(
   if (role === "SUPPLIER") {
     const supplier = supplierForAccount(snapshot, userId);
     return snapshot.shipments.filter(
-      (row) => row.supplier_id === supplier?.supplier_id
+      (row) => row.supplier_id === supplier?.supplier_id,
     );
   }
   if (role === "LOGISTICS_PARTNER") {
@@ -815,7 +827,7 @@ export function getShipments(
 export function getInspections(
   snapshot: DashboardSnapshot,
   role: UserRole,
-  userId: string
+  userId: string,
 ) {
   if (role === "SUPER_ADMIN" || role === "STAFF") {
     return snapshot.inspections;
@@ -826,7 +838,7 @@ export function getInspections(
   if (role === "SUPPLIER") {
     const supplier = supplierForAccount(snapshot, userId);
     return snapshot.inspections.filter(
-      (row) => row.supplier_id === supplier?.supplier_id
+      (row) => row.supplier_id === supplier?.supplier_id,
     );
   }
   return [];
@@ -835,7 +847,7 @@ export function getInspections(
 export function getTrips(
   snapshot: DashboardSnapshot,
   role: UserRole,
-  userId: string
+  userId: string,
 ) {
   if (role === "SUPER_ADMIN" || role === "STAFF") {
     return snapshot.trips;
@@ -849,7 +861,7 @@ export function getTrips(
 export function getPayments(
   snapshot: DashboardSnapshot,
   role: UserRole,
-  userId: string
+  userId: string,
 ) {
   if (role === "SUPER_ADMIN" || role === "STAFF") {
     return snapshot.payments;
@@ -863,7 +875,7 @@ export function getPayments(
 export function getSupportRequests(
   snapshot: DashboardSnapshot,
   role: UserRole,
-  userId: string
+  userId: string,
 ) {
   if (role === "SUPER_ADMIN" || role === "STAFF") {
     return snapshot.support_requests;
@@ -874,7 +886,7 @@ export function getSupportRequests(
 export function getActivity(
   snapshot: DashboardSnapshot,
   role: UserRole,
-  userId: string
+  userId: string,
 ) {
   if (role === "SUPER_ADMIN" || role === "STAFF") {
     return snapshot.activity;

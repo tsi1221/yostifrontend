@@ -70,7 +70,8 @@ export default function SupportsTable() {
     retry,
   } = useSupportsList();
 
-  const detailPath = (id: number | string) => `/${ROLE_SLUG[role]}/supports/${id}`;
+  const detailPath = (id: number | string) =>
+    `/${ROLE_SLUG[role]}/supports/${id}`;
 
   return (
     <div className="space-y-4">
@@ -91,7 +92,9 @@ export default function SupportsTable() {
           </span>
           <TextInput
             value={filters.orderReference}
-            onChange={(event) => setFilter("orderReference", event.target.value)}
+            onChange={(event) =>
+              setFilter("orderReference", event.target.value)
+            }
             placeholder="Order reference"
           />
         </label>
@@ -102,7 +105,10 @@ export default function SupportsTable() {
           <SelectInput
             value={filters.issuesType}
             onChange={(event) =>
-              setFilter("issuesType", event.target.value as TicketIssuesTypeFilter | "")
+              setFilter(
+                "issuesType",
+                event.target.value as TicketIssuesTypeFilter | "",
+              )
             }
           >
             {TICKET_ISSUES_TYPE_FILTERS.map((option) => (
@@ -121,7 +127,7 @@ export default function SupportsTable() {
             onChange={(event) =>
               setFilter(
                 "resolutionToRequest",
-                event.target.value as TicketResolutionFilter | ""
+                event.target.value as TicketResolutionFilter | "",
               )
             }
           >
@@ -139,7 +145,10 @@ export default function SupportsTable() {
           <SelectInput
             value={filters.urgency}
             onChange={(event) =>
-              setFilter("urgency", event.target.value as TicketUrgencyFilter | "")
+              setFilter(
+                "urgency",
+                event.target.value as TicketUrgencyFilter | "",
+              )
             }
           >
             {TICKET_URGENCY_FILTERS.map((option) => (
@@ -213,16 +222,24 @@ export default function SupportsTable() {
                     className="cursor-pointer hover:bg-slate-50/80"
                     onClick={() => navigate(detailPath(row.id))}
                   >
-                    <td className="px-4 py-3 font-medium text-slate-800">{row.id}</td>
+                    <td className="px-4 py-3 font-medium text-slate-800">
+                      {row.id}
+                    </td>
                     <td className="px-4 py-3 text-slate-700">
                       {row.orderReference || "—"}
                     </td>
-                    <td className="px-4 py-3 text-slate-700">{row.title || "—"}</td>
-                    <td className="px-4 py-3 text-slate-700">{row.issuesType || "—"}</td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {row.title || "—"}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {row.issuesType || "—"}
+                    </td>
                     <td className="px-4 py-3 text-slate-700">
                       {row.resolutionToRequest || "—"}
                     </td>
-                    <td className="px-4 py-3 text-slate-700">{row.urgency || "—"}</td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {row.urgency || "—"}
+                    </td>
                     <td className="px-4 py-3">
                       <StatusBadge value={row.status || "—"} />
                     </td>

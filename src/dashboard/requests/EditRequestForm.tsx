@@ -1,9 +1,18 @@
 import { useEffect, useState } from "react";
 
 import ActionButton from "../components/ActionButton";
-import { Field, SelectInput, TextArea, TextInput } from "../components/FormField";
+import {
+  Field,
+  SelectInput,
+  TextArea,
+  TextInput,
+} from "../components/FormField";
 import { formValuesToPayload, requestToFormValues } from "./format";
-import type { RequestFormValues, RequestRegion, SourcingRequestRecord } from "./types";
+import type {
+  RequestFormValues,
+  RequestRegion,
+  SourcingRequestRecord,
+} from "./types";
 import { REQUEST_REGIONS, REQUEST_STATUSES } from "./types";
 import { useUpdateRequest } from "./useUpdateRequest";
 
@@ -18,9 +27,11 @@ export default function EditRequestForm({
   onCancel,
   onSaved,
 }: EditRequestFormProps) {
-  const { updateRequest, saving, conflict, fieldErrors } = useUpdateRequest(request.id);
+  const { updateRequest, saving, conflict, fieldErrors } = useUpdateRequest(
+    request.id,
+  );
   const [values, setValues] = useState<RequestFormValues>(() =>
-    requestToFormValues(request)
+    requestToFormValues(request),
   );
 
   useEffect(() => {
@@ -29,13 +40,13 @@ export default function EditRequestForm({
 
   const setField = <K extends keyof RequestFormValues>(
     key: K,
-    value: RequestFormValues[K]
+    value: RequestFormValues[K],
   ) => {
     setValues((current) => ({ ...current, [key]: value }));
   };
 
   const statusOptions = REQUEST_STATUSES.includes(
-    values.status as (typeof REQUEST_STATUSES)[number]
+    values.status as (typeof REQUEST_STATUSES)[number],
   )
     ? REQUEST_STATUSES
     : [values.status, ...REQUEST_STATUSES];
@@ -45,7 +56,9 @@ export default function EditRequestForm({
       className="space-y-4"
       onSubmit={async (event) => {
         event.preventDefault();
-        const updated = await updateRequest(formValuesToPayload(values, request));
+        const updated = await updateRequest(
+          formValuesToPayload(values, request),
+        );
         if (updated) {
           onSaved(updated);
         }

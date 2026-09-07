@@ -1,9 +1,18 @@
 import { useEffect, useState } from "react";
 
 import ActionButton from "../components/ActionButton";
-import { Field, SelectInput, TextArea, TextInput } from "../components/FormField";
+import {
+  Field,
+  SelectInput,
+  TextArea,
+  TextInput,
+} from "../components/FormField";
 import { shipmentToFormValues } from "./shipmentsService";
-import type { ShipmentMethodValue, ShipmentRecord, UpdateShipmentFormValues } from "./types";
+import type {
+  ShipmentMethodValue,
+  ShipmentRecord,
+  UpdateShipmentFormValues,
+} from "./types";
 import { SHIPMENT_METHOD_OPTIONS } from "./types";
 import { useUpdateShipment } from "./useUpdateShipment";
 
@@ -18,9 +27,11 @@ export default function EditShipmentForm({
   onCancel,
   onSaved,
 }: EditShipmentFormProps) {
-  const { updateShipment, saving, fieldErrors } = useUpdateShipment(shipment.id);
+  const { updateShipment, saving, fieldErrors } = useUpdateShipment(
+    shipment.id,
+  );
   const [values, setValues] = useState<UpdateShipmentFormValues>(() =>
-    shipmentToFormValues(shipment)
+    shipmentToFormValues(shipment),
   );
 
   useEffect(() => {
@@ -29,7 +40,7 @@ export default function EditShipmentForm({
 
   const setField = <K extends keyof UpdateShipmentFormValues>(
     key: K,
-    value: UpdateShipmentFormValues[K]
+    value: UpdateShipmentFormValues[K],
   ) => {
     setValues((current) => ({ ...current, [key]: value }));
   };
@@ -54,19 +65,29 @@ export default function EditShipmentForm({
             onChange={(event) => setField("pickupLocation", event.target.value)}
           />
         </Field>
-        <Field label="Destination notes" error={fieldErrors.destinationDescription}>
+        <Field
+          label="Destination notes"
+          error={fieldErrors.destinationDescription}
+        >
           <TextArea
             placeholder="Deliver to Warehouse B, Door 3. Contact store manager on arrival."
             value={values.destinationDescription}
-            onChange={(event) => setField("destinationDescription", event.target.value)}
+            onChange={(event) =>
+              setField("destinationDescription", event.target.value)
+            }
           />
         </Field>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Field label="Destination country" error={fieldErrors.destinationCountry}>
+          <Field
+            label="Destination country"
+            error={fieldErrors.destinationCountry}
+          >
             <TextInput
               placeholder="Germany"
               value={values.destinationCountry}
-              onChange={(event) => setField("destinationCountry", event.target.value)}
+              onChange={(event) =>
+                setField("destinationCountry", event.target.value)
+              }
             />
           </Field>
           <Field label="City" error={fieldErrors.city}>

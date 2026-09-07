@@ -2,14 +2,14 @@ import { useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
 import type { BlogFieldErrors, BlogFormValues, BlogPost } from "./types";
 import {
   BLOG_TITLE_EXISTS_MESSAGE,
   BlogRequestError,
   createBlog,
   formValuesToPayload,
-  isPreviewAccessToken,
   validateBlogForm,
 } from "./api";
 
@@ -20,7 +20,9 @@ export function useCreateBlog() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<BlogFieldErrors>({});
 
-  const submitBlog = async (values: BlogFormValues): Promise<BlogPost | null> => {
+  const submitBlog = async (
+    values: BlogFormValues,
+  ): Promise<BlogPost | null> => {
     const clientErrors = validateBlogForm(values);
     if (Object.keys(clientErrors).length > 0) {
       setFieldErrors(clientErrors);
@@ -44,27 +46,28 @@ export function useCreateBlog() {
       }
 
       if (cause instanceof BlogRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          const previewMessage = "Sign in with a live account to create a blog post.";
-          setAuthError(previewMessage);
-          message.error(previewMessage);
-          return null;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
+        return null;
+      }
+
+      if (cause instanceof BlogRequestError && cause.status === 403) {
+        setAuthError(FORBIDDEN_MESSAGE);
+        message.error(FORBIDDEN_MESSAGE);
         return null;
       }
 
       if (cause instanceof BlogRequestError && cause.status === 409) {
         setConflict(cause.message);
-        setFieldErrors({ title: cause.fields?.title || BLOG_TITLE_EXISTS_MESSAGE });
+        setFieldErrors({
+          title: cause.fields?.title || BLOG_TITLE_EXISTS_MESSAGE,
+        });
         return null;
       }
 
       message.error(
         cause instanceof Error
           ? cause.message
-          : "Server error occurred. Could not create blog post."
+          : "Server error occurred. Could not create blog post.",
       );
       return null;
     } finally {

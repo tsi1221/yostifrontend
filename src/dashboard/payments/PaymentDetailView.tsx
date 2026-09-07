@@ -137,7 +137,9 @@ export default function PaymentDetailView() {
         </ActionButton>
         {payment ? (
           <div className="flex gap-2">
-            <ActionButton onClick={() => setEditing(true)}>Edit payment</ActionButton>
+            <ActionButton onClick={() => setEditing(true)}>
+              Edit payment
+            </ActionButton>
             <button
               type="button"
               className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
@@ -171,7 +173,9 @@ export default function PaymentDetailView() {
           <p className="text-lg font-semibold text-[#0F3952]">
             Unable to load payment details
           </p>
-          <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">{serverError}</p>
+          <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
+            {serverError}
+          </p>
           <ActionButton className="mt-5" onClick={retry}>
             Retry
           </ActionButton>
@@ -205,7 +209,9 @@ export default function PaymentDetailView() {
             />
           </div>
 
-          <p className="text-xs text-slate-400">User ID {payment.userId || "—"}</p>
+          <p className="text-xs text-slate-400">
+            User ID {payment.userId || "—"}
+          </p>
         </div>
       ) : null}
 

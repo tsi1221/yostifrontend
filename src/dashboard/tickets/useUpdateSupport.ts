@@ -2,11 +2,11 @@ import { useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
 import type { TicketFieldErrors, UpdateSupportFormValues } from "./types";
 import {
   TicketsRequestError,
-  isPreviewAccessToken,
   patchSupport,
   updateFormValuesToPayload,
   validateUpdateTicketForm,
@@ -41,18 +41,18 @@ export function useUpdateSupport(id: number) {
       }
 
       if (cause instanceof TicketsRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          message.error("Sign in with a live account to update this support ticket.");
-          return null;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
+        return null;
+      }
+
+      if (cause instanceof TicketsRequestError && cause.status === 403) {
+        message.error(FORBIDDEN_MESSAGE);
         return null;
       }
 
       if (cause instanceof TicketsRequestError && cause.status === 404) {
         message.warning(
-          "This support ticket could not be found or has been removed."
+          "This support ticket could not be found or has been removed.",
         );
         return null;
       }
@@ -65,7 +65,7 @@ export function useUpdateSupport(id: number) {
       message.error(
         cause instanceof Error
           ? cause.message
-          : "Server error occurred. Could not update support ticket."
+          : "Server error occurred. Could not update support ticket.",
       );
       return null;
     } finally {

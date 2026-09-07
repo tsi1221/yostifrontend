@@ -2,13 +2,13 @@ import { useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
 import type { InspectionFieldErrors, InspectionFormValues } from "./types";
 import {
   InspectionsRequestError,
   createInspection,
   formValuesToPayload,
-  isPreviewAccessToken,
   validateInspectionForm,
 } from "./inspectionsService";
 
@@ -39,19 +39,19 @@ export function useCreateInspection() {
       }
 
       if (cause instanceof InspectionsRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          message.error("Sign in with a live account to create an inspection request.");
-          return null;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
+        return null;
+      }
+
+      if (cause instanceof InspectionsRequestError && cause.status === 403) {
+        message.error(FORBIDDEN_MESSAGE);
         return null;
       }
 
       message.error(
         cause instanceof Error
           ? cause.message
-          : "Server error occurred. Could not create inspection."
+          : "Server error occurred. Could not create inspection.",
       );
       return null;
     } finally {

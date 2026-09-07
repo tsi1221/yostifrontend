@@ -2,7 +2,8 @@ import { useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
 import { ROLE_SLUG } from "../roles";
 import { useDashboard } from "../store";
 import type { ServiceDeletionPhase } from "./types";
@@ -11,7 +12,6 @@ import {
   ServiceRequestError,
   deleteService,
   invalidateServicesCache,
-  isPreviewAccessToken,
 } from "./servicesService";
 
 export function useDeleteService() {
@@ -38,13 +38,12 @@ export function useDeleteService() {
       }
 
       if (cause instanceof ServiceRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          message.error("Sign in with a live account to delete this service.");
-          setPhase("confirming");
-          return false;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
+        return false;
+      }
+
+      if (cause instanceof ServiceRequestError && cause.status === 403) {
+        message.error(FORBIDDEN_MESSAGE);
         return false;
       }
 
@@ -57,7 +56,7 @@ export function useDeleteService() {
       message.error(
         cause instanceof Error
           ? cause.message
-          : "Server error occurred. Could not delete service."
+          : "Server error occurred. Could not delete service.",
       );
       setPhase("confirming");
       return false;

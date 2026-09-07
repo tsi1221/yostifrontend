@@ -30,7 +30,8 @@ export default function PublicProjectsPage() {
   } = useProjectsList({ publicFeed: true });
 
   const filtersEmpty = !filters.search.trim() && !filters.title.trim();
-  const showFirstEmpty = !loading && !serverError && meta.total === 0 && filtersEmpty;
+  const showFirstEmpty =
+    !loading && !serverError && meta.total === 0 && filtersEmpty;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -40,7 +41,8 @@ export default function PublicProjectsPage() {
         </p>
         <h1 className="mt-2 text-3xl font-semibold text-[#0F3952]">Projects</h1>
         <p className="mt-2 text-sm text-slate-500">
-          Factory programs, sourcing desks, and logistics work delivered with Yosti.
+          Factory programs, sourcing desks, and logistics work delivered with
+          Yosti.
         </p>
       </header>
 
@@ -67,7 +69,10 @@ export default function PublicProjectsPage() {
       {loading ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }, (_, index) => (
-            <div key={index} className="h-56 animate-pulse rounded-2xl bg-slate-200" />
+            <div
+              key={index}
+              className="h-56 animate-pulse rounded-2xl bg-slate-200"
+            />
           ))}
         </div>
       ) : null}
@@ -102,8 +107,12 @@ export default function PublicProjectsPage() {
                 ) : (
                   <div className="mb-3 h-28 rounded-xl bg-[#0F3952]" />
                 )}
-                <h2 className="text-lg font-semibold text-[#0F3952]">{project.title}</h2>
-                <p className="mt-2 text-sm text-slate-600">{snippet(project.details)}</p>
+                <h2 className="text-lg font-semibold text-[#0F3952]">
+                  {project.title}
+                </h2>
+                <p className="mt-2 text-sm text-slate-600">
+                  {snippet(project.details)}
+                </p>
               </button>
             ))
           )}

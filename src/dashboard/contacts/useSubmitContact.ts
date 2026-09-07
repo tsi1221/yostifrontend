@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { message } from "antd";
 
-import type { ContactFieldErrors, ContactFormValues, ContactRecord } from "./types";
+import type {
+  ContactFieldErrors,
+  ContactFormValues,
+  ContactRecord,
+} from "./types";
 import {
   CONTACT_SUBMITTED_MESSAGE,
   ContactRequestError,
@@ -13,10 +17,14 @@ import {
 export function useSubmitContact() {
   const [saving, setSaving] = useState(false);
   const [sent, setSent] = useState(false);
-  const [successMessage, setSuccessMessage] = useState(CONTACT_SUBMITTED_MESSAGE);
+  const [successMessage, setSuccessMessage] = useState(
+    CONTACT_SUBMITTED_MESSAGE,
+  );
   const [fieldErrors, setFieldErrors] = useState<ContactFieldErrors>({});
 
-  const sendMessage = async (values: ContactFormValues): Promise<ContactRecord | null> => {
+  const sendMessage = async (
+    values: ContactFormValues,
+  ): Promise<ContactRecord | null> => {
     const clientErrors = validateContactForm(values);
     if (Object.keys(clientErrors).length > 0) {
       setFieldErrors(clientErrors);
@@ -41,7 +49,7 @@ export function useSubmitContact() {
       message.error(
         cause instanceof Error
           ? cause.message
-          : "Server error occurred. Could not send your message."
+          : "Server error occurred. Could not send your message.",
       );
       return null;
     } finally {

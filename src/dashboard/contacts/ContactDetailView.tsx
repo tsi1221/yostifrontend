@@ -27,7 +27,8 @@ export default function ContactDetailView() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { role } = useDashboard();
   const listPath = `/${ROLE_SLUG[role]}/contacts`;
-  const { contact, loading, notFound, serverError, retry } = useContactDetail(contactId);
+  const { contact, loading, notFound, serverError, retry } =
+    useContactDetail(contactId);
   const [pendingDelete, setPendingDelete] = useState<number | null>(null);
   const editing = searchParams.get("edit") === "1";
   const whatsapp = contact ? whatsappHref(contact.phoneWhatsapp) : "";
@@ -70,9 +71,13 @@ export default function ContactDetailView() {
 
       {!loading && notFound ? (
         <div className="rounded-2xl border border-red-200 bg-red-50 p-6">
-          <p className="font-medium text-red-800">{CONTACT_NOT_FOUND_MESSAGE}</p>
+          <p className="font-medium text-red-800">
+            {CONTACT_NOT_FOUND_MESSAGE}
+          </p>
           <div className="mt-4">
-            <ActionButton onClick={() => navigate(listPath)}>Back to inbox</ActionButton>
+            <ActionButton onClick={() => navigate(listPath)}>
+              Back to inbox
+            </ActionButton>
           </div>
         </div>
       ) : null}
@@ -94,13 +99,17 @@ export default function ContactDetailView() {
               <dt className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
                 Full name
               </dt>
-              <dd className="mt-1 text-sm font-medium text-[#0F3952]">{contact.fullname}</dd>
+              <dd className="mt-1 text-sm font-medium text-[#0F3952]">
+                {contact.fullname}
+              </dd>
             </div>
             <div>
               <dt className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
                 Topic
               </dt>
-              <dd className="mt-1 text-sm text-slate-700">{contact.topic || "—"}</dd>
+              <dd className="mt-1 text-sm text-slate-700">
+                {contact.topic || "—"}
+              </dd>
             </div>
             <div>
               <dt className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
@@ -131,7 +140,9 @@ export default function ContactDetailView() {
                     <ExternalLink size={14} />
                   </a>
                 ) : (
-                  <span className="text-sm text-slate-500">{contact.phoneWhatsapp || "—"}</span>
+                  <span className="text-sm text-slate-500">
+                    {contact.phoneWhatsapp || "—"}
+                  </span>
                 )}
               </dd>
             </div>

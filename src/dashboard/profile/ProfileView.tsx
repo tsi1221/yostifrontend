@@ -85,7 +85,9 @@ export default function ProfileView() {
         </section>
 
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-[#0F3952]">Account details</h3>
+          <h3 className="text-lg font-semibold text-[#0F3952]">
+            Account details
+          </h3>
           <p className="mt-1 text-sm text-slate-500">
             Email and role stay with the account. Update the contact fields you
             registered with.
@@ -112,7 +114,9 @@ export default function ProfileView() {
             <Field label="Company name" error={fieldErrors.companyName}>
               <TextInput
                 value={values.companyName}
-                onChange={(event) => setField("companyName", event.target.value)}
+                onChange={(event) =>
+                  setField("companyName", event.target.value)
+                }
                 placeholder="Company or trading name"
                 autoComplete="organization"
               />
@@ -128,7 +132,9 @@ export default function ProfileView() {
             <Field label="Phone / WhatsApp" error={fieldErrors.phoneWhatsapp}>
               <TextInput
                 value={values.phoneWhatsapp}
-                onChange={(event) => setField("phoneWhatsapp", event.target.value)}
+                onChange={(event) =>
+                  setField("phoneWhatsapp", event.target.value)
+                }
                 placeholder="+251 9XX XXX XXX"
                 autoComplete="tel"
               />

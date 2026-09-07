@@ -1,17 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { isQuietListFailure, liveListFailureMessage } from "../apiMessage";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
+import { liveListFailureMessage } from "../apiMessage";
 import { LIVE_DATA_RELOAD_EVENT } from "../auth/liveDataReload";
-import { isSuperAdminSession, recoverSuperAdminAccess } from "../auth/superAdminAccess";
-import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { RolesListQuery, RolesListResponse } from "./types";
 import { DEFAULT_ROLES_QUERY } from "./types";
 import {
   ROLES_INVALIDATE_EVENT,
   RoleRequestError,
   fetchRolesList,
-  isPreviewAccessToken,
 } from "./api";
 
 const EMPTY_RESPONSE: RolesListResponse = {
@@ -48,7 +47,7 @@ export function useRolesList() {
       search,
       name,
     }),
-    [filters.page, filters.pageSize, search, name]
+    [filters.page, filters.pageSize, search, name],
   );
 
   const load = useCallback(async () => {
@@ -59,37 +58,14 @@ export function useRolesList() {
       const payload = await fetchRolesList(query);
       setResponse(payload);
     } catch (cause) {
-      if (cause instanceof RoleRequestError && cause.status === 403 && isSuperAdminSession()) {
-        const recovered = await recoverSuperAdminAccess();
-        if (recovered) {
-          try {
-            const payload = await fetchRolesList(query);
-            setResponse(payload);
-            return;
-          } catch {
-            // Super Admin still cannot read roles after the grant.
-          }
-          setResponse(EMPTY_RESPONSE);
-          setServerError(liveListFailureMessage(cause, "roles"));
-          return;
-        }
+      if (cause instanceof RoleRequestError && cause.status === 403) {
         setResponse(EMPTY_RESPONSE);
+        setServerError(FORBIDDEN_MESSAGE);
         return;
       }
 
       if (cause instanceof RoleRequestError && cause.status === 401) {
-        setResponse(null);
-        if (isPreviewAccessToken(getAccessToken())) {
-          setServerError("Sign in with a live account to load roles.");
-          return;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
-        return;
-      }
-
-      if (isQuietListFailure(cause)) {
-        setResponse(EMPTY_RESPONSE);
+        expireSession(navigate);
         return;
       }
 
@@ -114,7 +90,10 @@ export function useRolesList() {
     };
   }, []);
 
-  const setFilter = <K extends keyof RolesListQuery>(key: K, value: RolesListQuery[K]) => {
+  const setFilter = <K extends keyof RolesListQuery>(
+    key: K,
+    value: RolesListQuery[K],
+  ) => {
     setFilters((current) => ({
       ...current,
       page: key === "page" ? Number(value) : 1,

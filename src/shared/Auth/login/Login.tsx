@@ -3,12 +3,12 @@ import { message } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import {
+  expireSession,
   getAuthUserDashboardPath,
   getStoredAuthUser,
   hasValidAccessToken,
   loginWithPassword,
   persistAuthSession,
-  recoverSuperAdminAccess,
   refreshStoredAuthProfile,
   roleFromAuthUser,
 } from "../../../dashboard/auth";
@@ -56,14 +56,17 @@ export default function Login({ setRole, setEmail }: LoginProps) {
       });
 
       persistAuthSession(payload);
-      const sessionUser = (await refreshStoredAuthProfile()) ?? payload.user;
+      let sessionUser = payload.user;
+      try {
+        sessionUser = (await refreshStoredAuthProfile()) ?? payload.user;
+      } catch {
+        expireSession(navigate);
+        return;
+      }
 
       const role = roleFromAuthUser(sessionUser);
       setRole(role);
       setEmail(sessionUser.email);
-      if (role === "SUPER_ADMIN") {
-        void recoverSuperAdminAccess();
-      }
 
       message.success(`Welcome back, ${sessionUser.fullname}!`);
       navigate(getAuthUserDashboardPath(sessionUser), { replace: true });
@@ -71,7 +74,7 @@ export default function Login({ setRole, setEmail }: LoginProps) {
       message.error(
         error instanceof Error
           ? error.message
-          : "Unable to sign in. Please try again."
+          : "Unable to sign in. Please try again.",
       );
     } finally {
       setLoading(false);

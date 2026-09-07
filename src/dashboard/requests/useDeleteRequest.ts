@@ -2,12 +2,9 @@ import { useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
-import {
-  RequestsRequestError,
-  deleteRequest,
-  isPreviewAccessToken,
-} from "./requestsService";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
+import { RequestsRequestError, deleteRequest } from "./requestsService";
 
 export function useDeleteRequest() {
   const navigate = useNavigate();
@@ -22,19 +19,19 @@ export function useDeleteRequest() {
       return true;
     } catch (cause) {
       if (cause instanceof RequestsRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          message.error("Sign in with a live Super Admin account to delete this request.");
-          return false;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
+        return false;
+      }
+
+      if (cause instanceof RequestsRequestError && cause.status === 403) {
+        message.error(FORBIDDEN_MESSAGE);
         return false;
       }
 
       message.error(
         cause instanceof Error
           ? cause.message
-          : "Server error occurred. Could not delete request."
+          : "Server error occurred. Could not delete request.",
       );
       return false;
     } finally {

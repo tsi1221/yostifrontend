@@ -16,7 +16,9 @@ export default function ShipmentsPage() {
         title="Shipments"
         description="Search, filter, and page through live cargo bookings."
         actions={
-          <ActionButton onClick={() => navigate(`/${ROLE_SLUG[role]}/logistics/new`)}>
+          <ActionButton
+            onClick={() => navigate(`/${ROLE_SLUG[role]}/logistics/new`)}
+          >
             New shipment
           </ActionButton>
         }

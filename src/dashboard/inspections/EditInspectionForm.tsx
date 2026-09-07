@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 
 import ActionButton from "../components/ActionButton";
-import { CheckboxRow, Field, SelectInput, TextInput } from "../components/FormField";
+import {
+  CheckboxRow,
+  Field,
+  SelectInput,
+  TextInput,
+} from "../components/FormField";
 import { inspectionToFormValues } from "./inspectionsService";
 import type {
   InspectionRecord,
@@ -22,9 +27,11 @@ export default function EditInspectionForm({
   onCancel,
   onSaved,
 }: EditInspectionFormProps) {
-  const { updateInspection, saving, fieldErrors } = useUpdateInspection(inspection.id);
+  const { updateInspection, saving, fieldErrors } = useUpdateInspection(
+    inspection.id,
+  );
   const [values, setValues] = useState<UpdateInspectionFormValues>(() =>
-    inspectionToFormValues(inspection)
+    inspectionToFormValues(inspection),
   );
 
   useEffect(() => {
@@ -33,7 +40,7 @@ export default function EditInspectionForm({
 
   const setField = <K extends keyof UpdateInspectionFormValues>(
     key: K,
-    value: UpdateInspectionFormValues[K]
+    value: UpdateInspectionFormValues[K],
   ) => {
     setValues((current) => ({ ...current, [key]: value }));
   };
@@ -61,9 +68,7 @@ export default function EditInspectionForm({
             value={values.supplierId}
             onChange={(event) => setField("supplierId", event.target.value)}
           />
-          <p className="text-xs text-slate-400">
-            Sent as an integer, e.g. 4.
-          </p>
+          <p className="text-xs text-slate-400">Sent as an integer, e.g. 4.</p>
         </Field>
         <Field label="Product type" error={fieldErrors.productType}>
           <TextInput

@@ -1,4 +1,3 @@
-import { isSuperAdminSession } from "../auth/superAdminAccess";
 import ActionButton from "../components/ActionButton";
 import { SelectInput, TextInput } from "../components/FormField";
 import type { ManagedUser } from "./types";
@@ -47,7 +46,7 @@ export default function UsersTable() {
     retry,
   } = useUsersList();
 
-  if (forbidden && !isSuperAdminSession()) {
+  if (forbidden || restricted) {
     return (
       <section className="rounded-2xl border border-red-200 bg-red-50 px-6 py-16 text-center">
         <p className="text-lg font-semibold text-red-700">Access Denied</p>
@@ -80,7 +79,7 @@ export default function UsersTable() {
             onChange={(event) =>
               setFilter(
                 "roleId",
-                event.target.value ? Number(event.target.value) : ""
+                event.target.value ? Number(event.target.value) : "",
               )
             }
           >
@@ -124,7 +123,10 @@ export default function UsersTable() {
 
               {!loading && !error && users.length === 0 ? (
                 <tr>
-                  <td colSpan={COLUMNS} className="px-4 py-12 text-center text-sm text-slate-500">
+                  <td
+                    colSpan={COLUMNS}
+                    className="px-4 py-12 text-center text-sm text-slate-500"
+                  >
                     No users match the current filters.
                   </td>
                 </tr>

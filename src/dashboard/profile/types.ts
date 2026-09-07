@@ -5,7 +5,9 @@ export interface ProfileFormValues {
   phoneWhatsapp: string;
 }
 
-export type ProfileFieldErrors = Partial<Record<keyof ProfileFormValues, string>>;
+export type ProfileFieldErrors = Partial<
+  Record<keyof ProfileFormValues, string>
+>;
 
 export interface ProfileUpdatePayload {
   fullname: string;

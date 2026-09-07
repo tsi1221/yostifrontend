@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { isQuietListFailure, liveListFailureMessage } from "../apiMessage";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
+import { liveListFailureMessage } from "../apiMessage";
 import { LIVE_DATA_RELOAD_EVENT } from "../auth/liveDataReload";
-import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { TripsListQuery, TripsListResponse } from "./types";
 import { DEFAULT_TRIPS_QUERY } from "./types";
 import {
   TRIPS_INVALIDATE_EVENT,
   TripsRequestError,
   fetchTripsList,
-  isPreviewAccessToken,
 } from "./tripsService";
 
 const EMPTY_RESPONSE: TripsListResponse = {
@@ -53,7 +53,7 @@ export function useTripsList() {
       arrivalCity,
       status: filters.status,
     }),
-    [arrivalCity, filters.page, filters.pageSize, filters.status, search]
+    [arrivalCity, filters.page, filters.pageSize, filters.status, search],
   );
 
   const load = useCallback(async () => {
@@ -65,19 +65,13 @@ export function useTripsList() {
       setResponse(payload);
     } catch (cause) {
       if (cause instanceof TripsRequestError && cause.status === 401) {
-        setResponse(null);
-
-        if (isPreviewAccessToken(getAccessToken())) {
-          setServerError("Sign in with a live account to load trips.");
-          return;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
         return;
       }
 
-      if (isQuietListFailure(cause)) {
+      if (cause instanceof TripsRequestError && cause.status === 403) {
         setResponse(EMPTY_RESPONSE);
+        setServerError(FORBIDDEN_MESSAGE);
         return;
       }
 
@@ -104,7 +98,7 @@ export function useTripsList() {
 
   const setFilter = <K extends keyof TripsListQuery>(
     key: K,
-    value: TripsListQuery[K]
+    value: TripsListQuery[K],
   ) => {
     setFilters((current) => ({
       ...current,

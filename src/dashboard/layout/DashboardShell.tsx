@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -11,13 +11,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 
-import {
-  clearAuthSession,
-  getStoredAuthUser,
-  installSuperAdminAccessFixes,
-  recoverSuperAdminAccess,
-  roleFromAuthUser,
-} from "../auth";
+import { clearAuthSession, getStoredAuthUser, roleFromAuthUser } from "../auth";
 import { ROLE_LABEL, ROLE_SLUG, getNavigation } from "../roles";
 import { useDashboard } from "../store";
 import type { UserRole } from "../types";
@@ -27,18 +21,14 @@ interface DashboardShellProps {
   children: ReactNode;
 }
 
-export default function DashboardShell({ role, children }: DashboardShellProps) {
+export default function DashboardShell({
+  role,
+  children,
+}: DashboardShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { user, snapshot } = useDashboard();
-
-  useEffect(() => {
-    installSuperAdminAccessFixes();
-    void recoverSuperAdminAccess();
-  }, []);
-  const alerts =
-    snapshot.support_requests.filter((row) => row.status === "open").length +
-    snapshot.verifications.filter((row) => row.status === "pending").length;
+  const { user } = useDashboard();
+  const alerts = 0;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -50,7 +40,9 @@ export default function DashboardShell({ role, children }: DashboardShellProps) 
         onMobileClose={() => setMobileOpen(false)}
       />
 
-      <div className={`flex min-h-screen flex-col ${collapsed ? "lg:pl-20" : "lg:pl-[280px]"}`}>
+      <div
+        className={`flex min-h-screen flex-col ${collapsed ? "lg:pl-20" : "lg:pl-[280px]"}`}
+      >
         <TopBar
           role={role}
           userName={user.full_name}
@@ -172,7 +164,9 @@ function Sidebar({
 }) {
   const location = useLocation();
   const groups = getNavigation(role);
-  const [openGroup, setOpenGroup] = useState<string | null>(groups[1]?.label ?? null);
+  const [openGroup, setOpenGroup] = useState<string | null>(
+    groups[1]?.label ?? null,
+  );
 
   return (
     <>
@@ -233,7 +227,7 @@ function Sidebar({
             }
 
             const childActive = group.children?.some((child) =>
-              location.pathname.startsWith(child.path)
+              location.pathname.startsWith(child.path),
             );
             const expanded = openGroup === group.label || childActive;
 
@@ -241,11 +235,11 @@ function Sidebar({
               <div key={group.label}>
                 <button
                   type="button"
-                  onClick={() =>
-                    setOpenGroup(expanded ? null : group.label)
-                  }
+                  onClick={() => setOpenGroup(expanded ? null : group.label)}
                   className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium ${
-                    childActive ? "text-[#FDC700]" : "text-white/80 hover:bg-white/5"
+                    childActive
+                      ? "text-[#FDC700]"
+                      : "text-white/80 hover:bg-white/5"
                   }`}
                 >
                   <Icon size={18} />

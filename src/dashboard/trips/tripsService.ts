@@ -2,7 +2,6 @@ import { TRIPS_URL } from "../auth/endpoints";
 import { getAccessToken } from "../auth/session";
 import { buildListQueryVariants, fetchAuthorizedList } from "../http";
 import { extractListRows, pickEntityId } from "../listResponse";
-import { isPreviewAccessToken } from "../users/usersService";
 import type {
   CreateTripPayload,
   TripFieldErrors,
@@ -17,8 +16,6 @@ import type {
 } from "./types";
 import { TRIP_STATUS_VALUES, TRIP_UPDATE_STATUS_VALUES } from "./types";
 
-export { isPreviewAccessToken };
-
 export class TripsRequestError extends Error {
   status: number;
   fields?: TripFieldErrors;
@@ -32,7 +29,9 @@ export class TripsRequestError extends Error {
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : null;
 }
 
 function pickString(...values: unknown[]) {
@@ -122,7 +121,7 @@ function parseFieldErrors(raw: unknown): TripFieldErrors {
 
   for (const item of items) {
     const key = FIELD_KEYS.find((field) =>
-      item.toLowerCase().includes(field.toLowerCase())
+      item.toLowerCase().includes(field.toLowerCase()),
     );
     if (key && !fields[key]) {
       fields[key] = item;
@@ -201,7 +200,9 @@ export function tripToFormValues(trip: TripRecord): UpdateTripFormValues {
   };
 }
 
-export function validateUpdateTripForm(values: UpdateTripFormValues): TripFieldErrors {
+export function validateUpdateTripForm(
+  values: UpdateTripFormValues,
+): TripFieldErrors {
   const errors: TripFieldErrors = {};
   if (!values.arrivalCity.trim()) {
     errors.arrivalCity = "Arrival city is required.";
@@ -225,7 +226,7 @@ export function validateUpdateTripForm(values: UpdateTripFormValues): TripFieldE
 }
 
 export function updateFormValuesToPayload(
-  values: UpdateTripFormValues
+  values: UpdateTripFormValues,
 ): UpdateTripPayload {
   return {
     arrivalCity: values.arrivalCity.trim(),
@@ -283,23 +284,37 @@ export function normalizeTrip(raw: unknown): TripRecord | null {
     record.destinationCity,
     record.destination_city,
     record.destination,
-    record.city
+    record.city,
   );
   if (id === undefined) {
     return null;
   }
 
   const user = asRecord(record.user);
-  const duration = pickText(record.duration, record.durationDays, record.duration_days);
+  const duration = pickText(
+    record.duration,
+    record.durationDays,
+    record.duration_days,
+  );
 
   return {
     id,
     userId:
-      pickNumber(record.userId, record.user_id, user?.id, user?.userId, user?.user_id) ?? 0,
+      pickNumber(
+        record.userId,
+        record.user_id,
+        user?.id,
+        user?.userId,
+        user?.user_id,
+      ) ?? 0,
     arrivalCity,
     duration: formatDuration(duration) || duration,
     hotel: pickText(record.hotel, record.hotelBooking, record.hotel_booking),
-    transport: pickText(record.transport, record.transportBooking, record.transport_booking),
+    transport: pickText(
+      record.transport,
+      record.transportBooking,
+      record.transport_booking,
+    ),
     translator: pickText(record.translator),
     status: pickString(record.status) || "planned",
   };
@@ -307,7 +322,7 @@ export function normalizeTrip(raw: unknown): TripRecord | null {
 
 function normalizeTripsResponse(
   raw: unknown,
-  query: TripsListQuery
+  query: TripsListQuery,
 ): TripsListResponse {
   const record = asRecord(raw);
   const nested = asRecord(record?.data);
@@ -318,11 +333,16 @@ function normalizeTripsResponse(
     .map((row) => normalizeTrip(row))
     .filter((row): row is TripRecord => Boolean(row));
 
-  const total = pickNumber(meta?.total, record?.total, nested?.total) ?? data.length;
+  const total =
+    pickNumber(meta?.total, record?.total, nested?.total) ?? data.length;
   const page = pickNumber(meta?.page, record?.page, nested?.page) ?? query.page;
   const pageSize =
-    pickNumber(meta?.pageSize, record?.pageSize, record?.limit, nested?.pageSize) ??
-    query.pageSize;
+    pickNumber(
+      meta?.pageSize,
+      record?.pageSize,
+      record?.limit,
+      nested?.pageSize,
+    ) ?? query.pageSize;
   const totalPages =
     pickNumber(meta?.totalPages, record?.totalPages, nested?.totalPages) ??
     Math.max(1, Math.ceil(total / Math.max(pageSize, 1)));
@@ -333,7 +353,9 @@ function normalizeTripsResponse(
   };
 }
 
-export async function fetchTripsList(query: TripsListQuery): Promise<TripsListResponse> {
+export async function fetchTripsList(
+  query: TripsListQuery,
+): Promise<TripsListResponse> {
   if (!getAccessToken()) {
     throw new TripsRequestError("Unauthorized", 401);
   }
@@ -344,11 +366,14 @@ export async function fetchTripsList(query: TripsListQuery): Promise<TripsListRe
       search: query.search.trim() || undefined,
       arrivalCity: query.arrivalCity.trim() || undefined,
       status: query.status || undefined,
-    })
+    }),
   );
 
   if (result.status === 400) {
-    throw new TripsRequestError(readApiMessage(result.data, "Invalid trip filters."), 400);
+    throw new TripsRequestError(
+      readApiMessage(result.data, "Invalid trip filters."),
+      400,
+    );
   }
   if (result.status === 401) {
     throw new TripsRequestError("Unauthorized", 401);
@@ -356,13 +381,16 @@ export async function fetchTripsList(query: TripsListQuery): Promise<TripsListRe
   if (result.status >= 500) {
     throw new TripsRequestError(
       readApiMessage(result.data, "The server could not load trips."),
-      result.status
+      result.status,
     );
   }
   if (!result.ok) {
     throw new TripsRequestError(
-      readApiMessage(result.data, `Unable to load trips. Server returned ${result.status}.`),
-      result.status
+      readApiMessage(
+        result.data,
+        `Unable to load trips. Server returned ${result.status}.`,
+      ),
+      result.status,
     );
   }
 
@@ -416,7 +444,7 @@ export async function fetchTrip(id: number): Promise<TripRecord> {
   if (!Number.isInteger(id) || id <= 0) {
     throw new TripsRequestError(
       "This trip itinerary could not be found or has been removed.",
-      404
+      404,
     );
   }
 
@@ -432,14 +460,17 @@ export async function fetchTrip(id: number): Promise<TripRecord> {
   } catch {
     throw new TripsRequestError(
       "Unable to reach the server. Check your connection and try again.",
-      0
+      0,
     );
   }
 
   const raw: unknown = await response.json().catch(() => null);
 
   if (response.status === 400) {
-    throw new TripsRequestError(readApiMessage(raw, "The trip ID format is invalid."), 400);
+    throw new TripsRequestError(
+      readApiMessage(raw, "The trip ID format is invalid."),
+      400,
+    );
   }
   if (response.status === 401) {
     throw new TripsRequestError("Unauthorized", 401);
@@ -447,19 +478,22 @@ export async function fetchTrip(id: number): Promise<TripRecord> {
   if (response.status === 404) {
     throw new TripsRequestError(
       "This trip itinerary could not be found or has been removed.",
-      404
+      404,
     );
   }
   if (response.status >= 500) {
     throw new TripsRequestError(
       readApiMessage(raw, "The server could not load this trip itinerary."),
-      response.status
+      response.status,
     );
   }
   if (!response.ok) {
     throw new TripsRequestError(
-      readApiMessage(raw, `Unable to load this trip itinerary. Server returned ${response.status}.`),
-      response.status
+      readApiMessage(
+        raw,
+        `Unable to load this trip itinerary. Server returned ${response.status}.`,
+      ),
+      response.status,
     );
   }
 
@@ -470,13 +504,18 @@ export async function fetchTrip(id: number): Promise<TripRecord> {
     normalizeTrip(record?.trip);
 
   if (!payload) {
-    throw new TripsRequestError("The server returned an incomplete trip itinerary.", 500);
+    throw new TripsRequestError(
+      "The server returned an incomplete trip itinerary.",
+      500,
+    );
   }
 
   return payload;
 }
 
-export async function createTrip(payload: CreateTripPayload): Promise<TripRecord> {
+export async function createTrip(
+  payload: CreateTripPayload,
+): Promise<TripRecord> {
   const token = getAccessToken();
   if (!token) {
     throw new TripsRequestError("Unauthorized", 401);
@@ -496,7 +535,7 @@ export async function createTrip(payload: CreateTripPayload): Promise<TripRecord
   } catch {
     throw new TripsRequestError(
       "Unable to reach the server. Check your connection and try again.",
-      0
+      0,
     );
   }
 
@@ -504,9 +543,12 @@ export async function createTrip(payload: CreateTripPayload): Promise<TripRecord
 
   if (response.status === 400) {
     throw new TripsRequestError(
-      readApiMessage(raw, "Unable to create this trip. Check the highlighted fields."),
+      readApiMessage(
+        raw,
+        "Unable to create this trip. Check the highlighted fields.",
+      ),
       400,
-      parseFieldErrors(raw)
+      parseFieldErrors(raw),
     );
   }
   if (response.status === 401) {
@@ -515,19 +557,22 @@ export async function createTrip(payload: CreateTripPayload): Promise<TripRecord
   if (response.status === 409) {
     throw new TripsRequestError(
       "A duplicate trip record already exists for this destination with the same status.",
-      409
+      409,
     );
   }
   if (response.status >= 500) {
     throw new TripsRequestError(
       readApiMessage(raw, "Server error occurred. Could not create trip."),
-      response.status
+      response.status,
     );
   }
   if (response.status !== 200 && response.status !== 201) {
     throw new TripsRequestError(
-      readApiMessage(raw, `Unable to create trip. Server returned ${response.status}.`),
-      response.status
+      readApiMessage(
+        raw,
+        `Unable to create trip. Server returned ${response.status}.`,
+      ),
+      response.status,
     );
   }
 
@@ -546,7 +591,7 @@ export async function createTrip(payload: CreateTripPayload): Promise<TripRecord
 
 export async function patchTrip(
   id: number,
-  payload: UpdateTripPayload
+  payload: UpdateTripPayload,
 ): Promise<TripRecord> {
   const token = getAccessToken();
   if (!token) {
@@ -571,7 +616,7 @@ export async function patchTrip(
   } catch {
     throw new TripsRequestError(
       "Unable to reach the server. Check your connection and try again.",
-      0
+      0,
     );
   }
 
@@ -579,9 +624,12 @@ export async function patchTrip(
 
   if (response.status === 400) {
     throw new TripsRequestError(
-      readApiMessage(raw, "Unable to save this trip. Check the highlighted fields."),
+      readApiMessage(
+        raw,
+        "Unable to save this trip. Check the highlighted fields.",
+      ),
       400,
-      parseFieldErrors(raw)
+      parseFieldErrors(raw),
     );
   }
   if (response.status === 401) {
@@ -590,25 +638,28 @@ export async function patchTrip(
   if (response.status === 404) {
     throw new TripsRequestError(
       "This trip could not be found or has been removed.",
-      404
+      404,
     );
   }
   if (response.status === 409) {
     throw new TripsRequestError(
       "This update conflicts with an existing trip record matching the same destination and status.",
-      409
+      409,
     );
   }
   if (response.status >= 500) {
     throw new TripsRequestError(
       readApiMessage(raw, "Server error occurred. Could not update trip."),
-      response.status
+      response.status,
     );
   }
   if (!response.ok) {
     throw new TripsRequestError(
-      readApiMessage(raw, `Unable to update trip. Server returned ${response.status}.`),
-      response.status
+      readApiMessage(
+        raw,
+        `Unable to update trip. Server returned ${response.status}.`,
+      ),
+      response.status,
     );
   }
 
@@ -649,7 +700,7 @@ export async function deleteTrip(id: number): Promise<string> {
   } catch {
     throw new TripsRequestError(
       "Unable to reach the server. Check your connection and try again.",
-      0
+      0,
     );
   }
 
@@ -658,7 +709,7 @@ export async function deleteTrip(id: number): Promise<string> {
   if (response.status === 400) {
     throw new TripsRequestError(
       readApiMessage(raw, "The trip ID format is invalid."),
-      400
+      400,
     );
   }
   if (response.status === 401) {
@@ -667,22 +718,22 @@ export async function deleteTrip(id: number): Promise<string> {
   if (response.status === 404) {
     throw new TripsRequestError(
       "This trip record does not exist or has already been removed.",
-      404
+      404,
     );
   }
   if (response.status >= 500) {
     throw new TripsRequestError(
       readApiMessage(raw, "Server error occurred. Could not delete trip."),
-      response.status
+      response.status,
     );
   }
   if (response.status !== 200) {
     throw new TripsRequestError(
       readApiMessage(
         raw,
-        `Unable to delete this trip itinerary. Server returned ${response.status}.`
+        `Unable to delete this trip itinerary. Server returned ${response.status}.`,
       ),
-      response.status
+      response.status,
     );
   }
 

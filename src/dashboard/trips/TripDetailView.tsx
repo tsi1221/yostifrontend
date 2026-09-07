@@ -115,7 +115,9 @@ export default function TripDetailView() {
         </ActionButton>
         {trip ? (
           <div className="flex gap-2">
-            <ActionButton onClick={() => setEditing(true)}>Edit itinerary</ActionButton>
+            <ActionButton onClick={() => setEditing(true)}>
+              Edit itinerary
+            </ActionButton>
             <button
               type="button"
               className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
@@ -132,7 +134,9 @@ export default function TripDetailView() {
 
       {!loading && notFound ? (
         <section className="rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
-          <p className="text-lg font-semibold text-[#0F3952]">Itinerary not found</p>
+          <p className="text-lg font-semibold text-[#0F3952]">
+            Itinerary not found
+          </p>
           <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
             This trip itinerary could not be found or has been removed.
           </p>
@@ -147,7 +151,9 @@ export default function TripDetailView() {
           <p className="text-lg font-semibold text-[#0F3952]">
             Unable to load trip details
           </p>
-          <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">{serverError}</p>
+          <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
+            {serverError}
+          </p>
           <ActionButton className="mt-5" onClick={retry}>
             Retry Connection
           </ActionButton>

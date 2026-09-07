@@ -2,13 +2,13 @@ import { useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
 import type { ShipmentFieldErrors, ShipmentFormValues } from "./types";
 import {
   ShipmentsRequestError,
   createShipment,
   formValuesToPayload,
-  isPreviewAccessToken,
   validateShipmentForm,
 } from "./shipmentsService";
 
@@ -41,12 +41,12 @@ export function useCreateShipment() {
       }
 
       if (cause instanceof ShipmentsRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          message.error("Sign in with a live account to create a shipment.");
-          return null;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
+        return null;
+      }
+
+      if (cause instanceof ShipmentsRequestError && cause.status === 403) {
+        message.error(FORBIDDEN_MESSAGE);
         return null;
       }
 
@@ -58,7 +58,7 @@ export function useCreateShipment() {
       message.error(
         cause instanceof Error
           ? cause.message
-          : "Server error occurred. Could not create shipment."
+          : "Server error occurred. Could not create shipment.",
       );
       return null;
     } finally {

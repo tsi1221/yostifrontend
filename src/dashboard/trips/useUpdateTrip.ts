@@ -2,11 +2,11 @@ import { useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
 import type { TripFieldErrors, UpdateTripFormValues } from "./types";
 import {
   TripsRequestError,
-  isPreviewAccessToken,
   patchTrip,
   updateFormValuesToPayload,
   validateUpdateTripForm,
@@ -41,12 +41,12 @@ export function useUpdateTrip(id: number) {
       }
 
       if (cause instanceof TripsRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          message.error("Sign in with a live account to update this trip.");
-          return null;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
+        return null;
+      }
+
+      if (cause instanceof TripsRequestError && cause.status === 403) {
+        message.error(FORBIDDEN_MESSAGE);
         return null;
       }
 
@@ -63,7 +63,7 @@ export function useUpdateTrip(id: number) {
       message.error(
         cause instanceof Error
           ? cause.message
-          : "Server error occurred. Could not update trip."
+          : "Server error occurred. Could not update trip.",
       );
       return null;
     } finally {

@@ -23,7 +23,6 @@ export {
   invalidateFilesCache,
   isAllowedFile,
   isImageMime,
-  isPreviewAccessToken,
   normalizeUploadedFile,
   resolveFileUrl,
   uploadFile,

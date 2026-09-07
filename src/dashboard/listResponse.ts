@@ -30,13 +30,22 @@ const ROW_KEYS = [
   "inspections",
 ] as const;
 
-const NEST_KEYS = ["data", "result", "payload", "content", "body", "meta"] as const;
+const NEST_KEYS = [
+  "data",
+  "result",
+  "payload",
+  "content",
+  "body",
+  "meta",
+] as const;
 
 function isObjectRowArray(value: unknown): value is unknown[] {
   return (
     Array.isArray(value) &&
     (value.length === 0 ||
-      value.every((item) => item && typeof item === "object" && !Array.isArray(item)))
+      value.every(
+        (item) => item && typeof item === "object" && !Array.isArray(item),
+      ))
   );
 }
 

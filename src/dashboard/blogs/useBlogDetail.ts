@@ -2,17 +2,20 @@ import { useCallback, useEffect, useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
+import { expireSession } from "../auth/sessionExpiry";
+
 import type { BlogPost } from "./types";
 import {
   BLOGS_INVALIDATE_EVENT,
   BlogRequestError,
   asBlogId,
   fetchBlog,
-  isPreviewAccessToken,
 } from "./api";
 
-export function useBlogDetail(id: string | undefined, options?: { publicFeed?: boolean }) {
+export function useBlogDetail(
+  id: string | undefined,
+  options?: { publicFeed?: boolean },
+) {
   const navigate = useNavigate();
   const publicFeed = options?.publicFeed === true;
   const [blog, setBlog] = useState<BlogPost | null>(null);
@@ -42,12 +45,11 @@ export function useBlogDetail(id: string | undefined, options?: { publicFeed?: b
       setBlog(null);
 
       if (cause instanceof BlogRequestError && cause.status === 401) {
-        if (publicFeed || isPreviewAccessToken(getAccessToken())) {
-          setServerError("Sign in with a live account to load this blog post.");
+        if (publicFeed) {
+          setServerError("Sign in to load this content.");
           return;
         }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
         return;
       }
 
@@ -57,7 +59,9 @@ export function useBlogDetail(id: string | undefined, options?: { publicFeed?: b
       }
 
       const text =
-        cause instanceof Error ? cause.message : "The server could not load this blog post.";
+        cause instanceof Error
+          ? cause.message
+          : "The server could not load this blog post.";
       message.error(text);
       setServerError(text);
     } finally {

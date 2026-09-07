@@ -3,7 +3,6 @@ import { INSPECTIONS_URL } from "../auth/endpoints";
 import { getAccessToken } from "../auth/session";
 import { buildListQueryVariants, fetchAuthorizedList } from "../http";
 import { extractListRows, pickEntityId } from "../listResponse";
-import { isPreviewAccessToken } from "../users/usersService";
 import type {
   CreateInspectionPayload,
   InspectionFieldErrors,
@@ -16,8 +15,6 @@ import type {
   UpdateInspectionPayload,
 } from "./types";
 import { INSPECTION_TYPE_VALUES, INSPECTION_UPDATE_TYPE_VALUES } from "./types";
-
-export { isPreviewAccessToken };
 
 export class InspectionsRequestError extends Error {
   status: number;
@@ -32,7 +29,9 @@ export class InspectionsRequestError extends Error {
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : null;
 }
 
 function pickString(...values: unknown[]) {
@@ -115,7 +114,7 @@ function parseFieldErrors(raw: unknown): InspectionFieldErrors {
 
   for (const item of items) {
     const key = FIELD_KEYS.find((field) =>
-      item.toLowerCase().includes(field.toLowerCase())
+      item.toLowerCase().includes(field.toLowerCase()),
     );
     if (key && !fields[key]) {
       fields[key] = item;
@@ -146,7 +145,7 @@ export function localDateTimeToIso(value: string): string {
 }
 
 export function validateInspectionForm(
-  values: InspectionFormValues
+  values: InspectionFormValues,
 ): InspectionFieldErrors {
   const errors: InspectionFieldErrors = {};
   if (parseSupplierId(values.supplierId) === undefined) {
@@ -165,7 +164,7 @@ export function validateInspectionForm(
 }
 
 export function formValuesToPayload(
-  values: InspectionFormValues
+  values: InspectionFormValues,
 ): CreateInspectionPayload {
   return {
     supplierId: parseSupplierId(values.supplierId) ?? 0,
@@ -188,14 +187,16 @@ export function isoToLocalDateTime(value: string): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-export function asUpdateInspectionType(value: string): InspectionUpdateTypeValue {
+export function asUpdateInspectionType(
+  value: string,
+): InspectionUpdateTypeValue {
   return value.trim().toLowerCase() === "factory visit"
     ? "factory visit"
     : "Preshipment";
 }
 
 export function inspectionToFormValues(
-  inspection: InspectionRecord
+  inspection: InspectionRecord,
 ): UpdateInspectionFormValues {
   return {
     supplierId: String(inspection.supplierId),
@@ -207,7 +208,7 @@ export function inspectionToFormValues(
 }
 
 export function validateUpdateInspectionForm(
-  values: UpdateInspectionFormValues
+  values: UpdateInspectionFormValues,
 ): InspectionFieldErrors {
   const errors: InspectionFieldErrors = {};
   if (parseSupplierId(values.supplierId) === undefined) {
@@ -226,10 +227,12 @@ export function validateUpdateInspectionForm(
 }
 
 export function updateFormValuesToPayload(
-  values: UpdateInspectionFormValues
+  values: UpdateInspectionFormValues,
 ): UpdateInspectionPayload {
   return {
-    supplierId: parseSupplierId(values.supplierId) ?? Number.parseInt(values.supplierId, 10),
+    supplierId:
+      parseSupplierId(values.supplierId) ??
+      Number.parseInt(values.supplierId, 10),
     productType: values.productType.trim(),
     type: values.type,
     date: localDateTimeToIso(values.date),
@@ -277,7 +280,9 @@ export function formatInspectionDate(value: string) {
   return `${datePart} - ${timePart}`;
 }
 
-export function parseInspectionId(value: string | undefined): number | undefined {
+export function parseInspectionId(
+  value: string | undefined,
+): number | undefined {
   if (!value) {
     return undefined;
   }
@@ -328,7 +333,7 @@ export function buildInspectionsQueryString(query: InspectionsListQuery) {
 
 function normalizeInspectionsResponse(
   raw: unknown,
-  query: InspectionsListQuery
+  query: InspectionsListQuery,
 ): InspectionsListResponse {
   const record = asRecord(raw);
   const nested = asRecord(record?.data);
@@ -339,11 +344,16 @@ function normalizeInspectionsResponse(
     .map((row) => normalizeInspection(row))
     .filter((row): row is InspectionRecord => Boolean(row));
 
-  const total = pickNumber(meta?.total, record?.total, nested?.total) ?? data.length;
+  const total =
+    pickNumber(meta?.total, record?.total, nested?.total) ?? data.length;
   const page = pickNumber(meta?.page, record?.page, nested?.page) ?? query.page;
   const pageSize =
-    pickNumber(meta?.pageSize, record?.pageSize, record?.limit, nested?.pageSize) ??
-    query.pageSize;
+    pickNumber(
+      meta?.pageSize,
+      record?.pageSize,
+      record?.limit,
+      nested?.pageSize,
+    ) ?? query.pageSize;
   const totalPages =
     pickNumber(meta?.totalPages, record?.totalPages, nested?.totalPages) ??
     Math.max(1, Math.ceil(total / Math.max(pageSize, 1)));
@@ -355,7 +365,7 @@ function normalizeInspectionsResponse(
 }
 
 export async function fetchInspectionsList(
-  query: InspectionsListQuery
+  query: InspectionsListQuery,
 ): Promise<InspectionsListResponse> {
   if (!getAccessToken()) {
     throw new InspectionsRequestError("Unauthorized", 401);
@@ -369,13 +379,13 @@ export async function fetchInspectionsList(
       productType: query.productType.trim() || undefined,
       photoVideoRequired: query.photoVideoRequired || undefined,
       date: filterDateToIso(query.date) || undefined,
-    })
+    }),
   );
 
   if (result.status === 400) {
     throw new InspectionsRequestError(
       readApiMessage(result.data, "Invalid inspection filters."),
-      400
+      400,
     );
   }
   if (result.status === 401) {
@@ -384,13 +394,16 @@ export async function fetchInspectionsList(
   if (result.status >= 500) {
     throw new InspectionsRequestError(
       readApiMessage(result.data, "The server could not load inspections."),
-      result.status
+      result.status,
     );
   }
   if (!result.ok) {
     throw new InspectionsRequestError(
-      readApiMessage(result.data, `Unable to load inspections. Server returned ${result.status}.`),
-      result.status
+      readApiMessage(
+        result.data,
+        `Unable to load inspections. Server returned ${result.status}.`,
+      ),
+      result.status,
     );
   }
 
@@ -403,7 +416,12 @@ export function normalizeInspection(raw: unknown): InspectionRecord | null {
     return null;
   }
 
-  const id = pickEntityId(record.id, record.inspectionId, record.inspection_id, record._id);
+  const id = pickEntityId(
+    record.id,
+    record.inspectionId,
+    record.inspection_id,
+    record._id,
+  );
   if (id === undefined) {
     return null;
   }
@@ -418,22 +436,24 @@ export function normalizeInspection(raw: unknown): InspectionRecord | null {
       record.productName,
       record.product_name,
       record.title,
-      record.subject
+      record.subject,
     ),
-    type: asInspectionType(pickString(record.type, record.inspectionType, record.inspection_type)),
+    type: asInspectionType(
+      pickString(record.type, record.inspectionType, record.inspection_type),
+    ),
     date: pickString(
       record.date,
       record.scheduledDate,
       record.scheduled_date,
       record.inspectionDate,
       record.inspection_date,
-      record.createdAt
+      record.createdAt,
     ),
     photoVideoRequired:
       pickBoolean(
         record.photoVideoRequired,
         record.photo_video_required,
-        record.mediaRequired
+        record.mediaRequired,
       ) ?? false,
   };
 }
@@ -461,7 +481,7 @@ export async function fetchInspection(id: number): Promise<InspectionRecord> {
   if (!Number.isInteger(id) || id <= 0) {
     throw new InspectionsRequestError(
       "This inspection request could not be found or has been removed.",
-      404
+      404,
     );
   }
 
@@ -477,7 +497,7 @@ export async function fetchInspection(id: number): Promise<InspectionRecord> {
   } catch {
     throw new InspectionsRequestError(
       "Unable to reach the server. Check your connection and try again.",
-      0
+      0,
     );
   }
 
@@ -486,7 +506,7 @@ export async function fetchInspection(id: number): Promise<InspectionRecord> {
   if (response.status === 400) {
     throw new InspectionsRequestError(
       readApiMessage(raw, "The inspection ID format is invalid."),
-      400
+      400,
     );
   }
   if (response.status === 401) {
@@ -495,22 +515,22 @@ export async function fetchInspection(id: number): Promise<InspectionRecord> {
   if (response.status === 404) {
     throw new InspectionsRequestError(
       "This inspection request could not be found or has been removed.",
-      404
+      404,
     );
   }
   if (response.status >= 500) {
     throw new InspectionsRequestError(
       readApiMessage(raw, "The server could not load this inspection request."),
-      response.status
+      response.status,
     );
   }
   if (!response.ok) {
     throw new InspectionsRequestError(
       readApiMessage(
         raw,
-        `Unable to load this inspection request. Server returned ${response.status}.`
+        `Unable to load this inspection request. Server returned ${response.status}.`,
       ),
-      response.status
+      response.status,
     );
   }
 
@@ -523,7 +543,7 @@ export async function fetchInspection(id: number): Promise<InspectionRecord> {
   if (!payload) {
     throw new InspectionsRequestError(
       "The server returned an incomplete inspection request.",
-      500
+      500,
     );
   }
 
@@ -531,7 +551,7 @@ export async function fetchInspection(id: number): Promise<InspectionRecord> {
 }
 
 export async function createInspection(
-  payload: CreateInspectionPayload
+  payload: CreateInspectionPayload,
 ): Promise<InspectionRecord> {
   const token = getAccessToken();
   if (!token) {
@@ -552,7 +572,7 @@ export async function createInspection(
   } catch {
     throw new InspectionsRequestError(
       "Unable to reach the server. Check your connection and try again.",
-      0
+      0,
     );
   }
 
@@ -560,9 +580,12 @@ export async function createInspection(
 
   if (response.status === 400) {
     throw new InspectionsRequestError(
-      readApiMessage(raw, "Unable to create this inspection. Check the highlighted fields."),
+      readApiMessage(
+        raw,
+        "Unable to create this inspection. Check the highlighted fields.",
+      ),
       400,
-      parseFieldErrors(raw)
+      parseFieldErrors(raw),
     );
   }
   if (response.status === 401) {
@@ -570,14 +593,20 @@ export async function createInspection(
   }
   if (response.status >= 500) {
     throw new InspectionsRequestError(
-      readApiMessage(raw, "Server error occurred. Could not create inspection."),
-      response.status
+      readApiMessage(
+        raw,
+        "Server error occurred. Could not create inspection.",
+      ),
+      response.status,
     );
   }
   if (response.status !== 200 && response.status !== 201) {
     throw new InspectionsRequestError(
-      readApiMessage(raw, `Unable to create inspection. Server returned ${response.status}.`),
-      response.status
+      readApiMessage(
+        raw,
+        `Unable to create inspection. Server returned ${response.status}.`,
+      ),
+      response.status,
     );
   }
 
@@ -587,7 +616,10 @@ export async function createInspection(
     normalizeInspection(asRecord(raw)?.inspection);
 
   if (!created) {
-    throw new InspectionsRequestError("The server returned an incomplete inspection.", 500);
+    throw new InspectionsRequestError(
+      "The server returned an incomplete inspection.",
+      500,
+    );
   }
 
   invalidateInspectionsCache();
@@ -596,7 +628,7 @@ export async function createInspection(
 
 export async function patchInspection(
   id: number,
-  payload: UpdateInspectionPayload
+  payload: UpdateInspectionPayload,
 ): Promise<InspectionRecord> {
   const token = getAccessToken();
   if (!token) {
@@ -621,7 +653,7 @@ export async function patchInspection(
   } catch {
     throw new InspectionsRequestError(
       "Unable to reach the server. Check your connection and try again.",
-      0
+      0,
     );
   }
 
@@ -629,9 +661,12 @@ export async function patchInspection(
 
   if (response.status === 400) {
     throw new InspectionsRequestError(
-      readApiMessage(raw, "Unable to save this inspection. Check the highlighted fields."),
+      readApiMessage(
+        raw,
+        "Unable to save this inspection. Check the highlighted fields.",
+      ),
       400,
-      parseFieldErrors(raw)
+      parseFieldErrors(raw),
     );
   }
   if (response.status === 401) {
@@ -640,19 +675,25 @@ export async function patchInspection(
   if (response.status === 404) {
     throw new InspectionsRequestError(
       "This inspection could not be found or has been removed.",
-      404
+      404,
     );
   }
   if (response.status >= 500) {
     throw new InspectionsRequestError(
-      readApiMessage(raw, "Server error occurred. Could not update inspection."),
-      response.status
+      readApiMessage(
+        raw,
+        "Server error occurred. Could not update inspection.",
+      ),
+      response.status,
     );
   }
   if (!response.ok) {
     throw new InspectionsRequestError(
-      readApiMessage(raw, `Unable to update inspection. Server returned ${response.status}.`),
-      response.status
+      readApiMessage(
+        raw,
+        `Unable to update inspection. Server returned ${response.status}.`,
+      ),
+      response.status,
     );
   }
 
@@ -662,15 +703,17 @@ export async function patchInspection(
     normalizeInspection(asRecord(raw)?.inspection);
 
   if (!updated) {
-    throw new InspectionsRequestError("The server returned an incomplete inspection.", 500);
+    throw new InspectionsRequestError(
+      "The server returned an incomplete inspection.",
+      500,
+    );
   }
 
   invalidateInspectionsCache();
   return updated;
 }
 
-const DELETE_INSPECTION_SUCCESS =
-  "Inspection request deleted successfully.";
+const DELETE_INSPECTION_SUCCESS = "Inspection request deleted successfully.";
 
 export async function deleteInspection(id: number): Promise<string> {
   const token = getAccessToken();
@@ -681,7 +724,7 @@ export async function deleteInspection(id: number): Promise<string> {
   if (!Number.isInteger(id) || id <= 0) {
     throw new InspectionsRequestError(
       "The inspection ID format is invalid.",
-      400
+      400,
     );
   }
 
@@ -697,7 +740,7 @@ export async function deleteInspection(id: number): Promise<string> {
   } catch {
     throw new InspectionsRequestError(
       "Unable to reach the server. Check your connection and try again.",
-      0
+      0,
     );
   }
 
@@ -706,7 +749,7 @@ export async function deleteInspection(id: number): Promise<string> {
   if (response.status === 400) {
     throw new InspectionsRequestError(
       readApiMessage(raw, "The inspection ID format is invalid."),
-      400
+      400,
     );
   }
   if (response.status === 401) {
@@ -715,22 +758,25 @@ export async function deleteInspection(id: number): Promise<string> {
   if (response.status === 404) {
     throw new InspectionsRequestError(
       "This inspection request does not exist or has already been removed.",
-      404
+      404,
     );
   }
   if (response.status >= 500) {
     throw new InspectionsRequestError(
-      readApiMessage(raw, "Server error occurred. Could not delete inspection."),
-      response.status
+      readApiMessage(
+        raw,
+        "Server error occurred. Could not delete inspection.",
+      ),
+      response.status,
     );
   }
   if (response.status !== 200) {
     throw new InspectionsRequestError(
       readApiMessage(
         raw,
-        `Unable to delete this inspection request. Server returned ${response.status}.`
+        `Unable to delete this inspection request. Server returned ${response.status}.`,
       ),
-      response.status
+      response.status,
     );
   }
 

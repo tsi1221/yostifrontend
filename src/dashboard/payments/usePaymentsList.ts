@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { isQuietListFailure, liveListFailureMessage } from "../apiMessage";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
+import { liveListFailureMessage } from "../apiMessage";
 import { LIVE_DATA_RELOAD_EVENT } from "../auth/liveDataReload";
-import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { PaymentsListQuery, PaymentsListResponse } from "./types";
 import { DEFAULT_PAYMENTS_QUERY } from "./types";
 import {
   PAYMENTS_INVALIDATE_EVENT,
   PaymentsRequestError,
   fetchPaymentsList,
-  isPreviewAccessToken,
 } from "./paymentsService";
 
 const EMPTY_RESPONSE: PaymentsListResponse = {
@@ -36,7 +36,9 @@ function useDebouncedValue<T>(value: T, delay: number) {
 
 export function usePaymentsList() {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState<PaymentsListQuery>(DEFAULT_PAYMENTS_QUERY);
+  const [filters, setFilters] = useState<PaymentsListQuery>(
+    DEFAULT_PAYMENTS_QUERY,
+  );
   const [response, setResponse] = useState<PaymentsListResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -53,7 +55,14 @@ export function usePaymentsList() {
       method: filters.method,
       status: filters.status,
     }),
-    [filters.method, filters.page, filters.pageSize, filters.service, filters.status, search]
+    [
+      filters.method,
+      filters.page,
+      filters.pageSize,
+      filters.service,
+      filters.status,
+      search,
+    ],
   );
 
   const load = useCallback(async () => {
@@ -65,19 +74,13 @@ export function usePaymentsList() {
       setResponse(payload);
     } catch (cause) {
       if (cause instanceof PaymentsRequestError && cause.status === 401) {
-        setResponse(null);
-
-        if (isPreviewAccessToken(getAccessToken())) {
-          setServerError("Sign in with a live account to load payments.");
-          return;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
         return;
       }
 
-      if (isQuietListFailure(cause)) {
+      if (cause instanceof PaymentsRequestError && cause.status === 403) {
         setResponse(EMPTY_RESPONSE);
+        setServerError(FORBIDDEN_MESSAGE);
         return;
       }
 
@@ -104,7 +107,7 @@ export function usePaymentsList() {
 
   const setFilter = <K extends keyof PaymentsListQuery>(
     key: K,
-    value: PaymentsListQuery[K]
+    value: PaymentsListQuery[K],
   ) => {
     setFilters((current) => ({
       ...current,

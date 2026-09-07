@@ -14,7 +14,8 @@ export default function CreateRoleForm() {
   const navigate = useNavigate();
   const { role } = useDashboard();
   const listPath = `/${ROLE_SLUG[role]}/roles`;
-  const { submitRole, saving, conflict, authError, fieldErrors } = useCreateRole();
+  const { submitRole, saving, conflict, authError, fieldErrors } =
+    useCreateRole();
   const [values, setValues] = useState<RoleFormValues>(EMPTY_ROLE_FORM);
 
   return (

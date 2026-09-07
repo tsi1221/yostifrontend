@@ -2,14 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
 import type { RoleRecord } from "./types";
 import {
   ROLES_INVALIDATE_EVENT,
   RoleRequestError,
   asRoleId,
   fetchRole,
-  isPreviewAccessToken,
 } from "./api";
 
 export function useRoleDetail(id: string | undefined) {
@@ -41,12 +41,12 @@ export function useRoleDetail(id: string | undefined) {
       setRole(null);
 
       if (cause instanceof RoleRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          setServerError("Sign in with a live account to load this role.");
-          return;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
+        return;
+      }
+
+      if (cause instanceof RoleRequestError && cause.status === 403) {
+        setServerError(FORBIDDEN_MESSAGE);
         return;
       }
 
@@ -55,7 +55,10 @@ export function useRoleDetail(id: string | undefined) {
         return;
       }
 
-      const text = cause instanceof Error ? cause.message : "The server could not load this role.";
+      const text =
+        cause instanceof Error
+          ? cause.message
+          : "The server could not load this role.";
       message.error(text);
       setServerError(text);
     } finally {

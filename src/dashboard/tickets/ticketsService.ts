@@ -1,8 +1,7 @@
-import { SUPPORT_URL, SUPPORTS_URL, TICKETS_URL } from "../auth/endpoints";
+import { SUPPORTS_URL } from "../auth/endpoints";
 import { getAccessToken } from "../auth/session";
 import { buildListQueryVariants, fetchAuthorizedList } from "../http";
 import { extractListRows } from "../listResponse";
-import { isPreviewAccessToken } from "../users/usersService";
 import type {
   CreateTicketPayload,
   DeleteSupportTicketResponse,
@@ -29,8 +28,6 @@ import {
   TICKET_URGENCY_VALUES,
 } from "./types";
 
-export { isPreviewAccessToken };
-
 export class TicketsRequestError extends Error {
   status: number;
   fields?: TicketFieldErrors;
@@ -44,7 +41,9 @@ export class TicketsRequestError extends Error {
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : null;
 }
 
 function pickString(...values: unknown[]) {
@@ -90,7 +89,9 @@ function readApiMessage(raw: unknown, fallback: string) {
   return fallback;
 }
 
-const FIELD_KEYS: Array<keyof CreateTicketPayload | keyof UpdateSupportPayload> = [
+const FIELD_KEYS: Array<
+  keyof CreateTicketPayload | keyof UpdateSupportPayload
+> = [
   "orderReference",
   "issuesType",
   "title",
@@ -123,7 +124,7 @@ function parseFieldErrors(raw: unknown): TicketFieldErrors {
 
   for (const item of items) {
     const key = FIELD_KEYS.find((field) =>
-      item.toLowerCase().includes(field.toLowerCase())
+      item.toLowerCase().includes(field.toLowerCase()),
     );
     if (key && !fields[key]) {
       fields[key] = item;
@@ -142,7 +143,9 @@ export function isHttpUrl(value: string) {
   }
 }
 
-export function validateTicketForm(values: TicketFormValues): TicketFieldErrors {
+export function validateTicketForm(
+  values: TicketFormValues,
+): TicketFieldErrors {
   const errors: TicketFieldErrors = {};
   if (!values.orderReference.trim()) {
     errors.orderReference = "Order reference is required.";
@@ -165,7 +168,9 @@ export function validateTicketForm(values: TicketFormValues): TicketFieldErrors 
   return errors;
 }
 
-export function formValuesToPayload(values: TicketFormValues): CreateTicketPayload {
+export function formValuesToPayload(
+  values: TicketFormValues,
+): CreateTicketPayload {
   return {
     orderReference: values.orderReference.trim(),
     issuesType: values.issuesType as TicketIssuesType,
@@ -189,7 +194,7 @@ export function normalizeTicket(raw: unknown): TicketRecord | null {
     record.ticket_id,
     record.supportId,
     record.support_id,
-    record._id
+    record._id,
   );
   if (id === undefined) {
     return null;
@@ -200,21 +205,30 @@ export function normalizeTicket(raw: unknown): TicketRecord | null {
   return {
     id,
     userId:
-      pickNumber(record.userId, record.user_id, user?.id, user?.userId, user?.user_id) ??
-      0,
+      pickNumber(
+        record.userId,
+        record.user_id,
+        user?.id,
+        user?.userId,
+        user?.user_id,
+      ) ?? 0,
     orderReference: pickString(
       record.orderReference,
       record.order_reference,
       record.orderRef,
-      record.order_ref
+      record.order_ref,
     ),
-    issuesType: pickString(record.issuesType, record.issueType, record.issue_type),
+    issuesType: pickString(
+      record.issuesType,
+      record.issueType,
+      record.issue_type,
+    ),
     title: pickString(record.title, record.subject),
     resolutionToRequest: pickString(
       record.resolutionToRequest,
       record.resolution_to_request,
       record.resolutionRequested,
-      record.resolution_requested
+      record.resolution_requested,
     ),
     urgency: pickString(record.urgency),
     attachment: pickString(
@@ -222,7 +236,7 @@ export function normalizeTicket(raw: unknown): TicketRecord | null {
       record.attachmentUrl,
       record.attachment_url,
       record.photoVideoUrl,
-      record.photo_video_url
+      record.photo_video_url,
     ),
     status: pickString(record.status) || "open",
   };
@@ -273,7 +287,7 @@ export function buildSupportsQueryString(query: SupportsListQuery) {
 
 function normalizeSupportsResponse(
   raw: unknown,
-  query: SupportsListQuery
+  query: SupportsListQuery,
 ): SupportsListResponse {
   const record = asRecord(raw);
   const nested = asRecord(record?.data);
@@ -284,11 +298,16 @@ function normalizeSupportsResponse(
     .map((row) => normalizeTicket(row))
     .filter((row): row is TicketRecord => Boolean(row));
 
-  const total = pickNumber(meta?.total, record?.total, nested?.total) ?? data.length;
+  const total =
+    pickNumber(meta?.total, record?.total, nested?.total) ?? data.length;
   const page = pickNumber(meta?.page, record?.page, nested?.page) ?? query.page;
   const pageSize =
-    pickNumber(meta?.pageSize, record?.pageSize, record?.limit, nested?.pageSize) ??
-    query.pageSize;
+    pickNumber(
+      meta?.pageSize,
+      record?.pageSize,
+      record?.limit,
+      nested?.pageSize,
+    ) ?? query.pageSize;
   const totalPages =
     pickNumber(meta?.totalPages, record?.totalPages, nested?.totalPages) ??
     Math.max(1, Math.ceil(total / Math.max(pageSize, 1)));
@@ -300,7 +319,7 @@ function normalizeSupportsResponse(
 }
 
 export async function fetchSupportsList(
-  query: SupportsListQuery
+  query: SupportsListQuery,
 ): Promise<SupportsListResponse> {
   if (!getAccessToken()) {
     throw new TicketsRequestError("Unauthorized", 401);
@@ -315,13 +334,13 @@ export async function fetchSupportsList(
       resolutionToRequest: query.resolutionToRequest || undefined,
       urgency: query.urgency || undefined,
       status: query.status || undefined,
-    })
+    }),
   );
 
   if (result.status === 400) {
     throw new TicketsRequestError(
       readApiMessage(result.data, "Invalid support ticket filters."),
-      400
+      400,
     );
   }
   if (result.status === 401) {
@@ -330,79 +349,45 @@ export async function fetchSupportsList(
   if (result.status >= 500) {
     throw new TicketsRequestError(
       readApiMessage(result.data, "The server could not load support tickets."),
-      result.status
+      result.status,
     );
   }
   if (!result.ok) {
     throw new TicketsRequestError(
       readApiMessage(
         result.data,
-        `Unable to load support tickets. Server returned ${result.status}.`
+        `Unable to load support tickets. Server returned ${result.status}.`,
       ),
-      result.status
+      result.status,
     );
   }
 
   return normalizeSupportsResponse(result.data, query);
 }
 
-function ticketsCreateUrls() {
-  return [...new Set([SUPPORTS_URL, TICKETS_URL, SUPPORT_URL])];
-}
-
-async function postTicket(
-  url: string,
-  token: string,
-  payload: CreateTicketPayload
-): Promise<Response> {
-  return fetch(url, {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(payload),
-  });
-}
-
-export async function createTicket(payload: CreateTicketPayload): Promise<TicketRecord> {
+export async function createTicket(
+  payload: CreateTicketPayload,
+): Promise<TicketRecord> {
   const token = getAccessToken();
   if (!token) {
     throw new TicketsRequestError("Unauthorized", 401);
   }
 
-  const urls = ticketsCreateUrls();
-  let response: Response | undefined;
-  let lastNetworkError = false;
-
-  for (const [index, url] of urls.entries()) {
-    try {
-      response = await postTicket(url, token, payload);
-    } catch {
-      lastNetworkError = true;
-      if (index < urls.length - 1) {
-        continue;
-      }
-      throw new TicketsRequestError(
-        "Unable to reach the server. Check your connection and try again.",
-        0
-      );
-    }
-
-    lastNetworkError = false;
-    if (response.status === 404 && index < urls.length - 1) {
-      continue;
-    }
-    break;
-  }
-
-  if (!response) {
+  let response: Response;
+  try {
+    response = await fetch(SUPPORTS_URL, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch {
     throw new TicketsRequestError(
-      lastNetworkError
-        ? "Unable to reach the server. Check your connection and try again."
-        : "Unable to create this support ticket.",
-      lastNetworkError ? 0 : 500
+      "Unable to reach the server. Check your connection and try again.",
+      0,
     );
   }
 
@@ -410,9 +395,12 @@ export async function createTicket(payload: CreateTicketPayload): Promise<Ticket
 
   if (response.status === 400) {
     throw new TicketsRequestError(
-      readApiMessage(raw, "Unable to create this support ticket. Check the highlighted fields."),
+      readApiMessage(
+        raw,
+        "Unable to create this support ticket. Check the highlighted fields.",
+      ),
       400,
-      parseFieldErrors(raw)
+      parseFieldErrors(raw),
     );
   }
   if (response.status === 401) {
@@ -423,17 +411,20 @@ export async function createTicket(payload: CreateTicketPayload): Promise<Ticket
   }
   if (response.status >= 500) {
     throw new TicketsRequestError(
-      readApiMessage(raw, "Server error occurred. Could not create support ticket."),
-      response.status
+      readApiMessage(
+        raw,
+        "Server error occurred. Could not create support ticket.",
+      ),
+      response.status,
     );
   }
   if (response.status !== 200 && response.status !== 201) {
     throw new TicketsRequestError(
       readApiMessage(
         raw,
-        `Unable to create support ticket. Server returned ${response.status}.`
+        `Unable to create support ticket. Server returned ${response.status}.`,
       ),
-      response.status
+      response.status,
     );
   }
 
@@ -444,7 +435,10 @@ export async function createTicket(payload: CreateTicketPayload): Promise<Ticket
     normalizeTicket(asRecord(raw)?.support);
 
   if (!created) {
-    throw new TicketsRequestError("The server returned an incomplete support ticket.", 500);
+    throw new TicketsRequestError(
+      "The server returned an incomplete support ticket.",
+      500,
+    );
   }
 
   invalidateTicketsCache();
@@ -455,7 +449,9 @@ export function supportDetailUrl(id: number) {
   return `${SUPPORTS_URL}/${id}`;
 }
 
-export function parseSupportTicketId(value: string | undefined): number | undefined {
+export function parseSupportTicketId(
+  value: string | undefined,
+): number | undefined {
   if (!value) {
     return undefined;
   }
@@ -474,16 +470,23 @@ export function asSupportTicketId(id: number | string): number | undefined {
   return parseSupportTicketId(id);
 }
 
-function matchEnum<T extends string>(value: string, options: readonly T[]): T | undefined {
+function matchEnum<T extends string>(
+  value: string,
+  options: readonly T[],
+): T | undefined {
   const key = value.trim().toLowerCase();
   return options.find((option) => option.toLowerCase() === key);
 }
 
-export function asTicketUpdateIssuesType(value: string): TicketUpdateIssuesType {
+export function asTicketUpdateIssuesType(
+  value: string,
+): TicketUpdateIssuesType {
   return matchEnum(value, TICKET_UPDATE_ISSUES_TYPE_VALUES) ?? "Defect";
 }
 
-export function asTicketUpdateResolution(value: string): TicketUpdateResolutionValue {
+export function asTicketUpdateResolution(
+  value: string,
+): TicketUpdateResolutionValue {
   return matchEnum(value, TICKET_UPDATE_RESOLUTION_VALUES) ?? "refund";
 }
 
@@ -499,7 +502,9 @@ export function asTicketUpdateStatus(value: string): TicketUpdateStatusValue {
   return matchEnum(value, TICKET_UPDATE_STATUS_VALUES) ?? "open";
 }
 
-export function ticketToFormValues(ticket: TicketRecord): UpdateSupportFormValues {
+export function ticketToFormValues(
+  ticket: TicketRecord,
+): UpdateSupportFormValues {
   return {
     orderReference: ticket.orderReference,
     issuesType: asTicketUpdateIssuesType(ticket.issuesType),
@@ -512,7 +517,7 @@ export function ticketToFormValues(ticket: TicketRecord): UpdateSupportFormValue
 }
 
 export function validateUpdateTicketForm(
-  values: UpdateSupportFormValues
+  values: UpdateSupportFormValues,
 ): TicketFieldErrors {
   const errors: TicketFieldErrors = {};
   if (!values.orderReference.trim()) {
@@ -540,7 +545,7 @@ export function validateUpdateTicketForm(
 }
 
 export function updateFormValuesToPayload(
-  values: UpdateSupportFormValues
+  values: UpdateSupportFormValues,
 ): UpdateSupportPayload {
   return {
     orderReference: values.orderReference.trim(),
@@ -582,7 +587,7 @@ function ticketFromResponse(raw: unknown): TicketRecord | null {
 
 export async function patchSupport(
   id: number,
-  payload: UpdateSupportPayload
+  payload: UpdateSupportPayload,
 ): Promise<TicketRecord> {
   const token = getAccessToken();
   if (!token) {
@@ -607,7 +612,7 @@ export async function patchSupport(
   } catch {
     throw new TicketsRequestError(
       "Unable to reach the server. Check your connection and try again.",
-      0
+      0,
     );
   }
 
@@ -615,9 +620,12 @@ export async function patchSupport(
 
   if (response.status === 400) {
     throw new TicketsRequestError(
-      readApiMessage(raw, "Unable to save this support ticket. Check the highlighted fields."),
+      readApiMessage(
+        raw,
+        "Unable to save this support ticket. Check the highlighted fields.",
+      ),
       400,
-      parseFieldErrors(raw)
+      parseFieldErrors(raw),
     );
   }
   if (response.status === 401) {
@@ -629,13 +637,16 @@ export async function patchSupport(
   if (response.status === 409) {
     throw new TicketsRequestError(
       readApiMessage(raw, OPEN_TICKET_CONFLICT_MESSAGE),
-      409
+      409,
     );
   }
   if (response.status >= 500) {
     throw new TicketsRequestError(
-      readApiMessage(raw, "Server error occurred. Could not update support ticket."),
-      response.status
+      readApiMessage(
+        raw,
+        "Server error occurred. Could not update support ticket.",
+      ),
+      response.status,
     );
   }
   if (response.status === 204) {
@@ -645,21 +656,27 @@ export async function patchSupport(
     if (synthesized) {
       return synthesized;
     }
-    throw new TicketsRequestError("The server returned an incomplete support ticket.", 500);
+    throw new TicketsRequestError(
+      "The server returned an incomplete support ticket.",
+      500,
+    );
   }
   if (!response.ok) {
     throw new TicketsRequestError(
       readApiMessage(
         raw,
-        `Unable to update this support ticket. Server returned ${response.status}.`
+        `Unable to update this support ticket. Server returned ${response.status}.`,
       ),
-      response.status
+      response.status,
     );
   }
 
   const updated = ticketFromResponse(raw);
   if (!updated) {
-    throw new TicketsRequestError("The server returned an incomplete support ticket.", 500);
+    throw new TicketsRequestError(
+      "The server returned an incomplete support ticket.",
+      500,
+    );
   }
 
   invalidateTicketsCache();
@@ -672,7 +689,7 @@ export const updateSupport = patchSupport;
 const DELETE_SUPPORT_TICKET_SUCCESS = "Support ticket deleted successfully.";
 
 export function parseDeleteSupportTicketResponse(
-  raw: unknown
+  raw: unknown,
 ): DeleteSupportTicketResponse {
   return {
     message: readApiMessage(raw, DELETE_SUPPORT_TICKET_SUCCESS),
@@ -701,7 +718,7 @@ export async function deleteSupportTicket(id: number): Promise<string> {
   } catch {
     throw new TicketsRequestError(
       "Unable to reach the server. Check your connection and try again.",
-      0
+      0,
     );
   }
 
@@ -710,7 +727,7 @@ export async function deleteSupportTicket(id: number): Promise<string> {
   if (response.status === 400) {
     throw new TicketsRequestError(
       readApiMessage(raw, "Unable to delete this support ticket."),
-      400
+      400,
     );
   }
   if (response.status === 401) {
@@ -721,17 +738,20 @@ export async function deleteSupportTicket(id: number): Promise<string> {
   }
   if (response.status >= 500) {
     throw new TicketsRequestError(
-      readApiMessage(raw, "Server error occurred. Could not delete support ticket."),
-      response.status
+      readApiMessage(
+        raw,
+        "Server error occurred. Could not delete support ticket.",
+      ),
+      response.status,
     );
   }
   if (response.status !== 200) {
     throw new TicketsRequestError(
       readApiMessage(
         raw,
-        `Unable to delete this support ticket. Server returned ${response.status}.`
+        `Unable to delete this support ticket. Server returned ${response.status}.`,
       ),
-      response.status
+      response.status,
     );
   }
 
@@ -810,7 +830,7 @@ export async function fetchSupportTicket(id: number): Promise<TicketRecord> {
   } catch {
     throw new TicketsRequestError(
       "Unable to reach the server. Check your connection and try again.",
-      0
+      0,
     );
   }
 
@@ -819,7 +839,7 @@ export async function fetchSupportTicket(id: number): Promise<TicketRecord> {
   if (response.status === 400) {
     throw new TicketsRequestError(
       readApiMessage(raw, "The support ticket ID format is invalid."),
-      400
+      400,
     );
   }
   if (response.status === 401) {
@@ -831,16 +851,16 @@ export async function fetchSupportTicket(id: number): Promise<TicketRecord> {
   if (response.status >= 500) {
     throw new TicketsRequestError(
       readApiMessage(raw, "The server could not load this support ticket."),
-      response.status
+      response.status,
     );
   }
   if (!response.ok) {
     throw new TicketsRequestError(
       readApiMessage(
         raw,
-        `Unable to load this support ticket. Server returned ${response.status}.`
+        `Unable to load this support ticket. Server returned ${response.status}.`,
       ),
-      response.status
+      response.status,
     );
   }
 
@@ -852,7 +872,10 @@ export async function fetchSupportTicket(id: number): Promise<TicketRecord> {
     normalizeTicket(record?.support);
 
   if (!payload) {
-    throw new TicketsRequestError("The server returned an incomplete support ticket.", 500);
+    throw new TicketsRequestError(
+      "The server returned an incomplete support ticket.",
+      500,
+    );
   }
 
   return payload;

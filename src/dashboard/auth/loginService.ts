@@ -1,11 +1,16 @@
-import type { AuthLoginRequest, AuthLoginResponse, AuthUser } from "../types/auth";
-import { AUTH_LOGIN_URL } from "./endpoints";
-import { loginWithPreviewAccount } from "./previewUsers";
+import api, { readApiError } from "../../lib/api";
+import type {
+  AuthLoginRequest,
+  AuthLoginResponse,
+  AuthUser,
+} from "../types/auth";
 
-export { AUTH_LOGIN_URL };
+export { AUTH_LOGIN_URL } from "./endpoints";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : null;
 }
 
 function pickString(...values: unknown[]) {
@@ -35,7 +40,10 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
 
   try {
     const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
-    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
+    const padded = base64.padEnd(
+      base64.length + ((4 - (base64.length % 4)) % 4),
+      "=",
+    );
     return asRecord(JSON.parse(atob(padded)));
   } catch {
     return null;
@@ -56,7 +64,10 @@ function readApiMessage(data: unknown) {
 
 function pickRoleFromList(value: unknown) {
   if (!Array.isArray(value)) {
-    return { role: undefined as string | undefined, roleId: undefined as number | undefined };
+    return {
+      role: undefined as string | undefined,
+      roleId: undefined as number | undefined,
+    };
   }
 
   for (const item of value) {
@@ -67,7 +78,13 @@ function pickRoleFromList(value: unknown) {
     if (!record) {
       continue;
     }
-    const role = pickString(record.name, record.roleName, record.role_name, record.title, record.role);
+    const role = pickString(
+      record.name,
+      record.roleName,
+      record.role_name,
+      record.title,
+      record.role,
+    );
     const roleId = pickNumber(record.id, record.roleId, record.role_id);
     if (role || roleId !== undefined) {
       return { role, roleId };
@@ -86,14 +103,15 @@ export function normalizeAuthUser(raw: unknown): AuthUser | null {
   const roleRecord = asRecord(record.role);
   const fromRoles = pickRoleFromList(record.roles);
   const fromAuthorities = pickRoleFromList(record.authorities);
-  const rawId = record.id ?? record.userId ?? record.user_id ?? record._id ?? record.sub;
+  const rawId =
+    record.id ?? record.userId ?? record.user_id ?? record._id ?? record.sub;
   const id = pickNumber(rawId) ?? (pickString(rawId) ? 0 : undefined);
   const fullname = pickString(
     record.fullname,
     record.full_name,
     record.fullName,
     record.name,
-    record.username
+    record.username,
   );
   const email = pickString(record.email, record.userEmail, record.mail);
   const roleId = pickNumber(
@@ -105,7 +123,7 @@ export function normalizeAuthUser(raw: unknown): AuthUser | null {
     roleRecord?.roleId,
     roleRecord?.role_id,
     fromRoles.roleId,
-    fromAuthorities.roleId
+    fromAuthorities.roleId,
   );
   const role = pickString(
     typeof record.role === "string" ? record.role : undefined,
@@ -115,7 +133,7 @@ export function normalizeAuthUser(raw: unknown): AuthUser | null {
     roleRecord?.roleName,
     roleRecord?.title,
     fromRoles.role,
-    fromAuthorities.role
+    fromAuthorities.role,
   );
 
   if (id === undefined || !email) {
@@ -137,19 +155,19 @@ export function normalizeAuthUser(raw: unknown): AuthUser | null {
     companyName: pickString(
       record.companyName,
       record.company_name,
-      record.company
+      record.company,
     ),
     country: pickString(record.country),
     phoneWhatsapp: pickString(
       record.phoneWhatsapp,
       record.phone_whatsapp,
       record.phone,
-      record.whatsapp
+      record.whatsapp,
     ),
     languagePreference: pickString(
       record.languagePreference,
       record.language_preference,
-      record.language
+      record.language,
     ),
   };
 }
@@ -168,7 +186,7 @@ function normalizeLoginPayload(raw: unknown): AuthLoginResponse | null {
     typeof record.data === "string" ? record.data : undefined,
     nested?.access_token,
     nested?.accessToken,
-    nested?.token
+    nested?.token,
   );
   const jwt = token ? decodeJwtPayload(token) : null;
   const user =
@@ -187,55 +205,39 @@ function normalizeLoginPayload(raw: unknown): AuthLoginResponse | null {
 }
 
 export async function loginWithPassword(
-  credentials: AuthLoginRequest
+  credentials: AuthLoginRequest,
 ): Promise<AuthLoginResponse> {
   const email = credentials.email.trim().toLowerCase();
   const password = credentials.password;
 
   try {
-    const response = await fetch(AUTH_LOGIN_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data: unknown = await response.json().catch(() => null);
+    const response = await api.post(
+      "/auth/login",
+      { email, password },
+      { validateStatus: () => true },
+    );
+    const data: unknown = response.data;
 
     if (response.status === 200 || response.status === 201) {
       const payload = normalizeLoginPayload(data);
       if (payload) {
         return payload;
       }
-    }
-
-    const preview = loginWithPreviewAccount(email, password);
-    if (preview) {
-      return preview;
+      throw new Error("The server did not return a usable access token.");
     }
 
     throw new Error(
       readApiMessage(data) ||
         (response.status === 401
           ? "Invalid email or password."
-          : "Unable to sign in. Please try again.")
+          : "Unable to sign in. Please try again."),
     );
   } catch (error) {
-    if (error instanceof Error && error.message !== "Failed to fetch") {
-      const preview = loginWithPreviewAccount(email, password);
-      if (preview) {
-        return preview;
-      }
+    if (error instanceof Error && !/status code/i.test(error.message)) {
       throw error;
     }
+    throw new Error(
+      readApiError(error, "Unable to sign in. Please try again."),
+    );
   }
-
-  const preview = loginWithPreviewAccount(email, password);
-  if (preview) {
-    return preview;
-  }
-
-  throw new Error("Invalid email or password.");
 }

@@ -9,7 +9,10 @@ import { ROLE_SLUG } from "../roles";
 import { useDashboard } from "../store";
 import DeleteInspectionDialog from "./DeleteInspectionDialog";
 import EditInspectionForm from "./EditInspectionForm";
-import { formatInspectionDate, formatInspectionType } from "./inspectionsService";
+import {
+  formatInspectionDate,
+  formatInspectionType,
+} from "./inspectionsService";
 import { useInspectionDetail } from "./useInspectionDetail";
 
 function DetailSkeleton() {
@@ -65,7 +68,9 @@ export default function InspectionDetailView() {
         </ActionButton>
         {inspection ? (
           <div className="flex gap-2">
-            <ActionButton onClick={() => setEditing(true)}>Edit inspection</ActionButton>
+            <ActionButton onClick={() => setEditing(true)}>
+              Edit inspection
+            </ActionButton>
             <button
               type="button"
               className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
@@ -99,7 +104,9 @@ export default function InspectionDetailView() {
           <p className="text-lg font-semibold text-[#0F3952]">
             Unable to load inspection details
           </p>
-          <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">{serverError}</p>
+          <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
+            {serverError}
+          </p>
           <ActionButton className="mt-5" onClick={retry}>
             Retry Connection
           </ActionButton>
@@ -113,7 +120,9 @@ export default function InspectionDetailView() {
               Inspection request
             </p>
             <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
-              <h1 className="text-3xl font-bold">{inspection.productType || "—"}</h1>
+              <h1 className="text-3xl font-bold">
+                {inspection.productType || "—"}
+              </h1>
               <TypeBadge type={inspection.type} />
             </div>
             <p className="mt-2 text-xs text-white/60">ID {inspection.id}</p>
@@ -171,7 +180,8 @@ export default function InspectionDetailView() {
                   📸 Photo & Video Proof Required
                 </p>
                 <p className="mt-1 text-sm text-slate-600">
-                  This booking requires photo and video evidence during the inspection.
+                  This booking requires photo and video evidence during the
+                  inspection.
                 </p>
               </div>
             ) : (

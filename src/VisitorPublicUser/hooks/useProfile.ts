@@ -20,7 +20,7 @@ export const useProfile = (): UseProfileReturn => {
   const fetchUser = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await api.get<{ success: boolean; data: User }>("/api/auth/me");
+      const response = await api.get<{ success: boolean; data: User }>("/users/me");
       if (response.data.success) {
         setUser(response.data.data);
       } else {
@@ -42,7 +42,7 @@ export const useProfile = (): UseProfileReturn => {
   // Update basic profile information
   const updateProfile = async (data: Partial<Pick<User, "fullName" | "phone" | "country">>) => {
     try {
-      const response = await api.put<{ success: boolean; data: User }>("/api/auth/me", data);
+      const response = await api.put<{ success: boolean; data: User }>("/users/me", data);
       if (response.data.success) {
         message.success("Profile updated successfully");
         await fetchUser();
@@ -58,9 +58,9 @@ export const useProfile = (): UseProfileReturn => {
   const updateProfileImage = async (file: File) => {
     try {
       const formData = new FormData();
-      formData.append("profileImage", file);
+      formData.append("file", file);
 
-      const response = await api.put<{ success: boolean; data: User }>("/api/auth/profile/image", formData, {
+      const response = await api.post("/files/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -76,17 +76,8 @@ export const useProfile = (): UseProfileReturn => {
   };
 
   // Change user password
-  const changePassword = async (currentPassword: string, newPassword: string) => {
-    try {
-      const response = await api.put<{ success: boolean }>("/api/auth/profile/password", { currentPassword, newPassword });
-      if (response.data.success) {
-        message.success("Password changed successfully");
-      } else {
-        message.error("Failed to change password");
-      }
-    } catch (error: any) {
-      message.error(error?.response?.data?.message || error.message || "Failed to change password");
-    }
+  const changePassword = async (_currentPassword: string, _newPassword: string) => {
+    message.error("Password changes are not available from this client.");
   };
 
   return {

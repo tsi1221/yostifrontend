@@ -111,19 +111,15 @@ function UrgencyBadge({ urgency }: { urgency: string }) {
   );
 }
 
-function InfoCard({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
+function InfoCard({ label, children }: { label: string; children: ReactNode }) {
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
         {label}
       </h2>
-      <div className="mt-3 text-xl font-semibold text-[#0F3952]">{children}</div>
+      <div className="mt-3 text-xl font-semibold text-[#0F3952]">
+        {children}
+      </div>
     </section>
   );
 }
@@ -138,7 +134,9 @@ export default function SupportTicketDetailView() {
     useSupportTicketDetail(ticketId);
   const [editing, setEditing] = useState(searchParams.get("edit") === "1");
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const ticketNumericId = ticket ? asSupportTicketId(ticket.id) ?? null : null;
+  const ticketNumericId = ticket
+    ? (asSupportTicketId(ticket.id) ?? null)
+    : null;
 
   const goBack = () => navigate(listPath);
   const closeEditor = () => {
@@ -158,7 +156,9 @@ export default function SupportTicketDetailView() {
         </ActionButton>
         {ticket ? (
           <div className="flex gap-2">
-            <ActionButton onClick={() => setEditing(true)}>Edit ticket</ActionButton>
+            <ActionButton onClick={() => setEditing(true)}>
+              Edit ticket
+            </ActionButton>
             <button
               type="button"
               className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
@@ -192,7 +192,9 @@ export default function SupportTicketDetailView() {
           <p className="text-lg font-semibold text-[#0F3952]">
             Unable to load support ticket
           </p>
-          <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">{serverError}</p>
+          <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
+            {serverError}
+          </p>
           <ActionButton className="mt-5" onClick={retry}>
             Retry
           </ActionButton>
@@ -206,7 +208,9 @@ export default function SupportTicketDetailView() {
               Support ticket
             </p>
             <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
-              <h1 className="text-3xl font-bold md:text-4xl">{ticket.title || "—"}</h1>
+              <h1 className="text-3xl font-bold md:text-4xl">
+                {ticket.title || "—"}
+              </h1>
               <div className="flex flex-wrap items-center gap-2">
                 <TicketStatusBadge status={ticket.status} />
                 <UrgencyBadge urgency={ticket.urgency} />
@@ -215,7 +219,9 @@ export default function SupportTicketDetailView() {
           </section>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <InfoCard label="Order reference">{ticket.orderReference || "—"}</InfoCard>
+            <InfoCard label="Order reference">
+              {ticket.orderReference || "—"}
+            </InfoCard>
             <InfoCard label="Issue type">
               {formatTicketLabel(ticket.issuesType)}
             </InfoCard>

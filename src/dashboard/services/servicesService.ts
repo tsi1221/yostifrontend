@@ -2,7 +2,6 @@ import { SERVICES_URL } from "../auth/endpoints";
 import { getAccessToken } from "../auth/session";
 import { buildListQueryVariants, fetchAuthorizedList } from "../http";
 import { extractListRows, pickEntityId } from "../listResponse";
-import { isPreviewAccessToken } from "../users/usersService";
 import type {
   CreateServicePayload,
   CreateServiceResult,
@@ -17,8 +16,6 @@ import type {
 } from "./types";
 import { SERVICE_TIER_VALUES } from "./types";
 
-export { isPreviewAccessToken };
-
 export class ServiceRequestError extends Error {
   status: number;
   fields?: ServiceFieldErrors;
@@ -32,7 +29,9 @@ export class ServiceRequestError extends Error {
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : null;
 }
 
 function pickString(...values: unknown[]) {
@@ -102,8 +101,15 @@ const FIELD_KEYS: Array<keyof ServiceFieldErrors> = [
   "details",
 ];
 
-function assignFieldError(fields: ServiceFieldErrors, key: string, value: string) {
-  const normalized = key.replace(/^details[._]/, "") as keyof ServiceFieldErrors;
+function assignFieldError(
+  fields: ServiceFieldErrors,
+  key: string,
+  value: string,
+) {
+  const normalized = key.replace(
+    /^details[._]/,
+    "",
+  ) as keyof ServiceFieldErrors;
   if (FIELD_KEYS.includes(normalized) && value) {
     fields[normalized] = value;
   }
@@ -140,7 +146,7 @@ function parseFieldErrors(raw: unknown): ServiceFieldErrors {
 
   for (const item of items) {
     const key = FIELD_KEYS.find((field) =>
-      item.toLowerCase().includes(field.toLowerCase())
+      item.toLowerCase().includes(field.toLowerCase()),
     );
     if (key && !fields[key]) {
       fields[key] = item;
@@ -163,7 +169,9 @@ export function collectedFeatures(values: ServiceFormValues) {
   return values.features.map((feature) => feature.trim()).filter(Boolean);
 }
 
-export function validateServiceForm(values: ServiceFormValues): ServiceFieldErrors {
+export function validateServiceForm(
+  values: ServiceFormValues,
+): ServiceFieldErrors {
   const errors: ServiceFieldErrors = {};
   if (!values.title.trim()) {
     errors.title = "Title is required.";
@@ -182,7 +190,9 @@ export function validateServiceForm(values: ServiceFormValues): ServiceFieldErro
   return errors;
 }
 
-export function formValuesToPayload(values: ServiceFormValues): CreateServicePayload {
+export function formValuesToPayload(
+  values: ServiceFormValues,
+): CreateServicePayload {
   return {
     title: values.title.trim(),
     logo: values.logo.trim(),
@@ -200,7 +210,12 @@ export function normalizeService(raw: unknown): ServiceRecord | null {
     return null;
   }
 
-  const id = pickEntityId(record.id, record.serviceId, record.service_id, record._id);
+  const id = pickEntityId(
+    record.id,
+    record.serviceId,
+    record.service_id,
+    record._id,
+  );
   if (id === undefined) {
     return null;
   }
@@ -212,7 +227,7 @@ export function normalizeService(raw: unknown): ServiceRecord | null {
       detailsRecord?.support247,
       detailsRecord?.support_247,
       record.support247,
-      record.support_247
+      record.support_247,
     ),
     features: pickStringArray(detailsRecord?.features ?? record.features),
   };
@@ -249,8 +264,11 @@ export function serviceDetailUrl(id: number) {
 }
 
 export function serviceToFormValues(service: ServiceRecord): ServiceFormValues {
-  const features = service.details.features.length > 0 ? service.details.features : [""];
-  const tier = SERVICE_TIER_VALUES.includes(service.details.tier as ServiceTierValue)
+  const features =
+    service.details.features.length > 0 ? service.details.features : [""];
+  const tier = SERVICE_TIER_VALUES.includes(
+    service.details.tier as ServiceTierValue,
+  )
     ? (service.details.tier as ServiceTierValue)
     : "";
   return {
@@ -262,7 +280,9 @@ export function serviceToFormValues(service: ServiceRecord): ServiceFormValues {
   };
 }
 
-export function formValuesToUpdatePayload(values: ServiceFormValues): UpdateServicePayload {
+export function formValuesToUpdatePayload(
+  values: ServiceFormValues,
+): UpdateServicePayload {
   return formValuesToPayload(values);
 }
 
@@ -281,7 +301,7 @@ function serviceFromResponse(raw: unknown): ServiceRecord | null {
 }
 
 export async function createService(
-  payload: CreateServicePayload
+  payload: CreateServicePayload,
 ): Promise<CreateServiceResult> {
   const token = getAccessToken();
   if (!token) {
@@ -302,7 +322,7 @@ export async function createService(
   } catch {
     throw new ServiceRequestError(
       "Unable to reach the server. Check your connection and try again.",
-      0
+      0,
     );
   }
 
@@ -310,9 +330,12 @@ export async function createService(
 
   if (response.status === 400) {
     throw new ServiceRequestError(
-      readApiMessage(raw, "Unable to create this service. Check the highlighted fields."),
+      readApiMessage(
+        raw,
+        "Unable to create this service. Check the highlighted fields.",
+      ),
       400,
-      parseFieldErrors(raw)
+      parseFieldErrors(raw),
     );
   }
   if (response.status === 401) {
@@ -324,19 +347,25 @@ export async function createService(
   if (response.status >= 500) {
     throw new ServiceRequestError(
       readApiMessage(raw, "Server error occurred. Could not create service."),
-      response.status
+      response.status,
     );
   }
   if (response.status !== 200 && response.status !== 201) {
     throw new ServiceRequestError(
-      readApiMessage(raw, `Unable to create this service. Server returned ${response.status}.`),
-      response.status
+      readApiMessage(
+        raw,
+        `Unable to create this service. Server returned ${response.status}.`,
+      ),
+      response.status,
     );
   }
 
   const created = serviceFromResponse(raw);
   if (!created) {
-    throw new ServiceRequestError("The server returned an incomplete service.", 500);
+    throw new ServiceRequestError(
+      "The server returned an incomplete service.",
+      500,
+    );
   }
 
   invalidateServicesCache();
@@ -364,7 +393,7 @@ export function buildServicesQueryString(query: ServicesListQuery) {
 
 function normalizeServicesResponse(
   raw: unknown,
-  query: ServicesListQuery
+  query: ServicesListQuery,
 ): ServicesListResponse {
   const record = asRecord(raw);
   const nested = asRecord(record?.data);
@@ -375,11 +404,16 @@ function normalizeServicesResponse(
     .map((row) => normalizeService(row))
     .filter((row): row is ServiceRecord => Boolean(row));
 
-  const total = pickNumber(meta?.total, record?.total, nested?.total) ?? data.length;
+  const total =
+    pickNumber(meta?.total, record?.total, nested?.total) ?? data.length;
   const page = pickNumber(meta?.page, record?.page, nested?.page) ?? query.page;
   const pageSize =
-    pickNumber(meta?.pageSize, record?.pageSize, record?.limit, nested?.pageSize) ??
-    query.pageSize;
+    pickNumber(
+      meta?.pageSize,
+      record?.pageSize,
+      record?.limit,
+      nested?.pageSize,
+    ) ?? query.pageSize;
   const totalPages =
     pickNumber(meta?.totalPages, record?.totalPages, nested?.totalPages) ??
     Math.max(1, Math.ceil(total / Math.max(pageSize, 1)));
@@ -391,7 +425,7 @@ function normalizeServicesResponse(
 }
 
 export async function fetchServicesList(
-  query: ServicesListQuery
+  query: ServicesListQuery,
 ): Promise<ServicesListResponse> {
   if (!getAccessToken()) {
     throw new ServiceRequestError("Unauthorized", 401);
@@ -402,13 +436,13 @@ export async function fetchServicesList(
     buildListQueryVariants(query.page, query.pageSize, {
       search: query.search.trim() || undefined,
       title: query.title.trim() || undefined,
-    })
+    }),
   );
 
   if (result.status === 400) {
     throw new ServiceRequestError(
       readApiMessage(result.data, "Invalid service filters."),
-      400
+      400,
     );
   }
   if (result.status === 401) {
@@ -417,13 +451,16 @@ export async function fetchServicesList(
   if (result.status >= 500) {
     throw new ServiceRequestError(
       readApiMessage(result.data, "The server could not load services."),
-      result.status
+      result.status,
     );
   }
   if (!result.ok) {
     throw new ServiceRequestError(
-      readApiMessage(result.data, `Unable to load services. Server returned ${result.status}.`),
-      result.status
+      readApiMessage(
+        result.data,
+        `Unable to load services. Server returned ${result.status}.`,
+      ),
+      result.status,
     );
   }
 
@@ -432,7 +469,7 @@ export async function fetchServicesList(
 
 export async function patchService(
   id: number,
-  payload: UpdateServicePayload
+  payload: UpdateServicePayload,
 ): Promise<ServiceRecord> {
   const token = getAccessToken();
   if (!token) {
@@ -457,7 +494,7 @@ export async function patchService(
   } catch {
     throw new ServiceRequestError(
       "Unable to reach the server. Check your connection and try again.",
-      0
+      0,
     );
   }
 
@@ -465,9 +502,12 @@ export async function patchService(
 
   if (response.status === 400) {
     throw new ServiceRequestError(
-      readApiMessage(raw, "Unable to save this service. Check the highlighted fields."),
+      readApiMessage(
+        raw,
+        "Unable to save this service. Check the highlighted fields.",
+      ),
       400,
-      parseFieldErrors(raw)
+      parseFieldErrors(raw),
     );
   }
   if (response.status === 401) {
@@ -484,19 +524,25 @@ export async function patchService(
   if (response.status >= 500) {
     throw new ServiceRequestError(
       readApiMessage(raw, "Server error occurred. Could not update service."),
-      response.status
+      response.status,
     );
   }
   if (!response.ok) {
     throw new ServiceRequestError(
-      readApiMessage(raw, `Unable to update this service. Server returned ${response.status}.`),
-      response.status
+      readApiMessage(
+        raw,
+        `Unable to update this service. Server returned ${response.status}.`,
+      ),
+      response.status,
     );
   }
 
   const updated = serviceFromResponse(raw);
   if (!updated) {
-    throw new ServiceRequestError("The server returned an incomplete service.", 500);
+    throw new ServiceRequestError(
+      "The server returned an incomplete service.",
+      500,
+    );
   }
 
   invalidateServicesCache();
@@ -531,7 +577,7 @@ export async function deleteService(id: number): Promise<string> {
   } catch {
     throw new ServiceRequestError(
       "Unable to reach the server. Check your connection and try again.",
-      0
+      0,
     );
   }
 
@@ -540,7 +586,7 @@ export async function deleteService(id: number): Promise<string> {
   if (response.status === 400) {
     throw new ServiceRequestError(
       readApiMessage(raw, "Unable to delete this service."),
-      400
+      400,
     );
   }
   if (response.status === 401) {
@@ -552,13 +598,16 @@ export async function deleteService(id: number): Promise<string> {
   if (response.status >= 500) {
     throw new ServiceRequestError(
       readApiMessage(raw, "Server error occurred. Could not delete service."),
-      response.status
+      response.status,
     );
   }
   if (response.status !== 200) {
     throw new ServiceRequestError(
-      readApiMessage(raw, `Unable to delete this service. Server returned ${response.status}.`),
-      response.status
+      readApiMessage(
+        raw,
+        `Unable to delete this service. Server returned ${response.status}.`,
+      ),
+      response.status,
     );
   }
 

@@ -2,13 +2,10 @@ import { useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
 import type { RequestFieldErrors, RequestUpdatePayload } from "./types";
-import {
-  RequestsRequestError,
-  isPreviewAccessToken,
-  patchRequest,
-} from "./requestsService";
+import { RequestsRequestError, patchRequest } from "./requestsService";
 
 export function useUpdateRequest(id: string) {
   const navigate = useNavigate();
@@ -33,12 +30,12 @@ export function useUpdateRequest(id: string) {
       }
 
       if (cause instanceof RequestsRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          message.error("Sign in with a live Super Admin account to save this request.");
-          return null;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
+        return null;
+      }
+
+      if (cause instanceof RequestsRequestError && cause.status === 403) {
+        message.error(FORBIDDEN_MESSAGE);
         return null;
       }
 
@@ -53,7 +50,7 @@ export function useUpdateRequest(id: string) {
       }
 
       message.error(
-        cause instanceof Error ? cause.message : "Unable to save this request."
+        cause instanceof Error ? cause.message : "Unable to save this request.",
       );
       return null;
     } finally {

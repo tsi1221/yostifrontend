@@ -75,7 +75,7 @@ const useShipments = () => {
     if (!token) return;
     setLoading(true);
     try {
-      const res = await api.get<{ data: Shipment[] }>("/api/shipments/myshipments", {
+      const res = await api.get<{ data: Shipment[] }>("/shipments", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setShipments(res.data.data ?? []);
@@ -107,7 +107,7 @@ const useShipments = () => {
       setShipments((prev) => [tempShipment, ...prev]);
 
       try {
-        const res = await api.post<{ data: Shipment }>("/api/shipments", values, {
+        const res = await api.post<{ data: Shipment }>("/shipments", values, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setShipments((prev) =>
@@ -124,7 +124,7 @@ const useShipments = () => {
 
   const getShipmentById = useCallback(
     async (id: string) => {
-      const res = await api.get<{ data: Shipment }>(`/api/shipments/${id}`, {
+      const res = await api.get<{ data: Shipment }>(`/shipments/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return res.data.data;

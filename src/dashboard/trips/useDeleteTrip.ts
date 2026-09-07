@@ -2,13 +2,10 @@ import { useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
 import type { TripDeletionPhase } from "./types";
-import {
-  TripsRequestError,
-  deleteTrip,
-  isPreviewAccessToken,
-} from "./tripsService";
+import { TripsRequestError, deleteTrip } from "./tripsService";
 
 export function useDeleteTrip() {
   const navigate = useNavigate();
@@ -30,19 +27,18 @@ export function useDeleteTrip() {
       }
 
       if (cause instanceof TripsRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          message.error("Sign in with a live account to delete this trip itinerary.");
-          setPhase("confirming");
-          return false;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
+        return false;
+      }
+
+      if (cause instanceof TripsRequestError && cause.status === 403) {
+        message.error(FORBIDDEN_MESSAGE);
         return false;
       }
 
       if (cause instanceof TripsRequestError && cause.status === 404) {
         message.warning(
-          "This trip record does not exist or has already been removed."
+          "This trip record does not exist or has already been removed.",
         );
         setPhase("confirming");
         return false;
@@ -51,7 +47,7 @@ export function useDeleteTrip() {
       message.error(
         cause instanceof Error
           ? cause.message
-          : "Server error occurred. Could not delete trip."
+          : "Server error occurred. Could not delete trip.",
       );
       setPhase("confirming");
       return false;

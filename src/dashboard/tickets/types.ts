@@ -43,7 +43,11 @@ export const TICKET_URGENCY_OPTIONS: {
   description: string;
 }[] = [
   { label: "Low", value: "low", description: "Can wait for a standard review" },
-  { label: "Medium", value: "medium", description: "Needs attention this week" },
+  {
+    label: "Medium",
+    value: "medium",
+    description: "Needs attention this week",
+  },
   { label: "High", value: "high", description: "Blocking shipment or payment" },
 ];
 

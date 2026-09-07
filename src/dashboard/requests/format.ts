@@ -1,6 +1,11 @@
 import { BADGE_TONE_CLASS, type StatusTone } from "../statusStyles";
 import { deadlineToIso } from "./requestsService";
-import type { RequestFormValues, RequestRegion, RequestUpdatePayload, SourcingRequestRecord } from "./types";
+import type {
+  RequestFormValues,
+  RequestRegion,
+  RequestUpdatePayload,
+  SourcingRequestRecord,
+} from "./types";
 import { REQUEST_REGIONS } from "./types";
 
 export function formatMoney(value: number) {
@@ -50,7 +55,11 @@ export function requestStatusTone(status: string): StatusTone {
   if (normalized === "quoted" || normalized === "pending") {
     return "yellow";
   }
-  if (normalized === "closed" || normalized === "rejected" || normalized === "cancelled") {
+  if (
+    normalized === "closed" ||
+    normalized === "rejected" ||
+    normalized === "cancelled"
+  ) {
     return "red";
   }
   return "navy";
@@ -81,8 +90,12 @@ export function dateInputToIso(dateValue: string, originalIso = "") {
   return deadlineToIso(dateValue);
 }
 
-export function requestToFormValues(request: SourcingRequestRecord): RequestFormValues {
-  const region = REQUEST_REGIONS.includes(request.supplierRegion as RequestRegion)
+export function requestToFormValues(
+  request: SourcingRequestRecord,
+): RequestFormValues {
+  const region = REQUEST_REGIONS.includes(
+    request.supplierRegion as RequestRegion,
+  )
     ? (request.supplierRegion as RequestRegion)
     : "Yiwu";
 
@@ -99,7 +112,7 @@ export function requestToFormValues(request: SourcingRequestRecord): RequestForm
 
 export function formValuesToPayload(
   values: RequestFormValues,
-  original?: SourcingRequestRecord
+  original?: SourcingRequestRecord,
 ): RequestUpdatePayload {
   return {
     productName: values.productName.trim(),

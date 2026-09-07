@@ -152,10 +152,18 @@ export default function TripsTable() {
                         {row.arrivalCity || "—"}
                       </p>
                     </td>
-                    <td className="px-4 py-3 text-slate-700">{row.duration || "—"}</td>
-                    <td className="px-4 py-3 text-slate-700">{row.hotel || "—"}</td>
-                    <td className="px-4 py-3 text-slate-700">{row.transport || "—"}</td>
-                    <td className="px-4 py-3 text-slate-700">{row.translator || "—"}</td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {row.duration || "—"}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {row.hotel || "—"}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {row.transport || "—"}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {row.translator || "—"}
+                    </td>
                     <td className="px-4 py-3">
                       <StatusBadge value={formatTripStatus(row.status)} />
                     </td>

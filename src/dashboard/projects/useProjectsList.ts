@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { isQuietListFailure, liveListFailureMessage } from "../apiMessage";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
+import { liveListFailureMessage } from "../apiMessage";
 import { LIVE_DATA_RELOAD_EVENT } from "../auth/liveDataReload";
-import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { ProjectsListQuery, ProjectsListResponse } from "./types";
 import { DEFAULT_PROJECTS_QUERY } from "./types";
 import {
   PROJECTS_INVALIDATE_EVENT,
   ProjectRequestError,
   fetchProjectsList,
-  isPreviewAccessToken,
 } from "./api";
 
 const EMPTY_RESPONSE: ProjectsListResponse = {
@@ -32,7 +32,9 @@ function useDebouncedValue<T>(value: T, delay: number) {
 export function useProjectsList(options?: { publicFeed?: boolean }) {
   const navigate = useNavigate();
   const publicFeed = options?.publicFeed === true;
-  const [filters, setFilters] = useState<ProjectsListQuery>(DEFAULT_PROJECTS_QUERY);
+  const [filters, setFilters] = useState<ProjectsListQuery>(
+    DEFAULT_PROJECTS_QUERY,
+  );
   const [response, setResponse] = useState<ProjectsListResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -48,7 +50,7 @@ export function useProjectsList(options?: { publicFeed?: boolean }) {
       search,
       title,
     }),
-    [filters.page, filters.pageSize, search, title]
+    [filters.page, filters.pageSize, search, title],
   );
 
   const load = useCallback(async () => {
@@ -60,18 +62,17 @@ export function useProjectsList(options?: { publicFeed?: boolean }) {
       setResponse(payload);
     } catch (cause) {
       if (cause instanceof ProjectRequestError && cause.status === 401) {
-        setResponse(null);
-        if (publicFeed || isPreviewAccessToken(getAccessToken())) {
-          setServerError("Sign in with a live account to load projects.");
+        if (publicFeed) {
+          setServerError("Sign in to load this content.");
           return;
         }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
         return;
       }
 
-      if (isQuietListFailure(cause)) {
+      if (cause instanceof ProjectRequestError && cause.status === 403) {
         setResponse(EMPTY_RESPONSE);
+        setServerError(FORBIDDEN_MESSAGE);
         return;
       }
 
@@ -98,7 +99,7 @@ export function useProjectsList(options?: { publicFeed?: boolean }) {
 
   const setFilter = <K extends keyof ProjectsListQuery>(
     key: K,
-    value: ProjectsListQuery[K]
+    value: ProjectsListQuery[K],
   ) => {
     setFilters((current) => ({
       ...current,

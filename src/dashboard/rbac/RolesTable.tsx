@@ -58,7 +58,8 @@ export default function RolesTable() {
 
   const detailPath = (id: number) => `/${ROLE_SLUG[role]}/roles/${id}`;
   const filtersEmpty = !filters.search.trim() && !filters.name.trim();
-  const showFirstEmpty = !loading && !serverError && meta.total === 0 && filtersEmpty;
+  const showFirstEmpty =
+    !loading && !serverError && meta.total === 0 && filtersEmpty;
 
   return (
     <div className="space-y-4">
@@ -111,7 +112,10 @@ export default function RolesTable() {
                 {loading ? <SkeletonRows /> : null}
                 {!loading && roles.length === 0 ? (
                   <tr>
-                    <td colSpan={COLUMNS} className="px-4 py-10 text-center text-slate-500">
+                    <td
+                      colSpan={COLUMNS}
+                      className="px-4 py-10 text-center text-slate-500"
+                    >
                       No roles match these filters.
                     </td>
                   </tr>
@@ -123,12 +127,18 @@ export default function RolesTable() {
                         className="cursor-pointer hover:bg-slate-50"
                         onClick={() => navigate(detailPath(item.id))}
                       >
-                        <td className="px-4 py-3 font-medium text-[#0F3952]">{item.id}</td>
-                        <td className="px-4 py-3 font-semibold text-[#0F3952]">{item.name}</td>
+                        <td className="px-4 py-3 font-medium text-[#0F3952]">
+                          {item.id}
+                        </td>
+                        <td className="px-4 py-3 font-semibold text-[#0F3952]">
+                          {item.name}
+                        </td>
                         <td className="max-w-xs px-4 py-3 text-slate-600">
                           {snippet(item.description, 90) || "—"}
                         </td>
-                        <td className="px-4 py-3 text-slate-600">{item.permissionIds.length}</td>
+                        <td className="px-4 py-3 text-slate-600">
+                          {item.permissionIds.length}
+                        </td>
                         <td className="px-4 py-3">
                           <ActionButton
                             onClick={(event) => {

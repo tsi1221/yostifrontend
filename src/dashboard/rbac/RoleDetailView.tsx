@@ -24,7 +24,13 @@ export default function RoleDetailView() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { role } = useDashboard();
   const listPath = `/${ROLE_SLUG[role]}/roles`;
-  const { role: record, loading, notFound, serverError, retry } = useRoleDetail(roleId);
+  const {
+    role: record,
+    loading,
+    notFound,
+    serverError,
+    retry,
+  } = useRoleDetail(roleId);
   const editing = searchParams.get("edit") === "1";
 
   return (
@@ -38,7 +44,9 @@ export default function RoleDetailView() {
               Back to roles
             </ActionButton>
             {record ? (
-              <ActionButton onClick={() => setSearchParams({ edit: "1" })}>Edit</ActionButton>
+              <ActionButton onClick={() => setSearchParams({ edit: "1" })}>
+                Edit
+              </ActionButton>
             ) : null}
           </div>
         }
@@ -51,7 +59,9 @@ export default function RoleDetailView() {
           <h2 className="text-lg font-semibold text-red-800">Role Not Found</h2>
           <p className="mt-2 text-sm text-red-700">{ROLE_NOT_FOUND_MESSAGE}</p>
           <div className="mt-4">
-            <ActionButton onClick={() => navigate(listPath)}>Back to roles</ActionButton>
+            <ActionButton onClick={() => navigate(listPath)}>
+              Back to roles
+            </ActionButton>
           </div>
         </div>
       ) : null}
@@ -69,7 +79,9 @@ export default function RoleDetailView() {
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
               Role #{record.id}
             </p>
-            <h2 className="mt-1 text-xl font-semibold text-[#0F3952]">{record.name}</h2>
+            <h2 className="mt-1 text-xl font-semibold text-[#0F3952]">
+              {record.name}
+            </h2>
             <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">
               {record.description || "No description provided."}
             </p>
@@ -79,11 +91,15 @@ export default function RoleDetailView() {
               Permission IDs
             </h3>
             {record.permissionIds.length === 0 ? (
-              <p className="mt-2 text-sm text-slate-500">No permissions assigned.</p>
+              <p className="mt-2 text-sm text-slate-500">
+                No permissions assigned.
+              </p>
             ) : (
               <div className="mt-2 flex flex-wrap gap-2">
                 {record.permissionIds.map((id) => {
-                  const permission = record.permissions.find((item) => item.id === id);
+                  const permission = record.permissions.find(
+                    (item) => item.id === id,
+                  );
                   return (
                     <span
                       key={id}

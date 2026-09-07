@@ -51,7 +51,9 @@ function SkeletonRows() {
 
 export default function ShipmentsTable() {
   const [editing, setEditing] = useState<ShipmentRecord | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<ShipmentRecord | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<ShipmentRecord | null>(
+    null,
+  );
   const {
     filters,
     setFilter,
@@ -84,7 +86,10 @@ export default function ShipmentsTable() {
           <SelectInput
             value={filters.method}
             onChange={(event) =>
-              setFilter("method", event.target.value as ShipmentMethodFilter | "")
+              setFilter(
+                "method",
+                event.target.value as ShipmentMethodFilter | "",
+              )
             }
           >
             {SHIPMENT_METHOD_FILTERS.map((option) => (
@@ -100,7 +105,9 @@ export default function ShipmentsTable() {
           </span>
           <TextInput
             value={filters.destinationCountry}
-            onChange={(event) => setFilter("destinationCountry", event.target.value)}
+            onChange={(event) =>
+              setFilter("destinationCountry", event.target.value)
+            }
             placeholder="Germany"
           />
         </label>
@@ -114,107 +121,110 @@ export default function ShipmentsTable() {
       ) : null}
 
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead className="bg-slate-50 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
-                <tr>
-                  <th className="px-4 py-3">ID</th>
-                  <th className="px-4 py-3">Method</th>
-                  <th className="px-4 py-3">Route</th>
-                  <th className="px-4 py-3">Weight</th>
-                  <th className="px-4 py-3">Volume</th>
-                  <th className="px-4 py-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {loading ? <SkeletonRows /> : null}
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="bg-slate-50 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+              <tr>
+                <th className="px-4 py-3">ID</th>
+                <th className="px-4 py-3">Method</th>
+                <th className="px-4 py-3">Route</th>
+                <th className="px-4 py-3">Weight</th>
+                <th className="px-4 py-3">Volume</th>
+                <th className="px-4 py-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {loading ? <SkeletonRows /> : null}
 
-                {!loading && shipments.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={COLUMNS}
-                      className="px-4 py-12 text-center text-sm text-slate-500"
-                    >
-                      No shipments match the current filters.
+              {!loading && shipments.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={COLUMNS}
+                    className="px-4 py-12 text-center text-sm text-slate-500"
+                  >
+                    No shipments match the current filters.
+                  </td>
+                </tr>
+              ) : null}
+
+              {!loading &&
+                shipments.map((row: ShipmentRecord) => (
+                  <tr key={row.id} className="hover:bg-slate-50/80">
+                    <td className="px-4 py-3 font-medium text-slate-800">
+                      {row.id}
+                    </td>
+                    <td className="px-4 py-3">{methodBadge(row.method)}</td>
+                    <td className="px-4 py-3 text-slate-700">
+                      <p className="font-medium text-slate-800">
+                        {row.pickupLocation || "—"}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        to{" "}
+                        {[row.city, row.destinationCountry]
+                          .filter(Boolean)
+                          .join(", ") || "—"}
+                      </p>
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {row.weight || "—"}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {row.volumeM3} m³
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <ActionButton onClick={() => setEditing(row)}>
+                          Edit
+                        </ActionButton>
+                        <button
+                          type="button"
+                          className="rounded-xl bg-red-600 p-2 text-white hover:bg-red-700"
+                          aria-label={`Delete shipment ${row.id}`}
+                          onClick={() => setPendingDelete(row)}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
-                ) : null}
-
-                {!loading &&
-                  shipments.map((row: ShipmentRecord) => (
-                    <tr key={row.id} className="hover:bg-slate-50/80">
-                      <td className="px-4 py-3 font-medium text-slate-800">
-                        {row.id}
-                      </td>
-                      <td className="px-4 py-3">{methodBadge(row.method)}</td>
-                      <td className="px-4 py-3 text-slate-700">
-                        <p className="font-medium text-slate-800">
-                          {row.pickupLocation || "—"}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          to {[row.city, row.destinationCountry].filter(Boolean).join(", ") || "—"}
-                        </p>
-                      </td>
-                      <td className="px-4 py-3 text-slate-700">
-                        {row.weight || "—"}
-                      </td>
-                      <td className="px-4 py-3 text-slate-700">
-                        {row.volumeM3} m³
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <ActionButton onClick={() => setEditing(row)}>
-                            Edit
-                          </ActionButton>
-                          <button
-                            type="button"
-                            className="rounded-xl bg-red-600 p-2 text-white hover:bg-red-700"
-                            aria-label={`Delete shipment ${row.id}`}
-                            onClick={() => setPendingDelete(row)}
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-
-          <footer className="flex flex-col gap-3 border-t border-slate-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-slate-500">
-              {rangeLabel(meta.page, meta.pageSize, meta.total)}
-            </p>
-            <div className="flex flex-wrap items-center gap-2">
-              <SelectInput
-                value={String(filters.pageSize)}
-                onChange={(event) => setPageSize(Number(event.target.value))}
-                className="w-auto"
-              >
-                <option value="10">10 / page</option>
-                <option value="20">20 / page</option>
-                <option value="50">50 / page</option>
-              </SelectInput>
-              <ActionButton
-                tone="ghost"
-                disabled={meta.page <= 1 || loading}
-                onClick={() => setPage(meta.page - 1)}
-              >
-                Previous
-              </ActionButton>
-              <span className="px-2 text-sm font-medium text-[#0F3952]">
-                {meta.page} / {Math.max(meta.totalPages, 1)}
-              </span>
-              <ActionButton
-                disabled={meta.page >= meta.totalPages || loading}
-                onClick={() => setPage(meta.page + 1)}
-              >
-                Next
-              </ActionButton>
-            </div>
-          </footer>
+                ))}
+            </tbody>
+          </table>
         </div>
+
+        <footer className="flex flex-col gap-3 border-t border-slate-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-slate-500">
+            {rangeLabel(meta.page, meta.pageSize, meta.total)}
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <SelectInput
+              value={String(filters.pageSize)}
+              onChange={(event) => setPageSize(Number(event.target.value))}
+              className="w-auto"
+            >
+              <option value="10">10 / page</option>
+              <option value="20">20 / page</option>
+              <option value="50">50 / page</option>
+            </SelectInput>
+            <ActionButton
+              tone="ghost"
+              disabled={meta.page <= 1 || loading}
+              onClick={() => setPage(meta.page - 1)}
+            >
+              Previous
+            </ActionButton>
+            <span className="px-2 text-sm font-medium text-[#0F3952]">
+              {meta.page} / {Math.max(meta.totalPages, 1)}
+            </span>
+            <ActionButton
+              disabled={meta.page >= meta.totalPages || loading}
+              onClick={() => setPage(meta.page + 1)}
+            >
+              Next
+            </ActionButton>
+          </div>
+        </footer>
+      </div>
 
       <SideDrawer
         open={Boolean(editing)}

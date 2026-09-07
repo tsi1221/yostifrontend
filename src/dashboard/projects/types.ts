@@ -23,7 +23,9 @@ export interface ProjectFormValues {
   details: string;
 }
 
-export type ProjectFieldErrors = Partial<Record<"title" | "image" | "details", string>>;
+export type ProjectFieldErrors = Partial<
+  Record<"title" | "image" | "details", string>
+>;
 
 export const EMPTY_PROJECT_FORM: ProjectFormValues = {
   title: "",

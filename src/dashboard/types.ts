@@ -1,9 +1,5 @@
 export type UserRole =
-  | "SUPER_ADMIN"
-  | "STAFF"
-  | "BUYER"
-  | "SUPPLIER"
-  | "LOGISTICS_PARTNER";
+  "SUPER_ADMIN" | "STAFF" | "BUYER" | "SUPPLIER" | "LOGISTICS_PARTNER";
 
 export type AccountType = "individual" | "business" | "supplier" | "logistics";
 export type SupplierRegion = "Yiwu" | "Guangzhou" | "Shenzhen";
@@ -11,16 +7,15 @@ export type SourcingStatus = "open" | "quoted" | "completed";
 export type VerificationStatus = "pending" | "approved" | "rejected";
 export type ShippingMethod = "sea" | "air" | "express";
 export type ShipmentStatus =
-  | "booked"
-  | "in transit"
-  | "at port"
-  | "customs"
-  | "delivered";
-export type DestinationCountry = "Ethiopia" | "China" | "Uganda" | "South Sudan";
+  "booked" | "in transit" | "at port" | "customs" | "delivered";
+export type DestinationCountry =
+  "Ethiopia" | "China" | "Uganda" | "South Sudan";
 export type InspectionType = "sample" | "pre-shipment" | "factory visit";
-export type InspectionStatus = "pending" | "scheduled" | "in progress" | "completed";
+export type InspectionStatus =
+  "pending" | "scheduled" | "in progress" | "completed";
 export type VisaStatus = "pending" | "approved" | "rejected";
-export type ServiceType = "sourcing" | "logistics" | "inspection" | "trip" | "visa";
+export type ServiceType =
+  "sourcing" | "logistics" | "inspection" | "trip" | "visa";
 export type PaymentMethod = "bank transfer" | "card" | "Alipay" | "WeChat Pay";
 export type PaymentStatus = "pending" | "completed" | "failed";
 export type IssueType = "defect" | "damage" | "missing";

@@ -16,7 +16,9 @@ export default function RolesPage() {
         title="Roles"
         description="Search, page, and configure system roles and their permission IDs."
         actions={
-          <ActionButton onClick={() => navigate(`/${ROLE_SLUG[role]}/roles/new`)}>
+          <ActionButton
+            onClick={() => navigate(`/${ROLE_SLUG[role]}/roles/new`)}
+          >
             New role
           </ActionButton>
         }

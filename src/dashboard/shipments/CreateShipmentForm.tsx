@@ -2,7 +2,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
-import { Field, SelectInput, TextArea, TextInput } from "../components/FormField";
+import {
+  Field,
+  SelectInput,
+  TextArea,
+  TextInput,
+} from "../components/FormField";
 import PageHeader from "../components/PageHeader";
 import { ROLE_SLUG } from "../roles";
 import { useDashboard } from "../store";
@@ -19,7 +24,7 @@ export default function CreateShipmentForm() {
 
   const setField = <K extends keyof ShipmentFormValues>(
     key: K,
-    value: ShipmentFormValues[K]
+    value: ShipmentFormValues[K],
   ) => {
     setValues((current) => ({ ...current, [key]: value }));
   };
@@ -53,29 +58,44 @@ export default function CreateShipmentForm() {
           </div>
         ) : null}
 
-        <fieldset disabled={saving} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <fieldset
+          disabled={saving}
+          className="grid grid-cols-1 gap-4 md:grid-cols-2"
+        >
           <Field label="Pickup location" error={fieldErrors.pickupLocation}>
             <TextArea
               required
               placeholder="Building 4, Yiwu International Trade City, Zhejiang"
               value={values.pickupLocation}
-              onChange={(event) => setField("pickupLocation", event.target.value)}
+              onChange={(event) =>
+                setField("pickupLocation", event.target.value)
+              }
             />
           </Field>
-          <Field label="Destination notes" error={fieldErrors.destinationDescription}>
+          <Field
+            label="Destination notes"
+            error={fieldErrors.destinationDescription}
+          >
             <TextArea
               required
               placeholder="Deliver to Warehouse B, Door 3. Contact store manager on arrival."
               value={values.destinationDescription}
-              onChange={(event) => setField("destinationDescription", event.target.value)}
+              onChange={(event) =>
+                setField("destinationDescription", event.target.value)
+              }
             />
           </Field>
-          <Field label="Destination country" error={fieldErrors.destinationCountry}>
+          <Field
+            label="Destination country"
+            error={fieldErrors.destinationCountry}
+          >
             <TextInput
               required
               placeholder="Germany"
               value={values.destinationCountry}
-              onChange={(event) => setField("destinationCountry", event.target.value)}
+              onChange={(event) =>
+                setField("destinationCountry", event.target.value)
+              }
             />
           </Field>
           <Field label="City" error={fieldErrors.city}>
@@ -93,7 +113,9 @@ export default function CreateShipmentForm() {
               value={values.weight}
               onChange={(event) => setField("weight", event.target.value)}
             />
-            <p className="text-xs text-slate-400">Numbers are saved as kg, e.g. 250 kg.</p>
+            <p className="text-xs text-slate-400">
+              Numbers are saved as kg, e.g. 250 kg.
+            </p>
           </Field>
           <Field label="Volume (m³)" error={fieldErrors.volumeM3}>
             <TextInput
@@ -123,7 +145,11 @@ export default function CreateShipmentForm() {
         </fieldset>
 
         <div className="flex justify-end gap-2">
-          <ActionButton tone="ghost" disabled={saving} onClick={() => navigate(listPath)}>
+          <ActionButton
+            tone="ghost"
+            disabled={saving}
+            onClick={() => navigate(listPath)}
+          >
             Cancel
           </ActionButton>
           <ActionButton type="submit" disabled={saving}>

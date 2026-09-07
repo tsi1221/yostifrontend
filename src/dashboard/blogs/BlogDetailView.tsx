@@ -71,7 +71,9 @@ export default function BlogDetailView() {
         <div className="rounded-2xl border border-red-200 bg-red-50 p-6">
           <p className="font-medium text-red-800">{BLOG_NOT_FOUND_MESSAGE}</p>
           <div className="mt-4">
-            <ActionButton onClick={() => navigate(listPath)}>Back to blogs</ActionButton>
+            <ActionButton onClick={() => navigate(listPath)}>
+              Back to blogs
+            </ActionButton>
           </div>
         </div>
       ) : null}
@@ -97,10 +99,14 @@ export default function BlogDetailView() {
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
                 Post #{blog.id}
               </p>
-              <h2 className="mt-1 text-xl font-semibold text-[#0F3952]">{blog.title}</h2>
+              <h2 className="mt-1 text-xl font-semibold text-[#0F3952]">
+                {blog.title}
+              </h2>
             </div>
           </div>
-          <p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">{blog.details}</p>
+          <p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">
+            {blog.details}
+          </p>
         </article>
       ) : null}
 

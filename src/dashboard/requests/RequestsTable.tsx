@@ -2,17 +2,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Trash2 } from "lucide-react";
 
-import { isSuperAdminSession } from "../auth/superAdminAccess";
 import ActionButton from "../components/ActionButton";
 import DeleteRequestDialog from "./DeleteRequestDialog";
 import { SelectInput, TextInput } from "../components/FormField";
 import { ROLE_SLUG } from "../roles";
 import { useDashboard } from "../store";
-import {
-  formatDeadline,
-  formatMoney,
-  requestStatusClass,
-} from "./format";
+import { formatDeadline, formatMoney, requestStatusClass } from "./format";
 import type { SourcingRequestRecord } from "./types";
 import { REQUEST_REGIONS } from "./types";
 import { useRequestsList } from "./useRequestsList";
@@ -47,7 +42,8 @@ function SkeletonRows() {
 export default function RequestsTable() {
   const navigate = useNavigate();
   const { role } = useDashboard();
-  const [pendingDelete, setPendingDelete] = useState<SourcingRequestRecord | null>(null);
+  const [pendingDelete, setPendingDelete] =
+    useState<SourcingRequestRecord | null>(null);
   const {
     filters,
     setFilter,
@@ -62,7 +58,7 @@ export default function RequestsTable() {
     retry,
   } = useRequestsList();
 
-  if (forbidden && !isSuperAdminSession()) {
+  if (forbidden || restricted) {
     return (
       <section className="rounded-2xl border border-red-200 bg-red-50 px-6 py-16 text-center">
         <p className="text-lg font-semibold text-red-700">Access Denied</p>
@@ -95,7 +91,7 @@ export default function RequestsTable() {
             onChange={(event) =>
               setFilter(
                 "supplierRegion",
-                event.target.value as typeof filters.supplierRegion
+                event.target.value as typeof filters.supplierRegion,
               )
             }
           >
@@ -146,7 +142,10 @@ export default function RequestsTable() {
 
               {!loading && requests.length === 0 ? (
                 <tr>
-                  <td colSpan={COLUMNS} className="px-4 py-12 text-center text-sm text-slate-500">
+                  <td
+                    colSpan={COLUMNS}
+                    className="px-4 py-12 text-center text-sm text-slate-500"
+                  >
                     No sourcing requests match the current filters.
                   </td>
                 </tr>
@@ -157,7 +156,9 @@ export default function RequestsTable() {
                   <tr
                     key={row.id}
                     className="cursor-pointer hover:bg-slate-50/80"
-                    onClick={() => navigate(`/${ROLE_SLUG[role]}/sourcing/${row.id}`)}
+                    onClick={() =>
+                      navigate(`/${ROLE_SLUG[role]}/sourcing/${row.id}`)
+                    }
                   >
                     <td className="px-4 py-3 font-medium text-slate-800">
                       {row.productName}
@@ -173,7 +174,9 @@ export default function RequestsTable() {
                     <td className="px-4 py-3 font-medium text-slate-800">
                       {formatMoney(row.targetPrice)}
                     </td>
-                    <td className="px-4 py-3 text-slate-700">{row.supplierRegion}</td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {row.supplierRegion}
+                    </td>
                     <td className="px-4 py-3 text-slate-700">
                       {formatDeadline(row.deadline)}
                     </td>
@@ -198,7 +201,9 @@ export default function RequestsTable() {
                         <ActionButton
                           onClick={(event) => {
                             event.stopPropagation();
-                            navigate(`/${ROLE_SLUG[role]}/sourcing/${row.id}?edit=1`);
+                            navigate(
+                              `/${ROLE_SLUG[role]}/sourcing/${row.id}?edit=1`,
+                            );
                           }}
                         >
                           Edit

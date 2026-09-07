@@ -8,9 +8,12 @@ import { useBlogDetail } from "./useBlogDetail";
 export default function PublicBlogDetail() {
   const navigate = useNavigate();
   const { blogId } = useParams();
-  const { blog, loading, notFound, serverError, retry } = useBlogDetail(blogId, {
-    publicFeed: true,
-  });
+  const { blog, loading, notFound, serverError, retry } = useBlogDetail(
+    blogId,
+    {
+      publicFeed: true,
+    },
+  );
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
@@ -27,7 +30,9 @@ export default function PublicBlogDetail() {
 
       {!loading && notFound ? (
         <div className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-6">
-          <h1 className="text-xl font-semibold text-red-800">Article not found</h1>
+          <h1 className="text-xl font-semibold text-red-800">
+            Article not found
+          </h1>
           <p className="mt-2 text-sm text-red-700">{BLOG_NOT_FOUND_MESSAGE}</p>
         </div>
       ) : null}
@@ -51,7 +56,9 @@ export default function PublicBlogDetail() {
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#FDC700]">
             Post #{blog.id}
           </p>
-          <h1 className="mt-2 text-3xl font-semibold text-[#0F3952]">{blog.title}</h1>
+          <h1 className="mt-2 text-3xl font-semibold text-[#0F3952]">
+            {blog.title}
+          </h1>
           <p className="mt-6 whitespace-pre-wrap text-base leading-7 text-slate-700">
             {blog.details}
           </p>

@@ -64,7 +64,8 @@ export default function ContactsTable() {
     !filters.fullname.trim() &&
     !filters.email.trim() &&
     !filters.topic.trim();
-  const showInboxEmpty = !loading && !serverError && meta.total === 0 && filtersEmpty;
+  const showInboxEmpty =
+    !loading && !serverError && meta.total === 0 && filtersEmpty;
 
   return (
     <div className="space-y-4">
@@ -153,11 +154,15 @@ export default function ContactsTable() {
                         className="cursor-pointer hover:bg-slate-50"
                         onClick={() => navigate(detailPath(contact.id))}
                       >
-                        <td className="px-4 py-3 font-medium text-[#0F3952]">{contact.id}</td>
+                        <td className="px-4 py-3 font-medium text-[#0F3952]">
+                          {contact.id}
+                        </td>
                         <td className="px-4 py-3 font-semibold text-[#0F3952]">
                           {contact.fullname}
                         </td>
-                        <td className="px-4 py-3 text-slate-600">{contact.email}</td>
+                        <td className="px-4 py-3 text-slate-600">
+                          {contact.email}
+                        </td>
                         <td className="px-4 py-3">{contact.topic || "—"}</td>
                         <td className="max-w-xs px-4 py-3 text-slate-600">
                           {snippet(contact.details) || "—"}
@@ -249,7 +254,11 @@ export default function ContactsTable() {
         contactId={pendingDelete}
         onClose={() => setPendingDelete(null)}
         onDeleted={() => {
-          if (editing && pendingDelete !== null && editing.id === pendingDelete) {
+          if (
+            editing &&
+            pendingDelete !== null &&
+            editing.id === pendingDelete
+          ) {
             setEditing(null);
           }
           setPendingDelete(null);

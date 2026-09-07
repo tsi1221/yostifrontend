@@ -3,7 +3,6 @@ import { SHIPMENTS_URL } from "../auth/endpoints";
 import { getAccessToken } from "../auth/session";
 import { buildListQueryVariants, fetchAuthorizedList } from "../http";
 import { extractListRows, pickEntityId } from "../listResponse";
-import { isPreviewAccessToken } from "../users/usersService";
 import type {
   CreateShipmentPayload,
   ShipmentFieldErrors,
@@ -16,8 +15,6 @@ import type {
   UpdateShipmentPayload,
 } from "./types";
 import { SHIPMENT_METHOD_VALUES } from "./types";
-
-export { isPreviewAccessToken };
 
 export class ShipmentsRequestError extends Error {
   status: number;
@@ -32,7 +29,9 @@ export class ShipmentsRequestError extends Error {
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : null;
 }
 
 function pickString(...values: unknown[]) {
@@ -102,7 +101,7 @@ function parseFieldErrors(raw: unknown): ShipmentFieldErrors {
 
   for (const item of items) {
     const key = FIELD_KEYS.find((field) =>
-      item.toLowerCase().includes(field.toLowerCase())
+      item.toLowerCase().includes(field.toLowerCase()),
     );
     if (key && !fields[key]) {
       fields[key] = item;
@@ -150,7 +149,9 @@ function asShipmentMethodValue(value: string): ShipmentMethodValue {
   return "Air";
 }
 
-export function shipmentToFormValues(shipment: ShipmentRecord): UpdateShipmentFormValues {
+export function shipmentToFormValues(
+  shipment: ShipmentRecord,
+): UpdateShipmentFormValues {
   return {
     pickupLocation: shipment.pickupLocation,
     destinationCountry: shipment.destinationCountry,
@@ -163,7 +164,7 @@ export function shipmentToFormValues(shipment: ShipmentRecord): UpdateShipmentFo
 }
 
 export function validateUpdateShipmentForm(
-  values: UpdateShipmentFormValues
+  values: UpdateShipmentFormValues,
 ): ShipmentFieldErrors {
   const errors: ShipmentFieldErrors = {};
   if (!values.pickupLocation.trim()) {
@@ -191,7 +192,7 @@ export function validateUpdateShipmentForm(
 }
 
 export function updateFormValuesToPayload(
-  values: UpdateShipmentFormValues
+  values: UpdateShipmentFormValues,
 ): UpdateShipmentPayload {
   return {
     pickupLocation: values.pickupLocation.trim(),
@@ -204,7 +205,9 @@ export function updateFormValuesToPayload(
   };
 }
 
-export function validateShipmentForm(values: ShipmentFormValues): ShipmentFieldErrors {
+export function validateShipmentForm(
+  values: ShipmentFormValues,
+): ShipmentFieldErrors {
   const errors: ShipmentFieldErrors = {};
   if (!values.pickupLocation.trim()) {
     errors.pickupLocation = "Pickup location is required.";
@@ -230,7 +233,9 @@ export function validateShipmentForm(values: ShipmentFormValues): ShipmentFieldE
   return errors;
 }
 
-export function formValuesToPayload(values: ShipmentFormValues): CreateShipmentPayload {
+export function formValuesToPayload(
+  values: ShipmentFormValues,
+): CreateShipmentPayload {
   return {
     pickupLocation: values.pickupLocation.trim(),
     destinationCountry: values.destinationCountry.trim(),
@@ -248,10 +253,15 @@ function normalizeShipment(raw: unknown): ShipmentRecord | null {
     return null;
   }
 
-  const id = pickEntityId(record.id, record.shipmentId, record.shipment_id, record._id);
+  const id = pickEntityId(
+    record.id,
+    record.shipmentId,
+    record.shipment_id,
+    record._id,
+  );
   const pickupLocation = pickString(
     record.pickupLocation,
-    record.pickup_location
+    record.pickup_location,
   );
   if (id === undefined) {
     return null;
@@ -263,12 +273,12 @@ function normalizeShipment(raw: unknown): ShipmentRecord | null {
     pickupLocation,
     destinationCountry: pickString(
       record.destinationCountry,
-      record.destination_country
+      record.destination_country,
     ),
     city: pickString(record.city),
     destinationDescription: pickString(
       record.destinationDescription,
-      record.destination_description
+      record.destination_description,
     ),
     weight: pickString(record.weight),
     volumeM3: pickNumber(record.volumeM3, record.volume_m3, record.volume) ?? 0,
@@ -303,7 +313,7 @@ export function buildShipmentsQueryString(query: ShipmentsListQuery) {
 
 function normalizeShipmentsResponse(
   raw: unknown,
-  query: ShipmentsListQuery
+  query: ShipmentsListQuery,
 ): ShipmentsListResponse {
   const record = asRecord(raw);
   const nested = asRecord(record?.data);
@@ -316,7 +326,8 @@ function normalizeShipmentsResponse(
   const total = pickNumber(record?.total, nested?.total) ?? data.length;
   const page = pickNumber(record?.page, nested?.page) ?? query.page;
   const pageSize =
-    pickNumber(record?.pageSize, record?.limit, nested?.pageSize) ?? query.pageSize;
+    pickNumber(record?.pageSize, record?.limit, nested?.pageSize) ??
+    query.pageSize;
   const totalPages =
     pickNumber(record?.totalPages, record?.total_pages, nested?.totalPages) ??
     Math.max(1, Math.ceil(total / Math.max(pageSize, 1)));
@@ -325,7 +336,7 @@ function normalizeShipmentsResponse(
 }
 
 export async function fetchShipmentsList(
-  query: ShipmentsListQuery
+  query: ShipmentsListQuery,
 ): Promise<ShipmentsListResponse> {
   if (!getAccessToken()) {
     throw new ShipmentsRequestError("Unauthorized", 401);
@@ -337,13 +348,13 @@ export async function fetchShipmentsList(
       search: query.search.trim() || undefined,
       method: query.method || undefined,
       destinationCountry: query.destinationCountry.trim() || undefined,
-    })
+    }),
   );
 
   if (result.status === 400) {
     throw new ShipmentsRequestError(
       readApiMessage(result.data, "Invalid shipment filters."),
-      400
+      400,
     );
   }
   if (result.status === 401) {
@@ -352,13 +363,16 @@ export async function fetchShipmentsList(
   if (result.status >= 500) {
     throw new ShipmentsRequestError(
       readApiMessage(result.data, "The server could not load shipments."),
-      result.status
+      result.status,
     );
   }
   if (!result.ok) {
     throw new ShipmentsRequestError(
-      readApiMessage(result.data, `Unable to load shipments. Server returned ${result.status}.`),
-      result.status
+      readApiMessage(
+        result.data,
+        `Unable to load shipments. Server returned ${result.status}.`,
+      ),
+      result.status,
     );
   }
 
@@ -366,7 +380,7 @@ export async function fetchShipmentsList(
 }
 
 export async function createShipment(
-  payload: CreateShipmentPayload
+  payload: CreateShipmentPayload,
 ): Promise<ShipmentRecord> {
   const token = getAccessToken();
   if (!token) {
@@ -387,7 +401,7 @@ export async function createShipment(
   } catch {
     throw new ShipmentsRequestError(
       "Unable to reach the server. Check your connection and try again.",
-      0
+      0,
     );
   }
 
@@ -395,9 +409,12 @@ export async function createShipment(
 
   if (response.status === 400) {
     throw new ShipmentsRequestError(
-      readApiMessage(raw, "Unable to create this shipment. Check the highlighted fields."),
+      readApiMessage(
+        raw,
+        "Unable to create this shipment. Check the highlighted fields.",
+      ),
       400,
-      parseFieldErrors(raw)
+      parseFieldErrors(raw),
     );
   }
   if (response.status === 401) {
@@ -406,19 +423,22 @@ export async function createShipment(
   if (response.status === 409) {
     throw new ShipmentsRequestError(
       "An identical shipment already exists for your account. Please verify details before trying again.",
-      409
+      409,
     );
   }
   if (response.status >= 500) {
     throw new ShipmentsRequestError(
       readApiMessage(raw, "Server error occurred. Could not create shipment."),
-      response.status
+      response.status,
     );
   }
   if (response.status !== 200 && response.status !== 201) {
     throw new ShipmentsRequestError(
-      readApiMessage(raw, `Unable to create shipment. Server returned ${response.status}.`),
-      response.status
+      readApiMessage(
+        raw,
+        `Unable to create shipment. Server returned ${response.status}.`,
+      ),
+      response.status,
     );
   }
 
@@ -428,7 +448,10 @@ export async function createShipment(
     normalizeShipment(asRecord(raw)?.shipment);
 
   if (!created) {
-    throw new ShipmentsRequestError("The server returned an incomplete shipment.", 500);
+    throw new ShipmentsRequestError(
+      "The server returned an incomplete shipment.",
+      500,
+    );
   }
 
   invalidateShipmentsCache();
@@ -437,7 +460,7 @@ export async function createShipment(
 
 export async function patchShipment(
   id: number,
-  payload: UpdateShipmentPayload
+  payload: UpdateShipmentPayload,
 ): Promise<ShipmentRecord> {
   const token = getAccessToken();
   if (!token) {
@@ -462,7 +485,7 @@ export async function patchShipment(
   } catch {
     throw new ShipmentsRequestError(
       "Unable to reach the server. Check your connection and try again.",
-      0
+      0,
     );
   }
 
@@ -470,9 +493,12 @@ export async function patchShipment(
 
   if (response.status === 400) {
     throw new ShipmentsRequestError(
-      readApiMessage(raw, "Unable to save this shipment. Check the highlighted fields."),
+      readApiMessage(
+        raw,
+        "Unable to save this shipment. Check the highlighted fields.",
+      ),
       400,
-      parseFieldErrors(raw)
+      parseFieldErrors(raw),
     );
   }
   if (response.status === 401) {
@@ -481,19 +507,22 @@ export async function patchShipment(
   if (response.status === 404) {
     throw new ShipmentsRequestError(
       "This shipment could not be found or has been removed.",
-      404
+      404,
     );
   }
   if (response.status >= 500) {
     throw new ShipmentsRequestError(
       readApiMessage(raw, "Server error occurred. Could not update shipment."),
-      response.status
+      response.status,
     );
   }
   if (!response.ok) {
     throw new ShipmentsRequestError(
-      readApiMessage(raw, `Unable to update shipment. Server returned ${response.status}.`),
-      response.status
+      readApiMessage(
+        raw,
+        `Unable to update shipment. Server returned ${response.status}.`,
+      ),
+      response.status,
     );
   }
 
@@ -503,7 +532,10 @@ export async function patchShipment(
     normalizeShipment(asRecord(raw)?.shipment);
 
   if (!updated) {
-    throw new ShipmentsRequestError("The server returned an incomplete shipment.", 500);
+    throw new ShipmentsRequestError(
+      "The server returned an incomplete shipment.",
+      500,
+    );
   }
 
   invalidateShipmentsCache();
@@ -517,7 +549,10 @@ export async function deleteShipment(id: number): Promise<void> {
   }
 
   if (!Number.isFinite(id) || id <= 0) {
-    throw new ShipmentsRequestError("The target Shipment ID format is invalid.", 400);
+    throw new ShipmentsRequestError(
+      "The target Shipment ID format is invalid.",
+      400,
+    );
   }
 
   let response: Response;
@@ -532,7 +567,7 @@ export async function deleteShipment(id: number): Promise<void> {
   } catch {
     throw new ShipmentsRequestError(
       "Unable to reach the server. Check your connection and try again.",
-      0
+      0,
     );
   }
 
@@ -546,7 +581,7 @@ export async function deleteShipment(id: number): Promise<void> {
   if (response.status === 400) {
     throw new ShipmentsRequestError(
       readApiMessage(raw, "The target Shipment ID format is invalid."),
-      400
+      400,
     );
   }
   if (response.status === 401) {
@@ -555,19 +590,22 @@ export async function deleteShipment(id: number): Promise<void> {
   if (response.status === 404) {
     throw new ShipmentsRequestError(
       "This shipment does not exist or has already been removed.",
-      404
+      404,
     );
   }
   if (response.status >= 500) {
     throw new ShipmentsRequestError(
       readApiMessage(raw, "Server error occurred. Could not delete shipment."),
-      response.status
+      response.status,
     );
   }
   if (!response.ok) {
     throw new ShipmentsRequestError(
-      readApiMessage(raw, `Unable to delete shipment. Server returned ${response.status}.`),
-      response.status
+      readApiMessage(
+        raw,
+        `Unable to delete shipment. Server returned ${response.status}.`,
+      ),
+      response.status,
     );
   }
 

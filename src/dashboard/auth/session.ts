@@ -4,7 +4,6 @@ import { roleFromAuthUser } from "./roleRouting";
 export const ACCESS_TOKEN_KEY = "access_token";
 export const AUTH_USER_KEY = "user";
 export const AUTH_PROFILE_UPDATED_EVENT = "yosti:auth-profile-updated";
-export const GRANT_SESSION_KEY = "yosti:role-permissions-granted";
 
 const PENDING_REGISTER_PROFILE_KEY = "yosti_pending_register_profile";
 const LEGACY_KEYS = ["token", "role", "email"] as const;
@@ -35,10 +34,6 @@ export function getAccessToken(): string | null {
   return readStoredToken(localStorage) ?? readStoredToken(sessionStorage);
 }
 
-export function isPreviewAccessToken(token: string | null = getAccessToken()) {
-  return Boolean(token && token.split(".").at(-1) === "preview");
-}
-
 export function hasValidAccessToken(): boolean {
   const token = getAccessToken();
   return Boolean(token && token.split(".").length === 3);
@@ -46,7 +41,7 @@ export function hasValidAccessToken(): boolean {
 
 export function mergeAuthUser(
   base: AuthUser,
-  patch?: Partial<AuthUser> | null
+  patch?: Partial<AuthUser> | null,
 ): AuthUser {
   if (!patch) {
     return base;
@@ -62,7 +57,8 @@ export function mergeAuthUser(
     companyName: patch.companyName?.trim() || base.companyName,
     country: patch.country?.trim() || base.country,
     phoneWhatsapp: patch.phoneWhatsapp?.trim() || base.phoneWhatsapp,
-    languagePreference: patch.languagePreference?.trim() || base.languagePreference,
+    languagePreference:
+      patch.languagePreference?.trim() || base.languagePreference,
   };
 }
 
@@ -123,12 +119,12 @@ export function persistPendingRegisterProfile(profile: PendingRegisterProfile) {
       companyName: profile.companyName.trim(),
       country: profile.country.trim(),
       phoneWhatsapp: profile.phoneWhatsapp.trim(),
-    })
+    }),
   );
 }
 
 export function consumePendingRegisterProfile(
-  email: string
+  email: string,
 ): PendingRegisterProfile | null {
   const raw = localStorage.getItem(PENDING_REGISTER_PROFILE_KEY);
   if (!raw) {
@@ -204,5 +200,4 @@ export function clearAuthSession() {
   sessionStorage.removeItem("token");
   sessionStorage.removeItem("role");
   sessionStorage.removeItem("email");
-  sessionStorage.removeItem(GRANT_SESSION_KEY);
 }

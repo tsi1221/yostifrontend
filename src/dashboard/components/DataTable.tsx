@@ -34,7 +34,10 @@ export default function DataTable<T>({
           <thead className="bg-slate-50 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
             <tr>
               {columns.map((column, index) => (
-                <th key={`${column.header}-${index}`} className={`px-4 py-3 ${column.className ?? ""}`}>
+                <th
+                  key={`${column.header}-${index}`}
+                  className={`px-4 py-3 ${column.className ?? ""}`}
+                >
                   {column.header}
                 </th>
               ))}
@@ -44,7 +47,10 @@ export default function DataTable<T>({
             {rows.map((row) => (
               <tr key={rowKey(row)} className="hover:bg-slate-50/80">
                 {columns.map((column, index) => (
-                  <td key={`${column.header}-${index}`} className={`px-4 py-3 text-slate-700 ${column.className ?? ""}`}>
+                  <td
+                    key={`${column.header}-${index}`}
+                    className={`px-4 py-3 text-slate-700 ${column.className ?? ""}`}
+                  >
                     {column.render(row)}
                   </td>
                 ))}

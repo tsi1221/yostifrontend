@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import axios, { AxiosError } from "axios";
 import { message } from "antd";
+import { API_BASE_URL } from "../../lib/api";
 
 export type TripStatus = "planned" | "ongoing" | "completed";
 
@@ -48,7 +49,7 @@ export interface TripApiResponse {
   data: BusinessTrip[];
 }
 
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = API_BASE_URL;
 
 export function useTripAdmin() {
   const [trips, setTrips] = useState<BusinessTrip[]>([]);
@@ -60,7 +61,7 @@ export function useTripAdmin() {
   const fetchTrips = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axios.get<TripApiResponse>(`${BASE_URL}/api/trips`, {
+      const res = await axios.get<TripApiResponse>(`${BASE_URL}/trips`, {
         headers: { Authorization: `Bearer ${getToken()}` },
       });
       if (res.data.success) setTrips(res.data.data);
@@ -77,7 +78,7 @@ export function useTripAdmin() {
     async (tripId: string, status: TripStatus) => {
       try {
         const res = await axios.put<{ success: boolean; data: BusinessTrip }>(
-          `${BASE_URL}/api/trips/${tripId}`,
+          `${BASE_URL}/trips/${tripId}`,
           { status },
           { headers: { Authorization: `Bearer ${getToken()}` } }
         );

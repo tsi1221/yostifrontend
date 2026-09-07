@@ -36,7 +36,8 @@ export default function DeleteRequestDialog({
           Delete request
         </p>
         <h2 className="mt-2 text-lg font-semibold text-[#0F3952]">
-          Are you sure you want to delete {productName}? This action cannot be undone.
+          Are you sure you want to delete {productName}? This action cannot be
+          undone.
         </h2>
         <div className="mt-6 flex justify-end gap-2">
           <ActionButton tone="ghost" disabled={deleting} onClick={onClose}>

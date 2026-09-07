@@ -16,7 +16,9 @@ export default function BlogsPage() {
         title="Blogs"
         description="Search, page, edit, and delete published articles."
         actions={
-          <ActionButton onClick={() => navigate(`/${ROLE_SLUG[role]}/blogs/new`)}>
+          <ActionButton
+            onClick={() => navigate(`/${ROLE_SLUG[role]}/blogs/new`)}
+          >
             New post
           </ActionButton>
         }

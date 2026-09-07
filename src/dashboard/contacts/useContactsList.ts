@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { isQuietListFailure, liveListFailureMessage } from "../apiMessage";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
+import { liveListFailureMessage } from "../apiMessage";
 import { LIVE_DATA_RELOAD_EVENT } from "../auth/liveDataReload";
-import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { ContactsListQuery, ContactsListResponse } from "./types";
 import { DEFAULT_CONTACTS_QUERY } from "./types";
 import {
   CONTACTS_INVALIDATE_EVENT,
   ContactRequestError,
   fetchContactsList,
-  isPreviewAccessToken,
 } from "./api";
 
 const EMPTY_RESPONSE: ContactsListResponse = {
@@ -31,7 +31,9 @@ function useDebouncedValue<T>(value: T, delay: number) {
 
 export function useContactsList() {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState<ContactsListQuery>(DEFAULT_CONTACTS_QUERY);
+  const [filters, setFilters] = useState<ContactsListQuery>(
+    DEFAULT_CONTACTS_QUERY,
+  );
   const [response, setResponse] = useState<ContactsListResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -51,7 +53,7 @@ export function useContactsList() {
       email,
       topic,
     }),
-    [email, filters.page, filters.pageSize, fullname, search, topic]
+    [email, filters.page, filters.pageSize, fullname, search, topic],
   );
 
   const load = useCallback(async () => {
@@ -63,18 +65,13 @@ export function useContactsList() {
       setResponse(payload);
     } catch (cause) {
       if (cause instanceof ContactRequestError && cause.status === 401) {
-        setResponse(null);
-        if (isPreviewAccessToken(getAccessToken())) {
-          setServerError("Sign in with a live account to load contact submissions.");
-          return;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
         return;
       }
 
-      if (isQuietListFailure(cause)) {
+      if (cause instanceof ContactRequestError && cause.status === 403) {
         setResponse(EMPTY_RESPONSE);
+        setServerError(FORBIDDEN_MESSAGE);
         return;
       }
 
@@ -101,7 +98,7 @@ export function useContactsList() {
 
   const setFilter = <K extends keyof ContactsListQuery>(
     key: K,
-    value: ContactsListQuery[K]
+    value: ContactsListQuery[K],
   ) => {
     setFilters((current) => ({
       ...current,

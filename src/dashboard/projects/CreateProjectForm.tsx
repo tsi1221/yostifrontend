@@ -15,12 +15,13 @@ export default function CreateProjectForm() {
   const navigate = useNavigate();
   const { role } = useDashboard();
   const listPath = `/${ROLE_SLUG[role]}/projects`;
-  const { submitProject, saving, conflict, authError, fieldErrors } = useCreateProject();
+  const { submitProject, saving, conflict, authError, fieldErrors } =
+    useCreateProject();
   const [values, setValues] = useState<ProjectFormValues>(EMPTY_PROJECT_FORM);
 
   const setField = <K extends keyof ProjectFormValues>(
     key: K,
-    value: ProjectFormValues[K]
+    value: ProjectFormValues[K],
   ) => {
     setValues((current) => ({ ...current, [key]: value }));
   };
@@ -90,7 +91,11 @@ export default function CreateProjectForm() {
         </fieldset>
 
         <div className="flex justify-end gap-2">
-          <ActionButton tone="ghost" disabled={saving} onClick={() => navigate(listPath)}>
+          <ActionButton
+            tone="ghost"
+            disabled={saving}
+            onClick={() => navigate(listPath)}
+          >
             Cancel
           </ActionButton>
           <ActionButton type="submit" disabled={saving}>

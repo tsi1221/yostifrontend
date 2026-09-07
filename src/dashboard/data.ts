@@ -1,5 +1,4 @@
 export {
-  SESSION_USERS,
   findSupplierName,
   findUserName,
   getActivity,

@@ -17,7 +17,9 @@ export default function SupportPage() {
         title={staff ? "Client support tickets" : "Support requests"}
         description="Search, filter, and page through live support tickets."
         actions={
-          <ActionButton onClick={() => navigate(`/${ROLE_SLUG[role]}/supports/new`)}>
+          <ActionButton
+            onClick={() => navigate(`/${ROLE_SLUG[role]}/supports/new`)}
+          >
             New ticket
           </ActionButton>
         }

@@ -49,7 +49,7 @@ export function roleIdForRole(role: RegisterRole) {
 }
 
 export async function registerAccount(
-  payload: AuthRegisterRequest
+  payload: AuthRegisterRequest,
 ): Promise<AuthRegisterResponse> {
   let response: Response;
 
@@ -65,7 +65,7 @@ export async function registerAccount(
   } catch {
     throw new AuthRequestError(
       "Unable to connect to the server. Check your connection and try again.",
-      0
+      0,
     );
   }
 
@@ -75,14 +75,14 @@ export async function registerAccount(
     throw new AuthRequestError(
       "This email address is already registered.",
       409,
-      "email"
+      "email",
     );
   }
 
   if (!response.ok) {
     throw new AuthRequestError(
       readApiMessage(data, "Unable to create your account. Please try again."),
-      response.status
+      response.status,
     );
   }
 

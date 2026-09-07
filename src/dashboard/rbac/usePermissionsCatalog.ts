@@ -1,41 +1,48 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-import { getAccessToken } from "../auth/session";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
 import type { RolePermission } from "./types";
 import {
-  FALLBACK_PERMISSIONS,
   RoleRequestError,
   fetchPermissionsCatalog,
-  isPreviewAccessToken,
   mergePermissionCatalog,
 } from "./api";
 
 export function usePermissionsCatalog(
   extras: RolePermission[] = [],
-  selectedIds: number[] = []
+  selectedIds: number[] = [],
 ) {
-  const [catalog, setCatalog] = useState<RolePermission[]>(FALLBACK_PERMISSIONS);
-  const [source, setSource] = useState<"api" | "fallback">("fallback");
+  const navigate = useNavigate();
+  const [catalog, setCatalog] = useState<RolePermission[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const payload = await fetchPermissionsCatalog();
       setCatalog(payload.permissions);
-      setSource(payload.source);
     } catch (cause) {
-      if (cause instanceof RoleRequestError && cause.status === 401 && isPreviewAccessToken(getAccessToken())) {
-        setCatalog(FALLBACK_PERMISSIONS);
-        setSource("fallback");
+      setCatalog([]);
+      if (cause instanceof RoleRequestError && cause.status === 401) {
+        expireSession(navigate);
         return;
       }
-      setCatalog(FALLBACK_PERMISSIONS);
-      setSource("fallback");
+      if (cause instanceof RoleRequestError && cause.status === 403) {
+        setError(FORBIDDEN_MESSAGE);
+        return;
+      }
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "The server could not load permissions.",
+      );
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     void load();
@@ -43,8 +50,8 @@ export function usePermissionsCatalog(
 
   const permissions = useMemo(
     () => mergePermissionCatalog(catalog, extras, selectedIds),
-    [catalog, extras, selectedIds]
+    [catalog, extras, selectedIds],
   );
 
-  return { permissions, source, loading, retry: load };
+  return { permissions, source: "api" as const, loading, error, retry: load };
 }

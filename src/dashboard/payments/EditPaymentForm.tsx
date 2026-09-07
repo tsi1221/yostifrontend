@@ -38,7 +38,7 @@ export default function EditPaymentForm({
 }: EditPaymentFormProps) {
   const { updatePayment, saving, fieldErrors } = useUpdatePayment(payment.id);
   const [values, setValues] = useState<UpdatePaymentFormValues>(() =>
-    paymentToFormValues(payment)
+    paymentToFormValues(payment),
   );
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export default function EditPaymentForm({
 
   const setField = <K extends keyof UpdatePaymentFormValues>(
     key: K,
-    value: UpdatePaymentFormValues[K]
+    value: UpdatePaymentFormValues[K],
   ) => {
     setValues((current) => ({ ...current, [key]: value }));
   };

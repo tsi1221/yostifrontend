@@ -2,7 +2,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
-import { CheckboxRow, Field, SelectInput, TextInput } from "../components/FormField";
+import {
+  CheckboxRow,
+  Field,
+  SelectInput,
+  TextInput,
+} from "../components/FormField";
 import PageHeader from "../components/PageHeader";
 import { ROLE_SLUG } from "../roles";
 import { useDashboard } from "../store";
@@ -15,11 +20,13 @@ export default function CreateInspectionForm() {
   const { role } = useDashboard();
   const listPath = `/${ROLE_SLUG[role]}/quality-control`;
   const { submitInspection, saving, fieldErrors } = useCreateInspection();
-  const [values, setValues] = useState<InspectionFormValues>(EMPTY_INSPECTION_FORM);
+  const [values, setValues] = useState<InspectionFormValues>(
+    EMPTY_INSPECTION_FORM,
+  );
 
   const setField = <K extends keyof InspectionFormValues>(
     key: K,
-    value: InspectionFormValues[K]
+    value: InspectionFormValues[K],
   ) => {
     setValues((current) => ({ ...current, [key]: value }));
   };
@@ -48,7 +55,10 @@ export default function CreateInspectionForm() {
           }
         }}
       >
-        <fieldset disabled={saving} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <fieldset
+          disabled={saving}
+          className="grid grid-cols-1 gap-4 md:grid-cols-2"
+        >
           <Field label="Supplier ID" error={fieldErrors.supplierId}>
             <TextInput
               type="number"
@@ -95,7 +105,10 @@ export default function CreateInspectionForm() {
             </p>
           </Field>
           <div className="md:col-span-2">
-            <Field label="Media requirement" error={fieldErrors.photoVideoRequired}>
+            <Field
+              label="Media requirement"
+              error={fieldErrors.photoVideoRequired}
+            >
               <CheckboxRow
                 label="Photo and video proof required"
                 checked={values.photoVideoRequired}
@@ -106,7 +119,11 @@ export default function CreateInspectionForm() {
         </fieldset>
 
         <div className="flex justify-end gap-2">
-          <ActionButton tone="ghost" disabled={saving} onClick={() => navigate(listPath)}>
+          <ActionButton
+            tone="ghost"
+            disabled={saving}
+            onClick={() => navigate(listPath)}
+          >
             Cancel
           </ActionButton>
           <ActionButton type="submit" disabled={saving}>

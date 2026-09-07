@@ -59,9 +59,13 @@ function ServiceCard({
       <header className="flex items-start gap-3">
         <ServiceLogo title={service.title} logo={service.logo} />
         <div className="min-w-0">
-          <h3 className="truncate text-base font-semibold text-[#0F3952]">{service.title}</h3>
+          <h3 className="truncate text-base font-semibold text-[#0F3952]">
+            {service.title}
+          </h3>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            {service.details.tier ? <StatusBadge value={service.details.tier} /> : null}
+            {service.details.tier ? (
+              <StatusBadge value={service.details.tier} />
+            ) : null}
             {service.details.support247 ? (
               <span className="inline-flex rounded-full bg-green-100 px-2.5 py-1 text-[11px] font-semibold text-green-800">
                 24/7 support
@@ -257,7 +261,11 @@ export default function ServicesGrid() {
         serviceId={pendingDelete}
         onClose={() => setPendingDelete(null)}
         onDeleted={() => {
-          if (editing && pendingDelete !== null && editing.id === pendingDelete) {
+          if (
+            editing &&
+            pendingDelete !== null &&
+            editing.id === pendingDelete
+          ) {
             setEditing(null);
           }
           setPendingDelete(null);

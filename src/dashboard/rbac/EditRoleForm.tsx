@@ -11,10 +11,17 @@ interface EditRoleFormProps {
   onSaved: (updated: RoleRecord) => void;
 }
 
-export default function EditRoleForm({ role, onCancel, onSaved }: EditRoleFormProps) {
+export default function EditRoleForm({
+  role,
+  onCancel,
+  onSaved,
+}: EditRoleFormProps) {
   const roleId = asRoleId(role.id) ?? 0;
-  const { updateRole, saving, notFound, authError, fieldErrors } = useUpdateRole(roleId);
-  const [values, setValues] = useState<RoleFormValues>(() => roleToFormValues(role));
+  const { updateRole, saving, notFound, authError, fieldErrors } =
+    useUpdateRole(roleId);
+  const [values, setValues] = useState<RoleFormValues>(() =>
+    roleToFormValues(role),
+  );
 
   useEffect(() => {
     setValues(roleToFormValues(role));

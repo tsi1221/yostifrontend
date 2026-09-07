@@ -10,7 +10,10 @@ import { BADGE_TONE_CLASS, getStatusTone } from "../statusStyles";
 import { useDashboard } from "../store";
 import DeleteInspectionDialog from "./DeleteInspectionDialog";
 import EditInspectionForm from "./EditInspectionForm";
-import { formatInspectionDate, formatInspectionType } from "./inspectionsService";
+import {
+  formatInspectionDate,
+  formatInspectionType,
+} from "./inspectionsService";
 import type {
   InspectionMediaFilter,
   InspectionRecord,
@@ -78,7 +81,9 @@ export default function InspectionsTable() {
   const navigate = useNavigate();
   const { role } = useDashboard();
   const [editing, setEditing] = useState<InspectionRecord | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<InspectionRecord | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<InspectionRecord | null>(
+    null,
+  );
   const {
     filters,
     setFilter,
@@ -91,7 +96,8 @@ export default function InspectionsTable() {
     retry,
   } = useInspectionsList();
 
-  const detailPath = (id: number) => `/${ROLE_SLUG[role]}/quality-control/${id}`;
+  const detailPath = (id: number) =>
+    `/${ROLE_SLUG[role]}/quality-control/${id}`;
 
   return (
     <div className="space-y-4">
@@ -142,7 +148,7 @@ export default function InspectionsTable() {
             onChange={(event) =>
               setFilter(
                 "photoVideoRequired",
-                event.target.value as InspectionMediaFilter
+                event.target.value as InspectionMediaFilter,
               )
             }
           >
@@ -173,123 +179,123 @@ export default function InspectionsTable() {
       ) : null}
 
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead className="bg-slate-50 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
-                <tr>
-                  <th className="px-4 py-3">ID</th>
-                  <th className="px-4 py-3">Product type</th>
-                  <th className="px-4 py-3">Type</th>
-                  <th className="px-4 py-3">Scheduled date</th>
-                  <th className="px-4 py-3">Media</th>
-                  <th className="px-4 py-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {loading ? <SkeletonRows /> : null}
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="bg-slate-50 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+              <tr>
+                <th className="px-4 py-3">ID</th>
+                <th className="px-4 py-3">Product type</th>
+                <th className="px-4 py-3">Type</th>
+                <th className="px-4 py-3">Scheduled date</th>
+                <th className="px-4 py-3">Media</th>
+                <th className="px-4 py-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {loading ? <SkeletonRows /> : null}
 
-                {!loading && inspections.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={COLUMNS}
-                      className="px-4 py-12 text-center text-sm text-slate-500"
-                    >
-                      No inspections match the current filters.
+              {!loading && inspections.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={COLUMNS}
+                    className="px-4 py-12 text-center text-sm text-slate-500"
+                  >
+                    No inspections match the current filters.
+                  </td>
+                </tr>
+              ) : null}
+
+              {!loading &&
+                inspections.map((row: InspectionRecord) => (
+                  <tr
+                    key={row.id}
+                    className="cursor-pointer hover:bg-slate-50/80"
+                    onClick={() => navigate(detailPath(row.id))}
+                  >
+                    <td className="px-4 py-3 font-medium text-slate-800">
+                      {row.id}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {row.productType || "—"}
+                    </td>
+                    <td className="px-4 py-3">{typeBadge(row.type)}</td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {formatInspectionDate(row.date)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <MediaBadge required={row.photoVideoRequired} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <ActionButton
+                          tone="ghost"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            navigate(detailPath(row.id));
+                          }}
+                        >
+                          View
+                        </ActionButton>
+                        <ActionButton
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setEditing(row);
+                          }}
+                        >
+                          Edit
+                        </ActionButton>
+                        <button
+                          type="button"
+                          className="rounded-xl bg-red-600 p-2 text-white hover:bg-red-700"
+                          aria-label={`Delete inspection request ${row.id}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setPendingDelete(row);
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
-                ) : null}
-
-                {!loading &&
-                  inspections.map((row: InspectionRecord) => (
-                    <tr
-                      key={row.id}
-                      className="cursor-pointer hover:bg-slate-50/80"
-                      onClick={() => navigate(detailPath(row.id))}
-                    >
-                      <td className="px-4 py-3 font-medium text-slate-800">
-                        {row.id}
-                      </td>
-                      <td className="px-4 py-3 text-slate-700">
-                        {row.productType || "—"}
-                      </td>
-                      <td className="px-4 py-3">{typeBadge(row.type)}</td>
-                      <td className="px-4 py-3 text-slate-700">
-                        {formatInspectionDate(row.date)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <MediaBadge required={row.photoVideoRequired} />
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <ActionButton
-                            tone="ghost"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              navigate(detailPath(row.id));
-                            }}
-                          >
-                            View
-                          </ActionButton>
-                          <ActionButton
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              setEditing(row);
-                            }}
-                          >
-                            Edit
-                          </ActionButton>
-                          <button
-                            type="button"
-                            className="rounded-xl bg-red-600 p-2 text-white hover:bg-red-700"
-                            aria-label={`Delete inspection request ${row.id}`}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              setPendingDelete(row);
-                            }}
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-
-          <footer className="flex flex-col gap-3 border-t border-slate-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-slate-500">
-              {rangeLabel(meta.page, meta.pageSize, meta.total)}
-            </p>
-            <div className="flex flex-wrap items-center gap-2">
-              <SelectInput
-                value={String(filters.pageSize)}
-                onChange={(event) => setPageSize(Number(event.target.value))}
-                className="w-auto"
-              >
-                <option value="10">10 / page</option>
-                <option value="20">20 / page</option>
-                <option value="50">50 / page</option>
-              </SelectInput>
-              <ActionButton
-                tone="ghost"
-                disabled={meta.page <= 1 || loading}
-                onClick={() => setPage(meta.page - 1)}
-              >
-                Previous
-              </ActionButton>
-              <span className="px-2 text-sm font-medium text-[#0F3952]">
-                {meta.page} / {Math.max(meta.totalPages, 1)}
-              </span>
-              <ActionButton
-                disabled={meta.page >= meta.totalPages || loading}
-                onClick={() => setPage(meta.page + 1)}
-              >
-                Next
-              </ActionButton>
-            </div>
-          </footer>
+                ))}
+            </tbody>
+          </table>
         </div>
+
+        <footer className="flex flex-col gap-3 border-t border-slate-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-slate-500">
+            {rangeLabel(meta.page, meta.pageSize, meta.total)}
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <SelectInput
+              value={String(filters.pageSize)}
+              onChange={(event) => setPageSize(Number(event.target.value))}
+              className="w-auto"
+            >
+              <option value="10">10 / page</option>
+              <option value="20">20 / page</option>
+              <option value="50">50 / page</option>
+            </SelectInput>
+            <ActionButton
+              tone="ghost"
+              disabled={meta.page <= 1 || loading}
+              onClick={() => setPage(meta.page - 1)}
+            >
+              Previous
+            </ActionButton>
+            <span className="px-2 text-sm font-medium text-[#0F3952]">
+              {meta.page} / {Math.max(meta.totalPages, 1)}
+            </span>
+            <ActionButton
+              disabled={meta.page >= meta.totalPages || loading}
+              onClick={() => setPage(meta.page + 1)}
+            >
+              Next
+            </ActionButton>
+          </div>
+        </footer>
+      </div>
 
       <SideDrawer
         open={Boolean(editing)}

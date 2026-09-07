@@ -54,7 +54,9 @@ export default function PaymentsTable() {
   const navigate = useNavigate();
   const { role } = useDashboard();
   const [editing, setEditing] = useState<PaymentRecord | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<PaymentRecord | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<PaymentRecord | null>(
+    null,
+  );
   const {
     filters,
     setFilter,
@@ -89,7 +91,10 @@ export default function PaymentsTable() {
           <SelectInput
             value={filters.service}
             onChange={(event) =>
-              setFilter("service", event.target.value as PaymentServiceFilter | "")
+              setFilter(
+                "service",
+                event.target.value as PaymentServiceFilter | "",
+              )
             }
           >
             {PAYMENT_SERVICE_FILTERS.map((option) => (
@@ -106,7 +111,10 @@ export default function PaymentsTable() {
           <SelectInput
             value={filters.method}
             onChange={(event) =>
-              setFilter("method", event.target.value as PaymentMethodFilter | "")
+              setFilter(
+                "method",
+                event.target.value as PaymentMethodFilter | "",
+              )
             }
           >
             {PAYMENT_METHOD_FILTERS.map((option) => (
@@ -123,7 +131,10 @@ export default function PaymentsTable() {
           <SelectInput
             value={filters.status}
             onChange={(event) =>
-              setFilter("status", event.target.value as PaymentStatusFilter | "")
+              setFilter(
+                "status",
+                event.target.value as PaymentStatusFilter | "",
+              )
             }
           >
             {PAYMENT_STATUS_FILTERS.map((option) => (
@@ -178,10 +189,18 @@ export default function PaymentsTable() {
                     className="cursor-pointer hover:bg-slate-50/80"
                     onClick={() => navigate(detailPath(row.id))}
                   >
-                    <td className="px-4 py-3 font-medium text-slate-800">{row.id}</td>
-                    <td className="px-4 py-3 text-slate-700">{row.userId || "—"}</td>
-                    <td className="px-4 py-3 text-slate-700">{row.service || "—"}</td>
-                    <td className="px-4 py-3 text-slate-700">{row.method || "—"}</td>
+                    <td className="px-4 py-3 font-medium text-slate-800">
+                      {row.id}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {row.userId || "—"}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {row.service || "—"}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {row.method || "—"}
+                    </td>
                     <td className="px-4 py-3">
                       <StatusBadge value={row.status || "—"} />
                     </td>

@@ -2,16 +2,16 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { isQuietListFailure, liveListFailureMessage } from "../apiMessage";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
+import { liveListFailureMessage } from "../apiMessage";
 import { LIVE_DATA_RELOAD_EVENT } from "../auth/liveDataReload";
-import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { ShipmentsListQuery, ShipmentsListResponse } from "./types";
 import { DEFAULT_SHIPMENTS_QUERY } from "./types";
 import {
   SHIPMENTS_INVALIDATE_EVENT,
   ShipmentsRequestError,
   fetchShipmentsList,
-  isPreviewAccessToken,
 } from "./shipmentsService";
 
 const EMPTY_RESPONSE: ShipmentsListResponse = {
@@ -35,7 +35,9 @@ function useDebouncedValue<T>(value: T, delay: number) {
 
 export function useShipmentsList() {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState<ShipmentsListQuery>(DEFAULT_SHIPMENTS_QUERY);
+  const [filters, setFilters] = useState<ShipmentsListQuery>(
+    DEFAULT_SHIPMENTS_QUERY,
+  );
   const [response, setResponse] = useState<ShipmentsListResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -53,7 +55,7 @@ export function useShipmentsList() {
       method,
       destinationCountry,
     }),
-    [destinationCountry, filters.page, filters.pageSize, method, search]
+    [destinationCountry, filters.page, filters.pageSize, method, search],
   );
 
   const load = useCallback(async () => {
@@ -72,17 +74,13 @@ export function useShipmentsList() {
       setResponse(null);
 
       if (cause instanceof ShipmentsRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          setServerError("Sign in with a live account to load shipments.");
-          return;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
         return;
       }
 
-      if (isQuietListFailure(cause)) {
+      if (cause instanceof ShipmentsRequestError && cause.status === 403) {
         setResponse(EMPTY_RESPONSE);
+        setServerError(FORBIDDEN_MESSAGE);
         return;
       }
 
@@ -109,7 +107,7 @@ export function useShipmentsList() {
 
   const setFilter = <K extends keyof ShipmentsListQuery>(
     key: K,
-    value: ShipmentsListQuery[K]
+    value: ShipmentsListQuery[K],
   ) => {
     setFilters((current) => ({
       ...current,

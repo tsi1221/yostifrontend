@@ -2,19 +2,19 @@ import { useCallback, useEffect, useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
+import { expireSession } from "../auth/sessionExpiry";
+
 import type { ProjectRecord } from "./types";
 import {
   PROJECTS_INVALIDATE_EVENT,
   ProjectRequestError,
   asProjectId,
   fetchProject,
-  isPreviewAccessToken,
 } from "./api";
 
 export function useProjectDetail(
   id: string | undefined,
-  options?: { publicFeed?: boolean }
+  options?: { publicFeed?: boolean },
 ) {
   const navigate = useNavigate();
   const publicFeed = options?.publicFeed === true;
@@ -45,12 +45,11 @@ export function useProjectDetail(
       setProject(null);
 
       if (cause instanceof ProjectRequestError && cause.status === 401) {
-        if (publicFeed || isPreviewAccessToken(getAccessToken())) {
-          setServerError("Sign in with a live account to load this project.");
+        if (publicFeed) {
+          setServerError("Sign in to load this content.");
           return;
         }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
         return;
       }
 
@@ -60,7 +59,9 @@ export function useProjectDetail(
       }
 
       const text =
-        cause instanceof Error ? cause.message : "The server could not load this project.";
+        cause instanceof Error
+          ? cause.message
+          : "The server could not load this project.";
       message.error(text);
       setServerError(text);
     } finally {

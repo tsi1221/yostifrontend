@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import axios, { AxiosError } from "axios";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../../lib/api";
 
 /* ===================== TYPES ===================== */
 
@@ -53,7 +54,7 @@ export interface ApiErrorResponse {
 
 /* ===================== HOOK ===================== */
 
-const BASE_URL = "http://localhost:5000/api/support";
+const BASE_URL = `${API_BASE_URL}/supports`;
 
 export const useSupportAdmin = () => {
   const [data, setData] = useState<SupportItem[]>([]);

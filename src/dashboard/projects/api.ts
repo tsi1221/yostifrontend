@@ -2,7 +2,6 @@ import { PROJECTS_URL } from "../auth/endpoints";
 import { getAccessToken } from "../auth/session";
 import { buildListQueryVariants, fetchAuthorizedList } from "../http";
 import { extractListRows, pickEntityId } from "../listResponse";
-import { isPreviewAccessToken } from "../users/usersService";
 import type {
   CreateProjectPayload,
   CreateProjectResult,
@@ -14,18 +13,17 @@ import type {
   UpdateProjectPayload,
 } from "./types";
 
-export { isPreviewAccessToken };
-
 export class ProjectRequestError extends Error {
   status: number;
   fields?: ProjectFieldErrors;
-  code?: "NOT_FOUND" | "TITLE_CONFLICT" | "UNAUTHORIZED" | "VALIDATION" | "NETWORK";
+  code?:
+    "NOT_FOUND" | "TITLE_CONFLICT" | "UNAUTHORIZED" | "VALIDATION" | "NETWORK";
 
   constructor(
     message: string,
     status: number,
     fields?: ProjectFieldErrors,
-    code?: ProjectRequestError["code"]
+    code?: ProjectRequestError["code"],
   ) {
     super(message);
     this.name = "ProjectRequestError";
@@ -48,7 +46,9 @@ export function invalidateProjectsCache() {
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : null;
 }
 
 function pickString(...values: unknown[]) {
@@ -85,12 +85,19 @@ function readApiMessage(raw: unknown, fallback: string) {
   return fallback;
 }
 
-const FIELD_KEYS: Array<keyof ProjectFieldErrors> = ["title", "image", "details"];
+const FIELD_KEYS: Array<keyof ProjectFieldErrors> = [
+  "title",
+  "image",
+  "details",
+];
 
 function parseFieldErrors(raw: unknown): ProjectFieldErrors {
   const record = asRecord(raw);
   const fields: ProjectFieldErrors = {};
-  const nested = asRecord(record?.fields) ?? asRecord(record?.errors) ?? asRecord(record?.message);
+  const nested =
+    asRecord(record?.fields) ??
+    asRecord(record?.errors) ??
+    asRecord(record?.message);
 
   if (nested) {
     for (const key of Object.keys(nested)) {
@@ -135,7 +142,9 @@ export function snippet(details: string, length = 160) {
   return `${text.slice(0, length).trim()}…`;
 }
 
-export function validateProjectForm(values: ProjectFormValues): ProjectFieldErrors {
+export function validateProjectForm(
+  values: ProjectFormValues,
+): ProjectFieldErrors {
   const errors: ProjectFieldErrors = {};
   if (!values.title.trim()) {
     errors.title = "Title is required.";
@@ -151,7 +160,9 @@ export function validateProjectForm(values: ProjectFormValues): ProjectFieldErro
   return errors;
 }
 
-export function formValuesToPayload(values: ProjectFormValues): CreateProjectPayload {
+export function formValuesToPayload(
+  values: ProjectFormValues,
+): CreateProjectPayload {
   return {
     title: values.title.trim(),
     image: values.image.trim(),
@@ -173,7 +184,12 @@ export function normalizeProject(raw: unknown): ProjectRecord | null {
     return null;
   }
 
-  const id = pickEntityId(record.id, record.projectId, record.project_id, record._id);
+  const id = pickEntityId(
+    record.id,
+    record.projectId,
+    record.project_id,
+    record._id,
+  );
   if (id === undefined) {
     return null;
   }
@@ -181,8 +197,18 @@ export function normalizeProject(raw: unknown): ProjectRecord | null {
   return {
     id,
     title: pickString(record.title, record.name),
-    image: pickString(record.image, record.imageUrl, record.image_url, record.logo),
-    details: pickString(record.details, record.content, record.body, record.description),
+    image: pickString(
+      record.image,
+      record.imageUrl,
+      record.image_url,
+      record.logo,
+    ),
+    details: pickString(
+      record.details,
+      record.content,
+      record.body,
+      record.description,
+    ),
   };
 }
 
@@ -197,7 +223,12 @@ function projectFromResponse(raw: unknown): ProjectRecord | null {
 function requireToken() {
   const token = getAccessToken();
   if (!token) {
-    throw new ProjectRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
+    throw new ProjectRequestError(
+      "Unauthorized",
+      401,
+      undefined,
+      "UNAUTHORIZED",
+    );
   }
   return token;
 }
@@ -208,7 +239,12 @@ function authHeaders(required: boolean): HeadersInit {
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   } else if (required) {
-    throw new ProjectRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
+    throw new ProjectRequestError(
+      "Unauthorized",
+      401,
+      undefined,
+      "UNAUTHORIZED",
+    );
   }
   return headers;
 }
@@ -231,7 +267,7 @@ export function buildProjectsQueryString(query: ProjectsListQuery) {
 
 function normalizeProjectsResponse(
   raw: unknown,
-  query: ProjectsListQuery
+  query: ProjectsListQuery,
 ): ProjectsListResponse {
   const record = asRecord(raw);
   const nested = asRecord(record?.data);
@@ -242,11 +278,16 @@ function normalizeProjectsResponse(
     .map((row) => normalizeProject(row))
     .filter((row): row is ProjectRecord => Boolean(row));
 
-  const total = pickNumber(meta?.total, record?.total, nested?.total) ?? data.length;
+  const total =
+    pickNumber(meta?.total, record?.total, nested?.total) ?? data.length;
   const page = pickNumber(meta?.page, record?.page, nested?.page) ?? query.page;
   const pageSize =
-    pickNumber(meta?.pageSize, record?.pageSize, record?.limit, nested?.pageSize) ??
-    query.pageSize;
+    pickNumber(
+      meta?.pageSize,
+      record?.pageSize,
+      record?.limit,
+      nested?.pageSize,
+    ) ?? query.pageSize;
   const totalPages =
     pickNumber(meta?.totalPages, record?.totalPages, nested?.totalPages) ??
     Math.max(1, Math.ceil(total / Math.max(pageSize, 1)));
@@ -258,7 +299,7 @@ function normalizeProjectsResponse(
 }
 
 export async function fetchProjectsList(
-  query: ProjectsListQuery
+  query: ProjectsListQuery,
 ): Promise<ProjectsListResponse> {
   const result = await fetchAuthorizedList(
     PROJECTS_URL,
@@ -266,7 +307,7 @@ export async function fetchProjectsList(
       search: query.search.trim() || undefined,
       title: query.title.trim() || undefined,
     }),
-    { requireAuth: false }
+    { requireAuth: false },
   );
 
   if (result.status === 400) {
@@ -274,18 +315,23 @@ export async function fetchProjectsList(
       readApiMessage(result.data, "Invalid project filters."),
       400,
       undefined,
-      "VALIDATION"
+      "VALIDATION",
     );
   }
   if (result.status === 401) {
-    throw new ProjectRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
+    throw new ProjectRequestError(
+      "Unauthorized",
+      401,
+      undefined,
+      "UNAUTHORIZED",
+    );
   }
   if (!result.ok) {
     throw new ProjectRequestError(
       readApiMessage(result.data, "The server could not load projects."),
       result.status,
       undefined,
-      result.status === 0 ? "NETWORK" : undefined
+      result.status === 0 ? "NETWORK" : undefined,
     );
   }
 
@@ -294,7 +340,12 @@ export async function fetchProjectsList(
 
 export async function fetchProject(id: number): Promise<ProjectRecord> {
   if (asProjectId(id) === undefined) {
-    throw new ProjectRequestError(PROJECT_NOT_FOUND_MESSAGE, 404, undefined, "NOT_FOUND");
+    throw new ProjectRequestError(
+      PROJECT_NOT_FOUND_MESSAGE,
+      404,
+      undefined,
+      "NOT_FOUND",
+    );
   }
 
   let response: Response;
@@ -308,34 +359,47 @@ export async function fetchProject(id: number): Promise<ProjectRecord> {
       "Unable to reach the server. Check your connection and try again.",
       0,
       undefined,
-      "NETWORK"
+      "NETWORK",
     );
   }
 
   const raw: unknown = await response.json().catch(() => null);
 
   if (response.status === 401) {
-    throw new ProjectRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
+    throw new ProjectRequestError(
+      "Unauthorized",
+      401,
+      undefined,
+      "UNAUTHORIZED",
+    );
   }
   if (response.status === 404) {
-    throw new ProjectRequestError(PROJECT_NOT_FOUND_MESSAGE, 404, undefined, "NOT_FOUND");
+    throw new ProjectRequestError(
+      PROJECT_NOT_FOUND_MESSAGE,
+      404,
+      undefined,
+      "NOT_FOUND",
+    );
   }
   if (!response.ok) {
     throw new ProjectRequestError(
       readApiMessage(raw, "The server could not load this project."),
-      response.status
+      response.status,
     );
   }
 
   const project = projectFromResponse(raw);
   if (!project) {
-    throw new ProjectRequestError("The server returned an incomplete project.", 500);
+    throw new ProjectRequestError(
+      "The server returned an incomplete project.",
+      500,
+    );
   }
   return project;
 }
 
 export async function createProject(
-  payload: CreateProjectPayload
+  payload: CreateProjectPayload,
 ): Promise<CreateProjectResult> {
   const token = requireToken();
 
@@ -355,7 +419,7 @@ export async function createProject(
       "Unable to reach the server. Check your connection and try again.",
       0,
       undefined,
-      "NETWORK"
+      "NETWORK",
     );
   }
 
@@ -363,33 +427,44 @@ export async function createProject(
 
   if (response.status === 400) {
     throw new ProjectRequestError(
-      readApiMessage(raw, "Unable to create this project. Check the highlighted fields."),
+      readApiMessage(
+        raw,
+        "Unable to create this project. Check the highlighted fields.",
+      ),
       400,
       parseFieldErrors(raw),
-      "VALIDATION"
+      "VALIDATION",
     );
   }
   if (response.status === 401) {
-    throw new ProjectRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
+    throw new ProjectRequestError(
+      "Unauthorized",
+      401,
+      undefined,
+      "UNAUTHORIZED",
+    );
   }
   if (response.status === 409) {
     throw new ProjectRequestError(
       PROJECT_TITLE_CONFLICT_MESSAGE,
       409,
       { title: PROJECT_TITLE_IN_USE_MESSAGE },
-      "TITLE_CONFLICT"
+      "TITLE_CONFLICT",
     );
   }
   if (response.status !== 200 && response.status !== 201) {
     throw new ProjectRequestError(
       readApiMessage(raw, "Server error occurred. Could not create project."),
-      response.status
+      response.status,
     );
   }
 
   const created = projectFromResponse(raw);
   if (!created) {
-    throw new ProjectRequestError("The server returned an incomplete project.", 500);
+    throw new ProjectRequestError(
+      "The server returned an incomplete project.",
+      500,
+    );
   }
 
   invalidateProjectsCache();
@@ -401,11 +476,16 @@ export async function createProject(
 
 export async function patchProject(
   id: number,
-  payload: UpdateProjectPayload
+  payload: UpdateProjectPayload,
 ): Promise<ProjectRecord> {
   const token = requireToken();
   if (asProjectId(id) === undefined) {
-    throw new ProjectRequestError(PROJECT_NOT_FOUND_MESSAGE, 404, undefined, "NOT_FOUND");
+    throw new ProjectRequestError(
+      PROJECT_NOT_FOUND_MESSAGE,
+      404,
+      undefined,
+      "NOT_FOUND",
+    );
   }
 
   let response: Response;
@@ -424,7 +504,7 @@ export async function patchProject(
       "Unable to reach the server. Check your connection and try again.",
       0,
       undefined,
-      "NETWORK"
+      "NETWORK",
     );
   }
 
@@ -432,36 +512,52 @@ export async function patchProject(
 
   if (response.status === 400) {
     throw new ProjectRequestError(
-      readApiMessage(raw, "Unable to save this project. Check the highlighted fields."),
+      readApiMessage(
+        raw,
+        "Unable to save this project. Check the highlighted fields.",
+      ),
       400,
       parseFieldErrors(raw),
-      "VALIDATION"
+      "VALIDATION",
     );
   }
   if (response.status === 401) {
-    throw new ProjectRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
+    throw new ProjectRequestError(
+      "Unauthorized",
+      401,
+      undefined,
+      "UNAUTHORIZED",
+    );
   }
   if (response.status === 404) {
-    throw new ProjectRequestError(PROJECT_NOT_FOUND_MESSAGE, 404, undefined, "NOT_FOUND");
+    throw new ProjectRequestError(
+      PROJECT_NOT_FOUND_MESSAGE,
+      404,
+      undefined,
+      "NOT_FOUND",
+    );
   }
   if (response.status === 409) {
     throw new ProjectRequestError(
       "Project title conflict",
       409,
       { title: PROJECT_TITLE_IN_USE_MESSAGE },
-      "TITLE_CONFLICT"
+      "TITLE_CONFLICT",
     );
   }
   if (!response.ok) {
     throw new ProjectRequestError(
       readApiMessage(raw, "Server error occurred. Could not update project."),
-      response.status
+      response.status,
     );
   }
 
   const updated = projectFromResponse(raw);
   if (!updated) {
-    throw new ProjectRequestError("The server returned an incomplete project.", 500);
+    throw new ProjectRequestError(
+      "The server returned an incomplete project.",
+      500,
+    );
   }
 
   invalidateProjectsCache();
@@ -471,7 +567,12 @@ export async function patchProject(
 export async function deleteProject(id: number): Promise<string> {
   const token = requireToken();
   if (asProjectId(id) === undefined) {
-    throw new ProjectRequestError(PROJECT_NOT_FOUND_MESSAGE, 404, undefined, "NOT_FOUND");
+    throw new ProjectRequestError(
+      PROJECT_NOT_FOUND_MESSAGE,
+      404,
+      undefined,
+      "NOT_FOUND",
+    );
   }
 
   let response: Response;
@@ -488,22 +589,32 @@ export async function deleteProject(id: number): Promise<string> {
       "Unable to reach the server. Check your connection and try again.",
       0,
       undefined,
-      "NETWORK"
+      "NETWORK",
     );
   }
 
   const raw: unknown = await response.json().catch(() => null);
 
   if (response.status === 401) {
-    throw new ProjectRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
+    throw new ProjectRequestError(
+      "Unauthorized",
+      401,
+      undefined,
+      "UNAUTHORIZED",
+    );
   }
   if (response.status === 404) {
-    throw new ProjectRequestError(PROJECT_NOT_FOUND_MESSAGE, 404, undefined, "NOT_FOUND");
+    throw new ProjectRequestError(
+      PROJECT_NOT_FOUND_MESSAGE,
+      404,
+      undefined,
+      "NOT_FOUND",
+    );
   }
   if (response.status !== 200) {
     throw new ProjectRequestError(
       readApiMessage(raw, "Server error occurred. Could not delete project."),
-      response.status
+      response.status,
     );
   }
 

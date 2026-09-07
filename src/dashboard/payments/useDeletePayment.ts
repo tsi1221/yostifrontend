@@ -2,13 +2,10 @@ import { useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
 import type { PaymentDeletionPhase } from "./types";
-import {
-  PaymentsRequestError,
-  deletePayment,
-  isPreviewAccessToken,
-} from "./paymentsService";
+import { PaymentsRequestError, deletePayment } from "./paymentsService";
 
 export function useDeletePayment() {
   const navigate = useNavigate();
@@ -30,21 +27,18 @@ export function useDeletePayment() {
       }
 
       if (cause instanceof PaymentsRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          message.error(
-            "Sign in with a live account to delete this payment record."
-          );
-          setPhase("confirming");
-          return false;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
+        return false;
+      }
+
+      if (cause instanceof PaymentsRequestError && cause.status === 403) {
+        message.error(FORBIDDEN_MESSAGE);
         return false;
       }
 
       if (cause instanceof PaymentsRequestError && cause.status === 404) {
         message.warning(
-          "This payment record does not exist or has already been removed."
+          "This payment record does not exist or has already been removed.",
         );
         setPhase("confirming");
         return false;
@@ -53,7 +47,7 @@ export function useDeletePayment() {
       message.error(
         cause instanceof Error
           ? cause.message
-          : "Server error occurred. Could not delete payment."
+          : "Server error occurred. Could not delete payment.",
       );
       setPhase("confirming");
       return false;

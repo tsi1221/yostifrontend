@@ -2,7 +2,8 @@ import { useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
 import { ROLE_SLUG } from "../roles";
 import { useDashboard } from "../store";
 import type { BlogDeletionPhase } from "./types";
@@ -11,7 +12,6 @@ import {
   BlogRequestError,
   deleteBlog,
   invalidateBlogsCache,
-  isPreviewAccessToken,
 } from "./api";
 
 export function useDeleteBlog() {
@@ -32,13 +32,12 @@ export function useDeleteBlog() {
       return true;
     } catch (cause) {
       if (cause instanceof BlogRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          message.error("Sign in with a live account to delete this blog post.");
-          setPhase("confirming");
-          return false;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
+        return false;
+      }
+
+      if (cause instanceof BlogRequestError && cause.status === 403) {
+        message.error(FORBIDDEN_MESSAGE);
         return false;
       }
 
@@ -51,7 +50,7 @@ export function useDeleteBlog() {
       message.error(
         cause instanceof Error
           ? cause.message
-          : "Server error occurred. Could not delete blog post."
+          : "Server error occurred. Could not delete blog post.",
       );
       setPhase("confirming");
       return false;

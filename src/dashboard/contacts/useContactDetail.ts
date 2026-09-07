@@ -2,14 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
 import type { ContactRecord } from "./types";
 import {
   CONTACTS_INVALIDATE_EVENT,
   ContactRequestError,
   asContactId,
   fetchContact,
-  isPreviewAccessToken,
 } from "./api";
 
 export function useContactDetail(id: string | undefined) {
@@ -41,12 +41,12 @@ export function useContactDetail(id: string | undefined) {
       setContact(null);
 
       if (cause instanceof ContactRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          setServerError("Sign in with a live account to load this contact.");
-          return;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
+        return;
+      }
+
+      if (cause instanceof ContactRequestError && cause.status === 403) {
+        setServerError(FORBIDDEN_MESSAGE);
         return;
       }
 

@@ -16,7 +16,9 @@ export default function TripsPage() {
         title="Trips Management Overview"
         description="Search, filter, and page through live business trip bookings."
         actions={
-          <ActionButton onClick={() => navigate(`/${ROLE_SLUG[role]}/trips/new`)}>
+          <ActionButton
+            onClick={() => navigate(`/${ROLE_SLUG[role]}/trips/new`)}
+          >
             New trip
           </ActionButton>
         }

@@ -84,8 +84,16 @@ export const PAYMENT_SERVICE_OPTIONS: {
   value: PaymentServiceValue;
   description: string;
 }[] = [
-  { label: "Logistic", value: "Logistic", description: "Cargo and shipping charges" },
-  { label: "Sourcing", value: "Sourcing", description: "Sourcing and supplier requests" },
+  {
+    label: "Logistic",
+    value: "Logistic",
+    description: "Cargo and shipping charges",
+  },
+  {
+    label: "Sourcing",
+    value: "Sourcing",
+    description: "Sourcing and supplier requests",
+  },
 ];
 
 export const PAYMENT_METHOD_OPTIONS: {
@@ -109,10 +117,7 @@ export interface PaymentFormValues {
 }
 
 export type PaymentUpdateStatusValue =
-  | "Pending"
-  | "Completed"
-  | "Refunded"
-  | "Failed";
+  "Pending" | "Completed" | "Refunded" | "Failed";
 
 export const PAYMENT_UPDATE_STATUS_VALUES: PaymentUpdateStatusValue[] = [
   "Pending",

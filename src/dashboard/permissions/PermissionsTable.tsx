@@ -74,7 +74,8 @@ export default function PermissionsTable() {
         </div>
       ) : null}
 
-      {(!serverError || permissions.length > 0) && !(loading && permissions.length === 0) ? (
+      {(!serverError || permissions.length > 0) &&
+      !(loading && permissions.length === 0) ? (
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
@@ -90,7 +91,10 @@ export default function PermissionsTable() {
                 {loading ? <SkeletonRows /> : null}
                 {!loading && permissions.length === 0 ? (
                   <tr>
-                    <td colSpan={COLUMNS} className="px-4 py-10 text-center text-slate-500">
+                    <td
+                      colSpan={COLUMNS}
+                      className="px-4 py-10 text-center text-slate-500"
+                    >
                       {filters.search.trim()
                         ? "No permissions match this search."
                         : "No permissions are published yet."}
@@ -100,11 +104,15 @@ export default function PermissionsTable() {
                 {!loading
                   ? permissions.map((permission) => (
                       <tr key={permission.id} className="hover:bg-slate-50">
-                        <td className="px-4 py-3 font-medium text-[#0F3952]">{permission.id}</td>
+                        <td className="px-4 py-3 font-medium text-[#0F3952]">
+                          {permission.id}
+                        </td>
                         <td className="px-4 py-3 font-mono text-sm font-semibold text-[#0F3952]">
                           {permission.name}
                         </td>
-                        <td className="px-4 py-3 text-slate-600">{permissionGroup(permission.name)}</td>
+                        <td className="px-4 py-3 text-slate-600">
+                          {permissionGroup(permission.name)}
+                        </td>
                         <td className="px-4 py-3 text-slate-600">
                           {permission.description || "—"}
                         </td>

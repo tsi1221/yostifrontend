@@ -1,3 +1,4 @@
+import api from "../lib/api";
 import { getAccessToken } from "./auth/session";
 
 export interface JsonResult {
@@ -7,7 +8,9 @@ export interface JsonResult {
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : null;
 }
 
 export function readJsonMessage(data: unknown, fallback: string) {
@@ -32,7 +35,7 @@ function unique(values: string[]) {
 export function buildListQueryVariants(
   page: number,
   pageSize: number,
-  extra: Record<string, string | number | boolean | undefined | ""> = {}
+  extra: Record<string, string | number | boolean | undefined | ""> = {},
 ) {
   const extras = new URLSearchParams();
   for (const [key, value] of Object.entries(extra)) {
@@ -49,8 +52,6 @@ export function buildListQueryVariants(
   return unique([
     `page=${currentPage}&limit=${size}${suffix}`,
     `page=${currentPage}&pageSize=${size}${suffix}`,
-    `page=${currentPage}&pageSize=${size}&limit=${size}${suffix}`,
-    `page=${currentPage}&limit=${size}`,
     extraText,
     "",
   ]);
@@ -59,30 +60,34 @@ export function buildListQueryVariants(
 export async function fetchAuthorizedJson(
   url: string,
   init?: RequestInit,
-  options?: { requireAuth?: boolean }
+  options?: { requireAuth?: boolean },
 ): Promise<JsonResult> {
-  const token = getAccessToken();
-  if (!token && options?.requireAuth !== false) {
+  if (!getAccessToken() && options?.requireAuth !== false) {
     return { ok: false, status: 401, data: { message: "Unauthorized" } };
   }
 
   try {
-    const response = await fetch(url, {
-      ...init,
-      headers: {
-        Accept: "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...(init?.body ? { "Content-Type": "application/json" } : {}),
-        ...init?.headers,
-      },
+    const method = (init?.method || "GET").toUpperCase();
+    const response = await api.request({
+      url,
+      method,
+      data: init?.body,
+      headers: init?.headers as Record<string, string> | undefined,
+      validateStatus: () => true,
     });
-    const data: unknown = await response.json().catch(() => null);
-    return { ok: response.ok, status: response.status, data };
+    return {
+      ok: response.status >= 200 && response.status < 300,
+      status: response.status,
+      data: response.data,
+    };
   } catch {
     return {
       ok: false,
       status: 0,
-      data: { message: "Unable to reach the server. Check your connection and try again." },
+      data: {
+        message:
+          "Unable to reach the server. Check your connection and try again.",
+      },
     };
   }
 }
@@ -90,12 +95,15 @@ export async function fetchAuthorizedJson(
 export async function fetchAuthorizedList(
   baseUrl: string,
   queryVariants: string[],
-  options?: { requireAuth?: boolean }
+  options?: { requireAuth?: boolean },
 ): Promise<JsonResult> {
   let last: JsonResult = {
     ok: false,
     status: 0,
-    data: { message: "Unable to reach the server. Check your connection and try again." },
+    data: {
+      message:
+        "Unable to reach the server. Check your connection and try again.",
+    },
   };
 
   for (const query of queryVariants) {

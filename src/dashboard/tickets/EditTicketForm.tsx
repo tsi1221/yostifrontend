@@ -38,9 +38,10 @@ export default function EditTicketForm({
   onSaved,
 }: EditTicketFormProps) {
   const ticketId = asSupportTicketId(ticket.id) ?? 0;
-  const { updateSupport, saving, conflict, fieldErrors } = useUpdateSupport(ticketId);
+  const { updateSupport, saving, conflict, fieldErrors } =
+    useUpdateSupport(ticketId);
   const [values, setValues] = useState<UpdateSupportFormValues>(() =>
-    ticketToFormValues(ticket)
+    ticketToFormValues(ticket),
   );
 
   useEffect(() => {
@@ -49,7 +50,7 @@ export default function EditTicketForm({
 
   const setField = <K extends keyof UpdateSupportFormValues>(
     key: K,
-    value: UpdateSupportFormValues[K]
+    value: UpdateSupportFormValues[K],
   ) => {
     setValues((current) => ({ ...current, [key]: value }));
   };
@@ -84,7 +85,10 @@ export default function EditTicketForm({
           <SelectInput
             value={values.issuesType}
             onChange={(event) =>
-              setField("issuesType", event.target.value as TicketUpdateIssuesType)
+              setField(
+                "issuesType",
+                event.target.value as TicketUpdateIssuesType,
+              )
             }
           >
             {TICKET_UPDATE_ISSUES_TYPE_OPTIONS.map((option) => (
@@ -101,13 +105,16 @@ export default function EditTicketForm({
             onChange={(event) => setField("title", event.target.value)}
           />
         </Field>
-        <Field label="Resolution to request" error={fieldErrors.resolutionToRequest}>
+        <Field
+          label="Resolution to request"
+          error={fieldErrors.resolutionToRequest}
+        >
           <SelectInput
             value={values.resolutionToRequest}
             onChange={(event) =>
               setField(
                 "resolutionToRequest",
-                event.target.value as TicketUpdateResolutionValue
+                event.target.value as TicketUpdateResolutionValue,
               )
             }
           >

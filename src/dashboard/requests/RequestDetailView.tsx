@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
-import { Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
-import { isSuperAdminSession } from "../auth/superAdminAccess";
 import ActionButton from "../components/ActionButton";
 import SideDrawer from "../components/SideDrawer";
 import { ROLE_SLUG } from "../roles";
@@ -41,10 +40,6 @@ export default function RequestDetailView() {
   const [editing, setEditing] = useState(searchParams.get("edit") === "1");
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  if (role !== "SUPER_ADMIN" && !isSuperAdminSession()) {
-    return <Navigate to={listPath} replace />;
-  }
-
   const goBack = () => navigate(listPath);
   const closeEditor = () => {
     setEditing(false);
@@ -63,7 +58,9 @@ export default function RequestDetailView() {
         </ActionButton>
         {request ? (
           <div className="flex gap-2">
-            <ActionButton onClick={() => setEditing(true)}>Edit request</ActionButton>
+            <ActionButton onClick={() => setEditing(true)}>
+              Edit request
+            </ActionButton>
             <button
               type="button"
               className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
@@ -80,7 +77,9 @@ export default function RequestDetailView() {
 
       {!loading && notFound ? (
         <section className="rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
-          <p className="text-lg font-semibold text-[#0F3952]">Request not found</p>
+          <p className="text-lg font-semibold text-[#0F3952]">
+            Request not found
+          </p>
           <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
             Request not found. It may have been deleted or the ID is incorrect.
           </p>
@@ -95,7 +94,9 @@ export default function RequestDetailView() {
           <p className="text-lg font-semibold text-[#0F3952]">
             Unable to load request details
           </p>
-          <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">{serverError}</p>
+          <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
+            {serverError}
+          </p>
           <ActionButton className="mt-5" onClick={retry}>
             Retry Connection
           </ActionButton>

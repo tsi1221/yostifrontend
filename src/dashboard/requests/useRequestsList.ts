@@ -2,17 +2,16 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { isQuietListFailure, liveListFailureMessage } from "../apiMessage";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
+import { liveListFailureMessage } from "../apiMessage";
 import { LIVE_DATA_RELOAD_EVENT } from "../auth/liveDataReload";
-import { isSuperAdminSession, recoverSuperAdminAccess } from "../auth/superAdminAccess";
-import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { RequestsListQuery, RequestsListResponse } from "./types";
 import { DEFAULT_REQUESTS_QUERY } from "./types";
 import {
   REQUESTS_INVALIDATE_EVENT,
   RequestsRequestError,
   fetchRequestsList,
-  isPreviewAccessToken,
 } from "./requestsService";
 
 const EMPTY_RESPONSE: RequestsListResponse = {
@@ -36,7 +35,9 @@ function useDebouncedValue<T>(value: T, delay: number) {
 
 export function useRequestsList() {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState<RequestsListQuery>(DEFAULT_REQUESTS_QUERY);
+  const [filters, setFilters] = useState<RequestsListQuery>(
+    DEFAULT_REQUESTS_QUERY,
+  );
   const [response, setResponse] = useState<RequestsListResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [forbidden, setForbidden] = useState(false);
@@ -56,7 +57,7 @@ export function useRequestsList() {
       supplierRegion,
       deadline,
     }),
-    [deadline, filters.page, filters.pageSize, search, supplierRegion]
+    [deadline, filters.page, filters.pageSize, search, supplierRegion],
   );
 
   const load = useCallback(async () => {
@@ -77,38 +78,15 @@ export function useRequestsList() {
       setResponse(null);
 
       if (cause instanceof RequestsRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          setServerError("Sign in with a live Super Admin account to load requests.");
-          return;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
         return;
       }
 
       if (cause instanceof RequestsRequestError && cause.status === 403) {
-        if (isSuperAdminSession()) {
-          const recovered = await recoverSuperAdminAccess();
-          if (recovered) {
-            try {
-              const payload = await fetchRequestsList(query);
-              setResponse(payload);
-              return;
-            } catch {
-              // Still cannot read requests after granting every role.
-            }
-          }
-          setResponse(EMPTY_RESPONSE);
-          setServerError(liveListFailureMessage(cause, "requests"));
-          return;
-        }
         setResponse(EMPTY_RESPONSE);
+        setForbidden(true);
         setRestricted(true);
-        return;
-      }
-
-      if (isQuietListFailure(cause)) {
-        setResponse(EMPTY_RESPONSE);
+        setServerError(FORBIDDEN_MESSAGE);
         return;
       }
 
@@ -135,7 +113,7 @@ export function useRequestsList() {
 
   const setFilter = <K extends keyof RequestsListQuery>(
     key: K,
-    value: RequestsListQuery[K]
+    value: RequestsListQuery[K],
   ) => {
     setFilters((current) => ({
       ...current,

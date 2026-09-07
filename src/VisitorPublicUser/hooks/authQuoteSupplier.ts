@@ -1,7 +1,8 @@
 // src/hooks/authQuoteSupplier.ts
 import axios from "axios";
 
-const API_BASE = "http://localhost:5000/api/sourcing";
+import { API_BASE_URL } from "../../lib/api";
+const API_BASE = `${API_BASE_URL}/requests`;
 
 // Helper to get token from localStorage (or your auth state)
 const getToken = () => localStorage.getItem("token");

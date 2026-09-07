@@ -2,13 +2,13 @@ import { useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
 import type { TicketFieldErrors, TicketFormValues } from "./types";
 import {
   TicketsRequestError,
   createTicket,
   formValuesToPayload,
-  isPreviewAccessToken,
   validateTicketForm,
 } from "./ticketsService";
 
@@ -41,12 +41,12 @@ export function useCreateTicket() {
       }
 
       if (cause instanceof TicketsRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          message.error("Sign in with a live account to create a support ticket.");
-          return null;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
+        return null;
+      }
+
+      if (cause instanceof TicketsRequestError && cause.status === 403) {
+        message.error(FORBIDDEN_MESSAGE);
         return null;
       }
 
@@ -58,7 +58,7 @@ export function useCreateTicket() {
       message.error(
         cause instanceof Error
           ? cause.message
-          : "Server error occurred. Could not create support ticket."
+          : "Server error occurred. Could not create support ticket.",
       );
       return null;
     } finally {

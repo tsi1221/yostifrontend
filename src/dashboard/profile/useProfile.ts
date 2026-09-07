@@ -2,17 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import {
-  clearAuthSession,
-  getStoredAuthUser,
-  isPreviewAccessToken,
-} from "../auth/session";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
+import { getStoredAuthUser } from "../auth/session";
 import type { AuthUser } from "../types/auth";
 import {
   ProfileRequestError,
   profileFormFromUser,
   refreshStoredAuthProfile,
-  saveProfileLocally,
   updateCurrentProfile,
   validateProfileForm,
 } from "./api";
@@ -22,7 +19,7 @@ export function useProfile() {
   const navigate = useNavigate();
   const [user, setUser] = useState<AuthUser | null>(() => getStoredAuthUser());
   const [values, setValues] = useState<ProfileFormValues>(() =>
-    profileFormFromUser(getStoredAuthUser())
+    profileFormFromUser(getStoredAuthUser()),
   );
   const [fieldErrors, setFieldErrors] = useState<ProfileFieldErrors>({});
   const [saving, setSaving] = useState(false);
@@ -51,11 +48,14 @@ export function useProfile() {
   }, []);
 
   const setField = useCallback(
-    <K extends keyof ProfileFormValues>(key: K, value: ProfileFormValues[K]) => {
+    <K extends keyof ProfileFormValues>(
+      key: K,
+      value: ProfileFormValues[K],
+    ) => {
       setValues((current) => ({ ...current, [key]: value }));
       setFieldErrors((current) => ({ ...current, [key]: undefined }));
     },
-    []
+    [],
   );
 
   const save = useCallback(async () => {
@@ -91,20 +91,19 @@ export function useProfile() {
       }
 
       if (cause instanceof ProfileRequestError && cause.status === 401) {
-        if (isPreviewAccessToken()) {
-          applyUser(saveProfileLocally(values));
-          message.success("Profile saved for this session.");
-          return true;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
+        return false;
+      }
+
+      if (cause instanceof ProfileRequestError && cause.status === 403) {
+        message.error(FORBIDDEN_MESSAGE);
         return false;
       }
 
       message.error(
         cause instanceof Error
           ? cause.message
-          : "Unable to update your profile. Please try again."
+          : "Unable to update your profile. Please try again.",
       );
       return false;
     } finally {

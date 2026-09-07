@@ -38,7 +38,6 @@ export {
   formValuesToUpdatePayload,
   invalidateServicesCache,
   isHttpUrl,
-  isPreviewAccessToken,
   normalizeService,
   patchService,
   serviceDetailUrl,

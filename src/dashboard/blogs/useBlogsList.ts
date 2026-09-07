@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { isQuietListFailure, liveListFailureMessage } from "../apiMessage";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
+import { liveListFailureMessage } from "../apiMessage";
 import { LIVE_DATA_RELOAD_EVENT } from "../auth/liveDataReload";
-import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { BlogsListQuery, BlogsListResponse } from "./types";
 import { DEFAULT_BLOGS_QUERY } from "./types";
 import {
   BLOGS_INVALIDATE_EVENT,
   BlogRequestError,
   fetchBlogsList,
-  isPreviewAccessToken,
 } from "./api";
 
 const EMPTY_RESPONSE: BlogsListResponse = {
@@ -48,7 +48,7 @@ export function useBlogsList(options?: { publicFeed?: boolean }) {
       search,
       title,
     }),
-    [filters.page, filters.pageSize, search, title]
+    [filters.page, filters.pageSize, search, title],
   );
 
   const load = useCallback(async () => {
@@ -60,18 +60,17 @@ export function useBlogsList(options?: { publicFeed?: boolean }) {
       setResponse(payload);
     } catch (cause) {
       if (cause instanceof BlogRequestError && cause.status === 401) {
-        setResponse(null);
-        if (publicFeed || isPreviewAccessToken(getAccessToken())) {
-          setServerError("Sign in with a live account to load blog posts.");
+        if (publicFeed) {
+          setServerError("Sign in to load this content.");
           return;
         }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
         return;
       }
 
-      if (isQuietListFailure(cause)) {
+      if (cause instanceof BlogRequestError && cause.status === 403) {
         setResponse(EMPTY_RESPONSE);
+        setServerError(FORBIDDEN_MESSAGE);
         return;
       }
 
@@ -98,7 +97,7 @@ export function useBlogsList(options?: { publicFeed?: boolean }) {
 
   const setFilter = <K extends keyof BlogsListQuery>(
     key: K,
-    value: BlogsListQuery[K]
+    value: BlogsListQuery[K],
   ) => {
     setFilters((current) => ({
       ...current,

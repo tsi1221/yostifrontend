@@ -2,7 +2,12 @@ import { useState } from "react";
 import { CheckCircle2, Loader2 } from "lucide-react";
 
 import ActionButton from "../components/ActionButton";
-import { Field, SelectInput, TextArea, TextInput } from "../components/FormField";
+import {
+  Field,
+  SelectInput,
+  TextArea,
+  TextInput,
+} from "../components/FormField";
 import type { ContactFormValues } from "./types";
 import { CONTACT_TOPIC_VALUES, EMPTY_CONTACT_FORM } from "./types";
 import { useSubmitContact } from "./useSubmitContact";
@@ -14,7 +19,7 @@ export default function PublicContactForm() {
 
   const setField = <K extends keyof ContactFormValues>(
     key: K,
-    value: ContactFormValues[K]
+    value: ContactFormValues[K],
   ) => {
     setValues((current) => ({ ...current, [key]: value }));
   };
@@ -25,7 +30,9 @@ export default function PublicContactForm() {
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-green-700">
           <CheckCircle2 size={32} />
         </div>
-        <h1 className="mt-4 text-2xl font-semibold text-[#0F3952]">{successMessage}</h1>
+        <h1 className="mt-4 text-2xl font-semibold text-[#0F3952]">
+          {successMessage}
+        </h1>
         <p className="mt-2 text-sm text-slate-500">
           Our team will follow up on WhatsApp or email shortly.
         </p>
@@ -48,9 +55,12 @@ export default function PublicContactForm() {
       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#FDC700]">
         Contact
       </p>
-      <h1 className="mt-2 text-3xl font-semibold text-[#0F3952]">Talk to Yosti</h1>
+      <h1 className="mt-2 text-3xl font-semibold text-[#0F3952]">
+        Talk to Yosti
+      </h1>
       <p className="mt-2 text-sm text-slate-500">
-        Share your sourcing, logistics, or partnership request. We reply on WhatsApp.
+        Share your sourcing, logistics, or partnership request. We reply on
+        WhatsApp.
       </p>
 
       <form
@@ -61,7 +71,10 @@ export default function PublicContactForm() {
           await sendMessage(values);
         }}
       >
-        <fieldset disabled={saving} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <fieldset
+          disabled={saving}
+          className="grid grid-cols-1 gap-4 md:grid-cols-2"
+        >
           <Field label="Full name" error={fieldErrors.fullname}>
             <TextInput
               placeholder="Ada Bekele"
@@ -74,7 +87,9 @@ export default function PublicContactForm() {
               type="tel"
               placeholder="+251 911 000 000"
               value={values.phoneWhatsapp}
-              onChange={(event) => setField("phoneWhatsapp", event.target.value)}
+              onChange={(event) =>
+                setField("phoneWhatsapp", event.target.value)
+              }
             />
           </Field>
           <Field label="Email" error={fieldErrors.email}>

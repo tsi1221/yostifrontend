@@ -36,7 +36,7 @@ interface ApiSingleResponse {
 
 /* -------------------- Hook -------------------- */
 
-export const useSupportBuyer = (myTicketsOnly: boolean = true) => {
+export const useSupportBuyer = (_myTicketsOnly: boolean = true) => {
   const [requests, setRequests] = useState<SupportRequest[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,13 +46,11 @@ export const useSupportBuyer = (myTicketsOnly: boolean = true) => {
     setError(null);
 
     try {
-      const endpoint = myTicketsOnly
-        ? "/api/support/mytickets"
-        : "/api/support";
+      const endpoint = "/supports";
 
       const res = await api.get<ApiListResponse>(endpoint);
 
-      const normalized = res.data.data.map((ticket) => ({
+      const normalized = res.data.data.map((ticket: SupportRequest) => ({
         ...ticket,
         status: ticket.status.toUpperCase() as SupportRequest["status"],
       }));
@@ -67,13 +65,13 @@ export const useSupportBuyer = (myTicketsOnly: boolean = true) => {
     } finally {
       setLoading(false);
     }
-  }, [myTicketsOnly]);
+  }, []);
 
   const submitRequest = async (
     payload: CreateSupportRequest
   ): Promise<SupportRequest> => {
     try {
-      const res = await api.post<ApiSingleResponse>("/api/support", payload);
+      const res = await api.post<ApiSingleResponse>("/supports", payload);
       const created = {
         ...res.data.data,
         status: res.data.data.status.toUpperCase() as SupportRequest["status"],

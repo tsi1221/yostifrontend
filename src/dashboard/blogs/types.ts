@@ -23,7 +23,9 @@ export interface BlogFormValues {
   details: string;
 }
 
-export type BlogFieldErrors = Partial<Record<"title" | "logo" | "details", string>>;
+export type BlogFieldErrors = Partial<
+  Record<"title" | "logo" | "details", string>
+>;
 
 export const EMPTY_BLOG_FORM: BlogFormValues = {
   title: "",

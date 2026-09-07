@@ -7,7 +7,6 @@ import {
   fetchPermissionsList,
   permissionGroup,
 } from "../permissions/api";
-import { isPreviewAccessToken } from "../users/usersService";
 import type {
   CreateRolePayload,
   CreateRoleResult,
@@ -20,18 +19,17 @@ import type {
   UpdateRolePayload,
 } from "./types";
 
-export { isPreviewAccessToken };
-
 export class RoleRequestError extends Error {
   status: number;
   fields?: RoleFieldErrors;
-  code?: "NOT_FOUND" | "NAME_CONFLICT" | "UNAUTHORIZED" | "VALIDATION" | "NETWORK";
+  code?:
+    "NOT_FOUND" | "NAME_CONFLICT" | "UNAUTHORIZED" | "VALIDATION" | "NETWORK";
 
   constructor(
     message: string,
     status: number,
     fields?: RoleFieldErrors,
-    code?: RoleRequestError["code"]
+    code?: RoleRequestError["code"],
   ) {
     super(message);
     this.name = "RoleRequestError";
@@ -44,7 +42,8 @@ export class RoleRequestError extends Error {
 export const ROLE_NAME_TAKEN_MESSAGE = "Role name is already taken";
 export const ROLE_NAME_EXISTS_MESSAGE = "Role name already exists";
 export const ROLE_NAME_CONFLICT_MESSAGE = "Role name conflict";
-export const ROLE_NOT_FOUND_MESSAGE = "This role could not be found or has been removed.";
+export const ROLE_NOT_FOUND_MESSAGE =
+  "This role could not be found or has been removed.";
 export const CREATE_ROLE_SUCCESS_MESSAGE = "Role created successfully.";
 export const UPDATE_ROLE_SUCCESS_MESSAGE = "Role updated successfully.";
 export const ROLES_INVALIDATE_EVENT = "yosti:roles-invalidate";
@@ -54,7 +53,9 @@ export function invalidateRolesCache() {
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : null;
 }
 
 function pickString(...values: unknown[]) {
@@ -91,12 +92,19 @@ function readApiMessage(raw: unknown, fallback: string) {
   return fallback;
 }
 
-const FIELD_KEYS: Array<keyof RoleFieldErrors> = ["name", "description", "permissionIds"];
+const FIELD_KEYS: Array<keyof RoleFieldErrors> = [
+  "name",
+  "description",
+  "permissionIds",
+];
 
 function parseFieldErrors(raw: unknown): RoleFieldErrors {
   const record = asRecord(raw);
   const fields: RoleFieldErrors = {};
-  const nested = asRecord(record?.fields) ?? asRecord(record?.errors) ?? asRecord(record?.message);
+  const nested =
+    asRecord(record?.fields) ??
+    asRecord(record?.errors) ??
+    asRecord(record?.message);
 
   if (nested) {
     for (const key of Object.keys(nested)) {
@@ -133,35 +141,6 @@ export function snippet(details: string, length = 160) {
   return `${text.slice(0, length).trim()}…`;
 }
 
-export const FALLBACK_PERMISSIONS: RolePermission[] = [
-  { id: 1, name: "users.read", description: "View user accounts", group: "Users" },
-  { id: 2, name: "users.write", description: "Create and update user accounts", group: "Users" },
-  { id: 3, name: "roles.read", description: "View roles and assigned permissions", group: "Roles" },
-  { id: 4, name: "roles.write", description: "Create and update roles", group: "Roles" },
-  { id: 5, name: "requests.read", description: "View sourcing requests", group: "Sourcing" },
-  { id: 6, name: "requests.write", description: "Create and update sourcing requests", group: "Sourcing" },
-  { id: 7, name: "shipments.read", description: "View shipments", group: "Logistics" },
-  { id: 8, name: "shipments.write", description: "Create and update shipments", group: "Logistics" },
-  { id: 9, name: "inspections.read", description: "View quality inspections", group: "Quality" },
-  { id: 10, name: "inspections.write", description: "Create and update inspections", group: "Quality" },
-  { id: 11, name: "trips.read", description: "View visa / trip records", group: "Trips" },
-  { id: 12, name: "trips.write", description: "Create and update trips", group: "Trips" },
-  { id: 13, name: "payments.read", description: "View payments", group: "Payments" },
-  { id: 14, name: "payments.write", description: "Create and update payments", group: "Payments" },
-  { id: 15, name: "supports.read", description: "View support tickets", group: "Support" },
-  { id: 16, name: "supports.write", description: "Create and update support tickets", group: "Support" },
-  { id: 17, name: "services.read", description: "View catalog services", group: "Catalog" },
-  { id: 18, name: "services.write", description: "Create and update services", group: "Catalog" },
-  { id: 19, name: "blogs.read", description: "View blog posts", group: "Content" },
-  { id: 20, name: "blogs.write", description: "Create and update blog posts", group: "Content" },
-  { id: 21, name: "projects.read", description: "View projects", group: "Content" },
-  { id: 22, name: "projects.write", description: "Create and update projects", group: "Content" },
-  { id: 23, name: "contacts.read", description: "View contact inbox", group: "Contacts" },
-  { id: 24, name: "contacts.write", description: "Update contact records", group: "Contacts" },
-  { id: 25, name: "files.read", description: "View uploaded files", group: "Files" },
-  { id: 26, name: "files.write", description: "Upload and delete files", group: "Files" },
-];
-
 function inferGroup(name: string, explicit = "") {
   if (explicit) {
     return explicit;
@@ -185,21 +164,38 @@ export function normalizePermission(raw: unknown): RolePermission | null {
     return null;
   }
 
-  const id = pickEntityId(record.id, record.permissionId, record.permission_id, record._id);
+  const id = pickEntityId(
+    record.id,
+    record.permissionId,
+    record.permission_id,
+    record._id,
+  );
   if (id === undefined) {
     return null;
   }
 
-  const name = pickString(record.name, record.key, record.slug, record.code, `Permission #${id}`);
+  const name = pickString(
+    record.name,
+    record.key,
+    record.slug,
+    record.code,
+    `Permission #${id}`,
+  );
   return {
     id,
     name,
     description: pickString(record.description, record.details, record.label),
-    group: inferGroup(name, pickString(record.group, record.module, record.resource, record.category)),
+    group: inferGroup(
+      name,
+      pickString(record.group, record.module, record.resource, record.category),
+    ),
   };
 }
 
-function collectPermissionIds(record: Record<string, unknown>, permissions: RolePermission[]) {
+function collectPermissionIds(
+  record: Record<string, unknown>,
+  permissions: RolePermission[],
+) {
   const fromArray = (value: unknown) => {
     if (!Array.isArray(value)) {
       return [];
@@ -211,7 +207,10 @@ function collectPermissionIds(record: Record<string, unknown>, permissions: Role
         }
         return pickNumber(asRecord(item)?.id, asRecord(item)?.permissionId);
       })
-      .filter((item): item is number => item !== undefined && Number.isInteger(item) && item > 0);
+      .filter(
+        (item): item is number =>
+          item !== undefined && Number.isInteger(item) && item > 0,
+      );
   };
 
   const ids = [
@@ -288,7 +287,7 @@ export function roleToFormValues(role: RoleRecord): RoleFormValues {
 export function mergePermissionCatalog(
   catalog: RolePermission[],
   extras: RolePermission[] = [],
-  selectedIds: number[] = []
+  selectedIds: number[] = [],
 ) {
   const byId = new Map<number, RolePermission>();
   for (const permission of [...catalog, ...extras]) {
@@ -306,7 +305,9 @@ export function mergePermissionCatalog(
       });
     }
   }
-  return [...byId.values()].sort((a, b) => a.group.localeCompare(b.group) || a.id - b.id);
+  return [...byId.values()].sort(
+    (a, b) => a.group.localeCompare(b.group) || a.id - b.id,
+  );
 }
 
 function requireToken() {
@@ -344,7 +345,10 @@ export function buildRolesQueryString(query: RolesListQuery) {
   return params.toString();
 }
 
-function normalizeRolesResponse(raw: unknown, query: RolesListQuery): RolesListResponse {
+function normalizeRolesResponse(
+  raw: unknown,
+  query: RolesListQuery,
+): RolesListResponse {
   const record = asRecord(raw);
   const nested = asRecord(record?.data);
   const meta = asRecord(record?.meta) ?? asRecord(nested?.meta);
@@ -354,11 +358,16 @@ function normalizeRolesResponse(raw: unknown, query: RolesListQuery): RolesListR
     .map((row) => normalizeRole(row))
     .filter((row): row is RoleRecord => Boolean(row));
 
-  const total = pickNumber(meta?.total, record?.total, nested?.total) ?? data.length;
+  const total =
+    pickNumber(meta?.total, record?.total, nested?.total) ?? data.length;
   const page = pickNumber(meta?.page, record?.page, nested?.page) ?? query.page;
   const pageSize =
-    pickNumber(meta?.pageSize, record?.pageSize, record?.limit, nested?.pageSize) ??
-    query.pageSize;
+    pickNumber(
+      meta?.pageSize,
+      record?.pageSize,
+      record?.limit,
+      nested?.pageSize,
+    ) ?? query.pageSize;
   const totalPages =
     pickNumber(meta?.totalPages, record?.totalPages, nested?.totalPages) ??
     Math.max(1, Math.ceil(total / Math.max(pageSize, 1)));
@@ -373,17 +382,24 @@ async function parseJson(response: Response) {
   return response.json().catch(() => null);
 }
 
-export async function fetchRolesList(query: RolesListQuery): Promise<RolesListResponse> {
+export async function fetchRolesList(
+  query: RolesListQuery,
+): Promise<RolesListResponse> {
   const result = await fetchAuthorizedList(
     ROLES_URL,
     buildListQueryVariants(query.page, query.pageSize, {
       search: query.search.trim() || undefined,
       name: query.name.trim() || undefined,
-    })
+    }),
   );
 
   if (result.status === 400) {
-    throw new RoleRequestError(readApiMessage(result.data, "Invalid role filters."), 400, undefined, "VALIDATION");
+    throw new RoleRequestError(
+      readApiMessage(result.data, "Invalid role filters."),
+      400,
+      undefined,
+      "VALIDATION",
+    );
   }
   if (result.status === 401) {
     throw new RoleRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
@@ -391,15 +407,18 @@ export async function fetchRolesList(query: RolesListQuery): Promise<RolesListRe
   if (result.status >= 500) {
     throw new RoleRequestError(
       readApiMessage(result.data, "The server could not load roles."),
-      result.status
+      result.status,
     );
   }
   if (!result.ok) {
     throw new RoleRequestError(
-      readApiMessage(result.data, `Unable to load roles. Server returned ${result.status}.`),
+      readApiMessage(
+        result.data,
+        `Unable to load roles. Server returned ${result.status}.`,
+      ),
       result.status,
       undefined,
-      result.status === 0 ? "NETWORK" : undefined
+      result.status === 0 ? "NETWORK" : undefined,
     );
   }
 
@@ -408,7 +427,12 @@ export async function fetchRolesList(query: RolesListQuery): Promise<RolesListRe
 
 export async function fetchRole(id: number): Promise<RoleRecord> {
   if (asRoleId(id) === undefined) {
-    throw new RoleRequestError(ROLE_NOT_FOUND_MESSAGE, 404, undefined, "NOT_FOUND");
+    throw new RoleRequestError(
+      ROLE_NOT_FOUND_MESSAGE,
+      404,
+      undefined,
+      "NOT_FOUND",
+    );
   }
 
   let response: Response;
@@ -422,7 +446,7 @@ export async function fetchRole(id: number): Promise<RoleRecord> {
       "Unable to reach the server. Check your connection and try again.",
       0,
       undefined,
-      "NETWORK"
+      "NETWORK",
     );
   }
 
@@ -432,12 +456,17 @@ export async function fetchRole(id: number): Promise<RoleRecord> {
     throw new RoleRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
   }
   if (response.status === 404) {
-    throw new RoleRequestError(ROLE_NOT_FOUND_MESSAGE, 404, undefined, "NOT_FOUND");
+    throw new RoleRequestError(
+      ROLE_NOT_FOUND_MESSAGE,
+      404,
+      undefined,
+      "NOT_FOUND",
+    );
   }
   if (!response.ok) {
     throw new RoleRequestError(
       readApiMessage(raw, "The server could not load this role."),
-      response.status
+      response.status,
     );
   }
 
@@ -450,33 +479,40 @@ export async function fetchRole(id: number): Promise<RoleRecord> {
 
 export async function fetchPermissionsCatalog(): Promise<{
   permissions: RolePermission[];
-  source: "api" | "fallback";
+  source: "api";
 }> {
   try {
-    const payload = await fetchPermissionsList({ page: 1, pageSize: 200, search: "" });
+    const payload = await fetchPermissionsList({
+      page: 1,
+      pageSize: 200,
+      search: "",
+    });
     const permissions = payload.data.map((item) => ({
       ...item,
       group: permissionGroup(item.name),
     }));
-    return {
-      permissions: permissions.length > 0 ? permissions : FALLBACK_PERMISSIONS,
-      source: permissions.length > 0 ? "api" : "fallback",
-    };
+    return { permissions, source: "api" };
   } catch (cause) {
     if (cause instanceof PermissionRequestError && cause.status === 401) {
-      throw new RoleRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
-    }
-    if (cause instanceof PermissionRequestError && cause.status === 404) {
-      return { permissions: FALLBACK_PERMISSIONS, source: "fallback" };
+      throw new RoleRequestError(
+        "Unauthorized",
+        401,
+        undefined,
+        "UNAUTHORIZED",
+      );
     }
     throw new RoleRequestError(
-      cause instanceof Error ? cause.message : "The server could not load permissions.",
-      cause instanceof PermissionRequestError ? cause.status : 500
+      cause instanceof Error
+        ? cause.message
+        : "The server could not load permissions.",
+      cause instanceof PermissionRequestError ? cause.status : 500,
     );
   }
 }
 
-export async function createRole(payload: CreateRolePayload): Promise<CreateRoleResult> {
+export async function createRole(
+  payload: CreateRolePayload,
+): Promise<CreateRoleResult> {
   const token = requireToken();
 
   let response: Response;
@@ -495,7 +531,7 @@ export async function createRole(payload: CreateRolePayload): Promise<CreateRole
       "Unable to reach the server. Check your connection and try again.",
       0,
       undefined,
-      "NETWORK"
+      "NETWORK",
     );
   }
 
@@ -503,24 +539,32 @@ export async function createRole(payload: CreateRolePayload): Promise<CreateRole
 
   if (response.status === 400) {
     throw new RoleRequestError(
-      readApiMessage(raw, "Unable to create this role. Check the highlighted fields."),
+      readApiMessage(
+        raw,
+        "Unable to create this role. Check the highlighted fields.",
+      ),
       400,
       parseFieldErrors(raw),
-      "VALIDATION"
+      "VALIDATION",
     );
   }
   if (response.status === 401) {
     throw new RoleRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
   }
   if (response.status === 409) {
-    throw new RoleRequestError(ROLE_NAME_EXISTS_MESSAGE, 409, {
-      name: ROLE_NAME_TAKEN_MESSAGE,
-    }, "NAME_CONFLICT");
+    throw new RoleRequestError(
+      ROLE_NAME_EXISTS_MESSAGE,
+      409,
+      {
+        name: ROLE_NAME_TAKEN_MESSAGE,
+      },
+      "NAME_CONFLICT",
+    );
   }
   if (response.status !== 200 && response.status !== 201) {
     throw new RoleRequestError(
       readApiMessage(raw, "Server error occurred. Could not create this role."),
-      response.status
+      response.status,
     );
   }
 
@@ -536,10 +580,18 @@ export async function createRole(payload: CreateRolePayload): Promise<CreateRole
   };
 }
 
-export async function patchRole(id: number, payload: UpdateRolePayload): Promise<RoleRecord> {
+export async function patchRole(
+  id: number,
+  payload: UpdateRolePayload,
+): Promise<RoleRecord> {
   const token = requireToken();
   if (asRoleId(id) === undefined) {
-    throw new RoleRequestError(ROLE_NOT_FOUND_MESSAGE, 404, undefined, "NOT_FOUND");
+    throw new RoleRequestError(
+      ROLE_NOT_FOUND_MESSAGE,
+      404,
+      undefined,
+      "NOT_FOUND",
+    );
   }
 
   let response: Response;
@@ -558,7 +610,7 @@ export async function patchRole(id: number, payload: UpdateRolePayload): Promise
       "Unable to reach the server. Check your connection and try again.",
       0,
       undefined,
-      "NETWORK"
+      "NETWORK",
     );
   }
 
@@ -566,27 +618,40 @@ export async function patchRole(id: number, payload: UpdateRolePayload): Promise
 
   if (response.status === 400) {
     throw new RoleRequestError(
-      readApiMessage(raw, "Unable to save this role. Check the highlighted fields."),
+      readApiMessage(
+        raw,
+        "Unable to save this role. Check the highlighted fields.",
+      ),
       400,
       parseFieldErrors(raw),
-      "VALIDATION"
+      "VALIDATION",
     );
   }
   if (response.status === 401) {
     throw new RoleRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
   }
   if (response.status === 404) {
-    throw new RoleRequestError(ROLE_NOT_FOUND_MESSAGE, 404, undefined, "NOT_FOUND");
+    throw new RoleRequestError(
+      ROLE_NOT_FOUND_MESSAGE,
+      404,
+      undefined,
+      "NOT_FOUND",
+    );
   }
   if (response.status === 409) {
-    throw new RoleRequestError(ROLE_NAME_CONFLICT_MESSAGE, 409, {
-      name: ROLE_NAME_TAKEN_MESSAGE,
-    }, "NAME_CONFLICT");
+    throw new RoleRequestError(
+      ROLE_NAME_CONFLICT_MESSAGE,
+      409,
+      {
+        name: ROLE_NAME_TAKEN_MESSAGE,
+      },
+      "NAME_CONFLICT",
+    );
   }
   if (!response.ok) {
     throw new RoleRequestError(
       readApiMessage(raw, "Server error occurred. Could not update this role."),
-      response.status
+      response.status,
     );
   }
 

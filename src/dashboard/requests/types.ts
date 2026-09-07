@@ -46,7 +46,12 @@ export const DEFAULT_REQUESTS_QUERY: RequestsListQuery = {
 
 export const REQUEST_REGIONS: RequestRegion[] = ["Yiwu", "Shenzhen"];
 
-export const REQUEST_STATUSES = ["open", "Quoted", "completed", "closed"] as const;
+export const REQUEST_STATUSES = [
+  "open",
+  "Quoted",
+  "completed",
+  "closed",
+] as const;
 
 export type RequestStatus = (typeof REQUEST_STATUSES)[number];
 
@@ -70,4 +75,6 @@ export interface RequestFormValues {
   status: string;
 }
 
-export type RequestFieldErrors = Partial<Record<keyof RequestUpdatePayload, string>>;
+export type RequestFieldErrors = Partial<
+  Record<keyof RequestUpdatePayload, string>
+>;

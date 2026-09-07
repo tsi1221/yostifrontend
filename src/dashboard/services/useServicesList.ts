@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { isQuietListFailure, liveListFailureMessage } from "../apiMessage";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
+import { liveListFailureMessage } from "../apiMessage";
 import { LIVE_DATA_RELOAD_EVENT } from "../auth/liveDataReload";
-import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { ServicesListQuery, ServicesListResponse } from "./types";
 import { DEFAULT_SERVICES_QUERY } from "./types";
 import {
   SERVICES_INVALIDATE_EVENT,
   ServiceRequestError,
   fetchServicesList,
-  isPreviewAccessToken,
 } from "./servicesService";
 
 const EMPTY_RESPONSE: ServicesListResponse = {
@@ -36,7 +36,9 @@ function useDebouncedValue<T>(value: T, delay: number) {
 
 export function useServicesList() {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState<ServicesListQuery>(DEFAULT_SERVICES_QUERY);
+  const [filters, setFilters] = useState<ServicesListQuery>(
+    DEFAULT_SERVICES_QUERY,
+  );
   const [response, setResponse] = useState<ServicesListResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -52,7 +54,7 @@ export function useServicesList() {
       search,
       title,
     }),
-    [filters.page, filters.pageSize, search, title]
+    [filters.page, filters.pageSize, search, title],
   );
 
   const load = useCallback(async () => {
@@ -64,19 +66,13 @@ export function useServicesList() {
       setResponse(payload);
     } catch (cause) {
       if (cause instanceof ServiceRequestError && cause.status === 401) {
-        setResponse(null);
-
-        if (isPreviewAccessToken(getAccessToken())) {
-          setServerError("Sign in with a live account to load services.");
-          return;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
         return;
       }
 
-      if (isQuietListFailure(cause)) {
+      if (cause instanceof ServiceRequestError && cause.status === 403) {
         setResponse(EMPTY_RESPONSE);
+        setServerError(FORBIDDEN_MESSAGE);
         return;
       }
 
@@ -103,7 +99,7 @@ export function useServicesList() {
 
   const setFilter = <K extends keyof ServicesListQuery>(
     key: K,
-    value: ServicesListQuery[K]
+    value: ServicesListQuery[K],
   ) => {
     setFilters((current) => ({
       ...current,

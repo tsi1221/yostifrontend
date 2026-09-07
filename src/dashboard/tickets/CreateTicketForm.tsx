@@ -24,7 +24,11 @@ function UrgencyToggle({
   onChange: (value: TicketUrgencyValue) => void;
 }) {
   return (
-    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Urgency">
+    <div
+      className="grid grid-cols-1 gap-2 sm:grid-cols-3"
+      role="radiogroup"
+      aria-label="Urgency"
+    >
       {TICKET_URGENCY_OPTIONS.map((option) => {
         const selected = value === option.value;
         return (
@@ -40,7 +44,9 @@ function UrgencyToggle({
             }`}
           >
             <span className="block text-sm font-semibold">{option.label}</span>
-            <span className={`mt-0.5 block text-xs ${selected ? "text-white/80" : "text-slate-500"}`}>
+            <span
+              className={`mt-0.5 block text-xs ${selected ? "text-white/80" : "text-slate-500"}`}
+            >
               {option.description}
             </span>
           </button>
@@ -59,7 +65,7 @@ export default function CreateTicketForm() {
 
   const setField = <K extends keyof TicketFormValues>(
     key: K,
-    value: TicketFormValues[K]
+    value: TicketFormValues[K],
   ) => {
     setValues((current) => ({ ...current, [key]: value }));
   };
@@ -94,12 +100,17 @@ export default function CreateTicketForm() {
           </div>
         ) : null}
 
-        <fieldset disabled={saving} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <fieldset
+          disabled={saving}
+          className="grid grid-cols-1 gap-4 md:grid-cols-2"
+        >
           <Field label="Order reference" error={fieldErrors.orderReference}>
             <TextInput
               placeholder="ORD-98765-XYZ"
               value={values.orderReference}
-              onChange={(event) => setField("orderReference", event.target.value)}
+              onChange={(event) =>
+                setField("orderReference", event.target.value)
+              }
             />
           </Field>
           <Field label="Issue type" error={fieldErrors.issuesType}>
@@ -108,7 +119,7 @@ export default function CreateTicketForm() {
               onChange={(event) =>
                 setField(
                   "issuesType",
-                  event.target.value as TicketFormValues["issuesType"]
+                  event.target.value as TicketFormValues["issuesType"],
                 )
               }
             >
@@ -128,13 +139,16 @@ export default function CreateTicketForm() {
               />
             </Field>
           </div>
-          <Field label="Resolution to request" error={fieldErrors.resolutionToRequest}>
+          <Field
+            label="Resolution to request"
+            error={fieldErrors.resolutionToRequest}
+          >
             <SelectInput
               value={values.resolutionToRequest}
               onChange={(event) =>
                 setField(
                   "resolutionToRequest",
-                  event.target.value as TicketFormValues["resolutionToRequest"]
+                  event.target.value as TicketFormValues["resolutionToRequest"],
                 )
               }
             >
@@ -167,7 +181,11 @@ export default function CreateTicketForm() {
         </fieldset>
 
         <div className="flex justify-end gap-2">
-          <ActionButton tone="ghost" disabled={saving} onClick={() => navigate(listPath)}>
+          <ActionButton
+            tone="ghost"
+            disabled={saving}
+            onClick={() => navigate(listPath)}
+          >
             Cancel
           </ActionButton>
           <ActionButton type="submit" disabled={saving}>

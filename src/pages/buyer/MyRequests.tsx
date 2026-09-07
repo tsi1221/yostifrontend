@@ -17,6 +17,7 @@ import {
 } from "antd";
 import { EyeOutlined, PlusOutlined, CloseOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
+import { API_BASE_URL } from "../../lib/api";
 
 const { Option } = Select;
 
@@ -43,13 +44,13 @@ export default function MyRequests() {
 
   const [form] = Form.useForm();
   const token = localStorage.getItem("token") || "";
-  const API_BASE = "http://localhost:5000"; // <- Make sure this points to your backend
+  const API_BASE = API_BASE_URL;
 
   // Fetch buyer requests from backend
   const fetchRequests = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_BASE}/api/sourcing/myrequests`, {
+      const res = await axios.get(`${API_BASE}/requests`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       // Backend must return array of requests
@@ -113,7 +114,7 @@ export default function MyRequests() {
         deadline: values.deadline.format("YYYY-MM-DD"),
       };
 
-      await axios.post(`${API_BASE}/api/sourcing`, payload, {
+      await axios.post(`${API_BASE}/requests`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

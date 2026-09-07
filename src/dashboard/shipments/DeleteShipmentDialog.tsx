@@ -40,7 +40,10 @@ export default function DeleteShipmentDialog({
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-red-600">
           Delete shipment
         </p>
-        <h2 id="delete-shipment-title" className="mt-2 text-lg font-semibold text-[#0F3952]">
+        <h2
+          id="delete-shipment-title"
+          className="mt-2 text-lg font-semibold text-[#0F3952]"
+        >
           Are you sure you want to delete Shipment #{shipmentId}? This action is
           permanent and cannot be undone.
         </h2>

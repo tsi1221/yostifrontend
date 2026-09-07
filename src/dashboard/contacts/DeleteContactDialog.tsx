@@ -40,9 +40,12 @@ export default function DeleteContactDialog({
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-red-600">
           Delete contact
         </p>
-        <h2 id="delete-contact-title" className="mt-2 text-lg font-semibold text-[#0F3952]">
-          Are you sure you want to delete this contact submission? This action cannot be
-          undone.
+        <h2
+          id="delete-contact-title"
+          className="mt-2 text-lg font-semibold text-[#0F3952]"
+        >
+          Are you sure you want to delete this contact submission? This action
+          cannot be undone.
         </h2>
         <div className="mt-6 flex justify-end gap-2">
           <ActionButton tone="ghost" disabled={deleting} onClick={onClose}>

@@ -20,7 +20,7 @@ export default function CreateTripForm() {
 
   const setField = <K extends keyof TripFormValues>(
     key: K,
-    value: TripFormValues[K]
+    value: TripFormValues[K],
   ) => {
     setValues((current) => ({ ...current, [key]: value }));
   };
@@ -55,7 +55,10 @@ export default function CreateTripForm() {
           </div>
         ) : null}
 
-        <fieldset disabled={saving} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <fieldset
+          disabled={saving}
+          className="grid grid-cols-1 gap-4 md:grid-cols-2"
+        >
           <Field label="Arrival city" error={fieldErrors.arrivalCity}>
             <TextInput
               placeholder="Guangzhou"
@@ -111,7 +114,11 @@ export default function CreateTripForm() {
         </fieldset>
 
         <div className="flex justify-end gap-2">
-          <ActionButton tone="ghost" disabled={saving} onClick={() => navigate(listPath)}>
+          <ActionButton
+            tone="ghost"
+            disabled={saving}
+            onClick={() => navigate(listPath)}
+          >
             Cancel
           </ActionButton>
           <ActionButton type="submit" disabled={saving}>

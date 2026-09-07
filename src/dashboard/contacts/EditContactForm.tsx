@@ -2,7 +2,12 @@ import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 
 import ActionButton from "../components/ActionButton";
-import { Field, SelectInput, TextArea, TextInput } from "../components/FormField";
+import {
+  Field,
+  SelectInput,
+  TextArea,
+  TextInput,
+} from "../components/FormField";
 import type { ContactFormValues, ContactRecord } from "./types";
 import { CONTACT_TOPIC_VALUES } from "./types";
 import { asContactId, contactToFormValues } from "./api";
@@ -20,9 +25,10 @@ export default function EditContactForm({
   onSaved,
 }: EditContactFormProps) {
   const contactId = asContactId(contact.id) ?? 0;
-  const { updateContact, saving, notFound, fieldErrors } = useUpdateContact(contactId);
+  const { updateContact, saving, notFound, fieldErrors } =
+    useUpdateContact(contactId);
   const [values, setValues] = useState<ContactFormValues>(() =>
-    contactToFormValues(contact)
+    contactToFormValues(contact),
   );
 
   useEffect(() => {
@@ -31,7 +37,7 @@ export default function EditContactForm({
 
   const setField = <K extends keyof ContactFormValues>(
     key: K,
-    value: ContactFormValues[K]
+    value: ContactFormValues[K],
   ) => {
     setValues((current) => ({ ...current, [key]: value }));
   };
@@ -88,7 +94,7 @@ export default function EditContactForm({
             ))}
             {values.topic &&
             !CONTACT_TOPIC_VALUES.includes(
-              values.topic as (typeof CONTACT_TOPIC_VALUES)[number]
+              values.topic as (typeof CONTACT_TOPIC_VALUES)[number],
             ) ? (
               <option value={values.topic}>{values.topic}</option>
             ) : null}

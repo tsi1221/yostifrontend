@@ -32,7 +32,7 @@ export default function PermissionPicker({
     return permissions.filter((permission) =>
       `${permission.name} ${permission.description} ${permission.group} ${permission.id}`
         .toLowerCase()
-        .includes(needle)
+        .includes(needle),
     );
   }, [permissions, query]);
 
@@ -62,9 +62,7 @@ export default function PermissionPicker({
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
           Permissions
         </p>
-        <p className="text-xs text-slate-500">
-          {selectedIds.length} selected
-        </p>
+        <p className="text-xs text-slate-500">{selectedIds.length} selected</p>
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row">
@@ -78,14 +76,18 @@ export default function PermissionPicker({
           <ActionButton
             tone="ghost"
             disabled={disabled || loading || visibleIds.length === 0}
-            onClick={() => onChange([...new Set([...selectedIds, ...visibleIds])])}
+            onClick={() =>
+              onChange([...new Set([...selectedIds, ...visibleIds])])
+            }
           >
             Select visible
           </ActionButton>
           <ActionButton
             tone="ghost"
             disabled={disabled || loading || selectedIds.length === 0}
-            onClick={() => onChange(selectedIds.filter((id) => !visibleIds.includes(id)))}
+            onClick={() =>
+              onChange(selectedIds.filter((id) => !visibleIds.includes(id)))
+            }
           >
             Clear visible
           </ActionButton>
@@ -95,7 +97,10 @@ export default function PermissionPicker({
       {loading ? (
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {Array.from({ length: 6 }, (_, index) => (
-            <div key={index} className="h-10 animate-pulse rounded-xl bg-slate-100" />
+            <div
+              key={index}
+              className="h-10 animate-pulse rounded-xl bg-slate-100"
+            />
           ))}
         </div>
       ) : (
@@ -139,7 +144,9 @@ export default function PermissionPicker({
         </div>
       )}
 
-      {error ? <p className="text-xs font-medium text-red-600">{error}</p> : null}
+      {error ? (
+        <p className="text-xs font-medium text-red-600">{error}</p>
+      ) : null}
     </div>
   );
 }

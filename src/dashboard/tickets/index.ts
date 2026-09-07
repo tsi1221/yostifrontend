@@ -61,7 +61,6 @@ export {
   formValuesToPayload,
   invalidateSupportsCache,
   invalidateTicketsCache,
-  isPreviewAccessToken,
   normalizeTicket,
   parseDeleteSupportTicketResponse,
   parseSupportTicketId,

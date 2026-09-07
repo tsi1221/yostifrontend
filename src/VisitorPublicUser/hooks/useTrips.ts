@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import axios, { AxiosError } from "axios";
 import { message } from "antd";
+import { API_BASE_URL } from "../../lib/api";
 
 export type TripStatus = "planned" | "ongoing" | "completed";
 
@@ -33,7 +34,7 @@ interface ErrorResponse {
   message?: string;
 }
 
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = API_BASE_URL;
 
 export function useTrips() {
   const [trips, setTrips] = useState<BusinessTrip[]>([]);
@@ -43,7 +44,7 @@ export function useTrips() {
     setLoading(true);
     try {
       const res = await axios.get<{ success: boolean; data: BusinessTrip[] }>(
-        `${BASE_URL}/api/trips/mytrips`,
+        `${BASE_URL}/trips/mytrips`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -64,7 +65,7 @@ export function useTrips() {
     async (trip: NewTripPayload) => {
       try {
         const res = await axios.post<{ success: boolean; data: BusinessTrip }>(
-          `${BASE_URL}/api/trips`,
+          `${BASE_URL}/trips`,
           trip,
           {
             headers: {

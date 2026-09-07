@@ -2,13 +2,17 @@ import { useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
-import type { ContactFieldErrors, ContactFormValues, ContactRecord } from "./types";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
+import type {
+  ContactFieldErrors,
+  ContactFormValues,
+  ContactRecord,
+} from "./types";
 import {
   CONTACT_NOT_FOUND_MESSAGE,
   ContactRequestError,
   formValuesToPayload,
-  isPreviewAccessToken,
   patchContact,
   validateContactForm,
 } from "./api";
@@ -20,7 +24,7 @@ export function useUpdateContact(id: number) {
   const [fieldErrors, setFieldErrors] = useState<ContactFieldErrors>({});
 
   const updateContact = async (
-    values: ContactFormValues
+    values: ContactFormValues,
   ): Promise<ContactRecord | null> => {
     const clientErrors = validateContactForm(values);
     if (Object.keys(clientErrors).length > 0) {
@@ -44,12 +48,12 @@ export function useUpdateContact(id: number) {
       }
 
       if (cause instanceof ContactRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          message.error("Sign in with a live account to update this contact.");
-          return null;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
+        return null;
+      }
+
+      if (cause instanceof ContactRequestError && cause.status === 403) {
+        message.error(FORBIDDEN_MESSAGE);
         return null;
       }
 
@@ -62,7 +66,7 @@ export function useUpdateContact(id: number) {
       message.error(
         cause instanceof Error
           ? cause.message
-          : "Server error occurred. Could not update contact."
+          : "Server error occurred. Could not update contact.",
       );
       return null;
     } finally {

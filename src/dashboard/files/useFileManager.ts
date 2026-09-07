@@ -2,7 +2,8 @@ import { useRef, useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
 import type { FileFieldErrors, UploadedFile } from "./types";
 import {
   FILE_INVALID_FORMAT_MESSAGE,
@@ -10,7 +11,6 @@ import {
   FileRequestError,
   deleteFileByFilename,
   isAllowedFile,
-  isPreviewAccessToken,
   uploadFile,
 } from "./api";
 
@@ -19,7 +19,6 @@ type PendingAction =
   | { kind: "delete"; filename: string };
 
 const UPLOAD_CONCURRENCY = 3;
-const PREVIEW_AUTH_MESSAGE = "Sign in with a live account to manage files.";
 
 export function useFileManager() {
   const navigate = useNavigate();
@@ -33,13 +32,12 @@ export function useFileManager() {
 
   const handleAuth = (cause: unknown) => {
     if (cause instanceof FileRequestError && cause.status === 401) {
-      if (isPreviewAccessToken(getAccessToken())) {
-        setAuthError(PREVIEW_AUTH_MESSAGE);
-        message.error(PREVIEW_AUTH_MESSAGE);
-        return true;
-      }
-      clearAuthSession();
-      navigate("/login", { replace: true });
+      expireSession(navigate);
+      return true;
+    }
+    if (cause instanceof FileRequestError && cause.status === 403) {
+      setAuthError(FORBIDDEN_MESSAGE);
+      message.error(FORBIDDEN_MESSAGE);
       return true;
     }
     return false;
@@ -85,7 +83,9 @@ export function useFileManager() {
         });
         setFiles((current) => [
           uploaded.record,
-          ...current.filter((item) => item.filename !== uploaded.record.filename),
+          ...current.filter(
+            (item) => item.filename !== uploaded.record.filename,
+          ),
         ]);
         uploadedCount += 1;
         return uploaded.record;
@@ -100,7 +100,9 @@ export function useFileManager() {
           return null;
         }
         message.error(
-          cause instanceof Error ? cause.message : "Could not upload this file."
+          cause instanceof Error
+            ? cause.message
+            : "Could not upload this file.",
         );
         return null;
       }
@@ -114,7 +116,7 @@ export function useFileManager() {
           cursor += 1;
           await uploadOne(allowed[index], index);
         }
-      }
+      },
     );
 
     try {
@@ -133,7 +135,8 @@ export function useFileManager() {
     }
   };
 
-  const addFile = (file: File, description?: string) => addFiles([file], description);
+  const addFile = (file: File, description?: string) =>
+    addFiles([file], description);
 
   const removeFile = async (filename: string) => {
     pendingRef.current = { kind: "delete", filename };
@@ -157,7 +160,7 @@ export function useFileManager() {
         setFiles((current) =>
           current.some((item) => item.filename === restored.filename)
             ? current
-            : [restored, ...current]
+            : [restored, ...current],
         );
       }
       if (handleAuth(cause)) {
@@ -166,7 +169,9 @@ export function useFileManager() {
       if (cause instanceof FileRequestError && cause.status === 400) {
         setFieldErrors(cause.fields ?? { filename: cause.message });
       }
-      message.error(cause instanceof Error ? cause.message : "Could not delete this file.");
+      message.error(
+        cause instanceof Error ? cause.message : "Could not delete this file.",
+      );
       return false;
     } finally {
       setDeleting(null);

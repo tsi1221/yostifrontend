@@ -2,13 +2,13 @@ import { useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
 import type { TripFieldErrors, TripFormValues } from "./types";
 import {
   TripsRequestError,
   createTrip,
   formValuesToPayload,
-  isPreviewAccessToken,
   validateTripForm,
 } from "./tripsService";
 
@@ -41,12 +41,12 @@ export function useCreateTrip() {
       }
 
       if (cause instanceof TripsRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          message.error("Sign in with a live account to create a trip.");
-          return null;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
+        return null;
+      }
+
+      if (cause instanceof TripsRequestError && cause.status === 403) {
+        message.error(FORBIDDEN_MESSAGE);
         return null;
       }
 
@@ -58,7 +58,7 @@ export function useCreateTrip() {
       message.error(
         cause instanceof Error
           ? cause.message
-          : "Server error occurred. Could not create trip."
+          : "Server error occurred. Could not create trip.",
       );
       return null;
     } finally {

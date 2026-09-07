@@ -1,13 +1,23 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { CreditCard, Loader2, PackageSearch, Truck, Wallet } from "lucide-react";
+import {
+  CreditCard,
+  Loader2,
+  PackageSearch,
+  Truck,
+  Wallet,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
 import PageHeader from "../components/PageHeader";
 import { ROLE_SLUG } from "../roles";
 import { useDashboard } from "../store";
-import type { PaymentFormValues, PaymentMethodValue, PaymentServiceValue } from "./types";
+import type {
+  PaymentFormValues,
+  PaymentMethodValue,
+  PaymentServiceValue,
+} from "./types";
 import {
   EMPTY_PAYMENT_FORM,
   PAYMENT_METHOD_OPTIONS,
@@ -51,14 +61,18 @@ function ChoiceCard({
     >
       <span
         className={`mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-          selected ? "bg-[#FDC700] text-[#0F3952]" : "bg-[#0F3952]/10 text-[#0F3952]"
+          selected
+            ? "bg-[#FDC700] text-[#0F3952]"
+            : "bg-[#0F3952]/10 text-[#0F3952]"
         }`}
       >
         {icon}
       </span>
       <span className="min-w-0">
         <span className="block text-sm font-semibold">{title}</span>
-        <span className={`mt-0.5 block text-xs ${selected ? "text-white/80" : "text-slate-500"}`}>
+        <span
+          className={`mt-0.5 block text-xs ${selected ? "text-white/80" : "text-slate-500"}`}
+        >
           {description}
         </span>
       </span>
@@ -75,7 +89,7 @@ export default function CreatePaymentForm() {
 
   const setField = <K extends keyof PaymentFormValues>(
     key: K,
-    value: PaymentFormValues[K]
+    value: PaymentFormValues[K],
   ) => {
     setValues((current) => ({ ...current, [key]: value }));
   };
@@ -115,7 +129,11 @@ export default function CreatePaymentForm() {
             <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
               Service
             </span>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Service">
+            <div
+              className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+              role="radiogroup"
+              aria-label="Service"
+            >
               {PAYMENT_SERVICE_OPTIONS.map((option) => (
                 <ChoiceCard
                   key={option.value}
@@ -128,7 +146,9 @@ export default function CreatePaymentForm() {
               ))}
             </div>
             {fieldErrors.service ? (
-              <span className="text-xs font-medium text-red-600">{fieldErrors.service}</span>
+              <span className="text-xs font-medium text-red-600">
+                {fieldErrors.service}
+              </span>
             ) : null}
           </div>
 
@@ -136,7 +156,11 @@ export default function CreatePaymentForm() {
             <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
               Payment method
             </span>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Payment method">
+            <div
+              className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+              role="radiogroup"
+              aria-label="Payment method"
+            >
               {PAYMENT_METHOD_OPTIONS.map((option) => (
                 <ChoiceCard
                   key={option.value}
@@ -149,13 +173,19 @@ export default function CreatePaymentForm() {
               ))}
             </div>
             {fieldErrors.method ? (
-              <span className="text-xs font-medium text-red-600">{fieldErrors.method}</span>
+              <span className="text-xs font-medium text-red-600">
+                {fieldErrors.method}
+              </span>
             ) : null}
           </div>
         </fieldset>
 
         <div className="flex justify-end gap-2">
-          <ActionButton tone="ghost" disabled={saving} onClick={() => navigate(listPath)}>
+          <ActionButton
+            tone="ghost"
+            disabled={saving}
+            onClick={() => navigate(listPath)}
+          >
             Cancel
           </ActionButton>
           <ActionButton type="submit" disabled={saving}>

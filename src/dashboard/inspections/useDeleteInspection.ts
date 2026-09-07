@@ -2,12 +2,12 @@ import { useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
 import type { InspectionDeletionPhase } from "./types";
 import {
   InspectionsRequestError,
   deleteInspection,
-  isPreviewAccessToken,
 } from "./inspectionsService";
 
 export function useDeleteInspection() {
@@ -30,21 +30,18 @@ export function useDeleteInspection() {
       }
 
       if (cause instanceof InspectionsRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          message.error(
-            "Sign in with a live account to delete this inspection request."
-          );
-          setPhase("confirming");
-          return false;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
+        return false;
+      }
+
+      if (cause instanceof InspectionsRequestError && cause.status === 403) {
+        message.error(FORBIDDEN_MESSAGE);
         return false;
       }
 
       if (cause instanceof InspectionsRequestError && cause.status === 404) {
         message.warning(
-          "This inspection request does not exist or has already been removed."
+          "This inspection request does not exist or has already been removed.",
         );
         setPhase("confirming");
         return false;
@@ -53,7 +50,7 @@ export function useDeleteInspection() {
       message.error(
         cause instanceof Error
           ? cause.message
-          : "Server error occurred. Could not delete inspection."
+          : "Server error occurred. Could not delete inspection.",
       );
       setPhase("confirming");
       return false;

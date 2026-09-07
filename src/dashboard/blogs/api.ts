@@ -2,7 +2,6 @@ import { BLOGS_URL } from "../auth/endpoints";
 import { getAccessToken } from "../auth/session";
 import { buildListQueryVariants, fetchAuthorizedList } from "../http";
 import { extractListRows, pickEntityId } from "../listResponse";
-import { isPreviewAccessToken } from "../users/usersService";
 import type {
   BlogFieldErrors,
   BlogFormValues,
@@ -14,18 +13,17 @@ import type {
   UpdateBlogPayload,
 } from "./types";
 
-export { isPreviewAccessToken };
-
 export class BlogRequestError extends Error {
   status: number;
   fields?: BlogFieldErrors;
-  code?: "NOT_FOUND" | "TITLE_CONFLICT" | "UNAUTHORIZED" | "VALIDATION" | "NETWORK";
+  code?:
+    "NOT_FOUND" | "TITLE_CONFLICT" | "UNAUTHORIZED" | "VALIDATION" | "NETWORK";
 
   constructor(
     message: string,
     status: number,
     fields?: BlogFieldErrors,
-    code?: BlogRequestError["code"]
+    code?: BlogRequestError["code"],
   ) {
     super(message);
     this.name = "BlogRequestError";
@@ -48,7 +46,9 @@ export function invalidateBlogsCache() {
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : null;
 }
 
 function pickString(...values: unknown[]) {
@@ -90,7 +90,10 @@ const FIELD_KEYS: Array<keyof BlogFieldErrors> = ["title", "logo", "details"];
 function parseFieldErrors(raw: unknown): BlogFieldErrors {
   const record = asRecord(raw);
   const fields: BlogFieldErrors = {};
-  const nested = asRecord(record?.fields) ?? asRecord(record?.errors) ?? asRecord(record?.message);
+  const nested =
+    asRecord(record?.fields) ??
+    asRecord(record?.errors) ??
+    asRecord(record?.message);
 
   if (nested) {
     for (const key of Object.keys(nested)) {
@@ -181,8 +184,18 @@ export function normalizeBlog(raw: unknown): BlogPost | null {
   return {
     id,
     title: pickString(record.title, record.name),
-    logo: pickString(record.logo, record.logoUrl, record.logo_url, record.image),
-    details: pickString(record.details, record.content, record.body, record.description),
+    logo: pickString(
+      record.logo,
+      record.logoUrl,
+      record.logo_url,
+      record.image,
+    ),
+    details: pickString(
+      record.details,
+      record.content,
+      record.body,
+      record.description,
+    ),
   };
 }
 
@@ -229,7 +242,10 @@ export function buildBlogsQueryString(query: BlogsListQuery) {
   return params.toString();
 }
 
-function normalizeBlogsResponse(raw: unknown, query: BlogsListQuery): BlogsListResponse {
+function normalizeBlogsResponse(
+  raw: unknown,
+  query: BlogsListQuery,
+): BlogsListResponse {
   const record = asRecord(raw);
   const nested = asRecord(record?.data);
   const meta = asRecord(record?.meta) ?? asRecord(nested?.meta);
@@ -239,11 +255,16 @@ function normalizeBlogsResponse(raw: unknown, query: BlogsListQuery): BlogsListR
     .map((row) => normalizeBlog(row))
     .filter((row): row is BlogPost => Boolean(row));
 
-  const total = pickNumber(meta?.total, record?.total, nested?.total) ?? data.length;
+  const total =
+    pickNumber(meta?.total, record?.total, nested?.total) ?? data.length;
   const page = pickNumber(meta?.page, record?.page, nested?.page) ?? query.page;
   const pageSize =
-    pickNumber(meta?.pageSize, record?.pageSize, record?.limit, nested?.pageSize) ??
-    query.pageSize;
+    pickNumber(
+      meta?.pageSize,
+      record?.pageSize,
+      record?.limit,
+      nested?.pageSize,
+    ) ?? query.pageSize;
   const totalPages =
     pickNumber(meta?.totalPages, record?.totalPages, nested?.totalPages) ??
     Math.max(1, Math.ceil(total / Math.max(pageSize, 1)));
@@ -254,18 +275,25 @@ function normalizeBlogsResponse(raw: unknown, query: BlogsListQuery): BlogsListR
   };
 }
 
-export async function fetchBlogsList(query: BlogsListQuery): Promise<BlogsListResponse> {
+export async function fetchBlogsList(
+  query: BlogsListQuery,
+): Promise<BlogsListResponse> {
   const result = await fetchAuthorizedList(
     BLOGS_URL,
     buildListQueryVariants(query.page, query.pageSize, {
       search: query.search.trim() || undefined,
       title: query.title.trim() || undefined,
     }),
-    { requireAuth: false }
+    { requireAuth: false },
   );
 
   if (result.status === 400) {
-    throw new BlogRequestError(readApiMessage(result.data, "Invalid blog filters."), 400, undefined, "VALIDATION");
+    throw new BlogRequestError(
+      readApiMessage(result.data, "Invalid blog filters."),
+      400,
+      undefined,
+      "VALIDATION",
+    );
   }
   if (result.status === 401) {
     throw new BlogRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
@@ -273,15 +301,18 @@ export async function fetchBlogsList(query: BlogsListQuery): Promise<BlogsListRe
   if (result.status >= 500) {
     throw new BlogRequestError(
       readApiMessage(result.data, "The server could not load blog posts."),
-      result.status
+      result.status,
     );
   }
   if (!result.ok) {
     throw new BlogRequestError(
-      readApiMessage(result.data, `Unable to load blog posts. Server returned ${result.status}.`),
+      readApiMessage(
+        result.data,
+        `Unable to load blog posts. Server returned ${result.status}.`,
+      ),
       result.status,
       undefined,
-      result.status === 0 ? "NETWORK" : undefined
+      result.status === 0 ? "NETWORK" : undefined,
     );
   }
 
@@ -290,7 +321,12 @@ export async function fetchBlogsList(query: BlogsListQuery): Promise<BlogsListRe
 
 export async function fetchBlog(id: number): Promise<BlogPost> {
   if (asBlogId(id) === undefined) {
-    throw new BlogRequestError(BLOG_NOT_FOUND_MESSAGE, 404, undefined, "NOT_FOUND");
+    throw new BlogRequestError(
+      BLOG_NOT_FOUND_MESSAGE,
+      404,
+      undefined,
+      "NOT_FOUND",
+    );
   }
 
   let response: Response;
@@ -304,7 +340,7 @@ export async function fetchBlog(id: number): Promise<BlogPost> {
       "Unable to reach the server. Check your connection and try again.",
       0,
       undefined,
-      "NETWORK"
+      "NETWORK",
     );
   }
 
@@ -314,23 +350,33 @@ export async function fetchBlog(id: number): Promise<BlogPost> {
     throw new BlogRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
   }
   if (response.status === 404) {
-    throw new BlogRequestError(BLOG_NOT_FOUND_MESSAGE, 404, undefined, "NOT_FOUND");
+    throw new BlogRequestError(
+      BLOG_NOT_FOUND_MESSAGE,
+      404,
+      undefined,
+      "NOT_FOUND",
+    );
   }
   if (!response.ok) {
     throw new BlogRequestError(
       readApiMessage(raw, "The server could not load this blog post."),
-      response.status
+      response.status,
     );
   }
 
   const blog = blogFromResponse(raw);
   if (!blog) {
-    throw new BlogRequestError("The server returned an incomplete blog post.", 500);
+    throw new BlogRequestError(
+      "The server returned an incomplete blog post.",
+      500,
+    );
   }
   return blog;
 }
 
-export async function createBlog(payload: CreateBlogPayload): Promise<CreateBlogResult> {
+export async function createBlog(
+  payload: CreateBlogPayload,
+): Promise<CreateBlogResult> {
   const token = requireToken();
 
   let response: Response;
@@ -349,7 +395,7 @@ export async function createBlog(payload: CreateBlogPayload): Promise<CreateBlog
       "Unable to reach the server. Check your connection and try again.",
       0,
       undefined,
-      "NETWORK"
+      "NETWORK",
     );
   }
 
@@ -357,30 +403,41 @@ export async function createBlog(payload: CreateBlogPayload): Promise<CreateBlog
 
   if (response.status === 400) {
     throw new BlogRequestError(
-      readApiMessage(raw, "Unable to create this blog post. Check the highlighted fields."),
+      readApiMessage(
+        raw,
+        "Unable to create this blog post. Check the highlighted fields.",
+      ),
       400,
       parseFieldErrors(raw),
-      "VALIDATION"
+      "VALIDATION",
     );
   }
   if (response.status === 401) {
     throw new BlogRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
   }
   if (response.status === 409) {
-    throw new BlogRequestError(BLOG_TITLE_CONFLICT_MESSAGE, 409, {
-      title: BLOG_TITLE_EXISTS_MESSAGE,
-    }, "TITLE_CONFLICT");
+    throw new BlogRequestError(
+      BLOG_TITLE_CONFLICT_MESSAGE,
+      409,
+      {
+        title: BLOG_TITLE_EXISTS_MESSAGE,
+      },
+      "TITLE_CONFLICT",
+    );
   }
   if (response.status !== 200 && response.status !== 201) {
     throw new BlogRequestError(
       readApiMessage(raw, "Server error occurred. Could not create blog post."),
-      response.status
+      response.status,
     );
   }
 
   const created = blogFromResponse(raw);
   if (!created) {
-    throw new BlogRequestError("The server returned an incomplete blog post.", 500);
+    throw new BlogRequestError(
+      "The server returned an incomplete blog post.",
+      500,
+    );
   }
 
   invalidateBlogsCache();
@@ -390,10 +447,18 @@ export async function createBlog(payload: CreateBlogPayload): Promise<CreateBlog
   };
 }
 
-export async function patchBlog(id: number, payload: UpdateBlogPayload): Promise<BlogPost> {
+export async function patchBlog(
+  id: number,
+  payload: UpdateBlogPayload,
+): Promise<BlogPost> {
   const token = requireToken();
   if (asBlogId(id) === undefined) {
-    throw new BlogRequestError(BLOG_NOT_FOUND_MESSAGE, 404, undefined, "NOT_FOUND");
+    throw new BlogRequestError(
+      BLOG_NOT_FOUND_MESSAGE,
+      404,
+      undefined,
+      "NOT_FOUND",
+    );
   }
 
   let response: Response;
@@ -412,7 +477,7 @@ export async function patchBlog(id: number, payload: UpdateBlogPayload): Promise
       "Unable to reach the server. Check your connection and try again.",
       0,
       undefined,
-      "NETWORK"
+      "NETWORK",
     );
   }
 
@@ -420,33 +485,49 @@ export async function patchBlog(id: number, payload: UpdateBlogPayload): Promise
 
   if (response.status === 400) {
     throw new BlogRequestError(
-      readApiMessage(raw, "Unable to save this blog post. Check the highlighted fields."),
+      readApiMessage(
+        raw,
+        "Unable to save this blog post. Check the highlighted fields.",
+      ),
       400,
       parseFieldErrors(raw),
-      "VALIDATION"
+      "VALIDATION",
     );
   }
   if (response.status === 401) {
     throw new BlogRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
   }
   if (response.status === 404) {
-    throw new BlogRequestError(BLOG_NOT_FOUND_MESSAGE, 404, undefined, "NOT_FOUND");
+    throw new BlogRequestError(
+      BLOG_NOT_FOUND_MESSAGE,
+      404,
+      undefined,
+      "NOT_FOUND",
+    );
   }
   if (response.status === 409) {
-    throw new BlogRequestError(BLOG_TITLE_CONFLICT_MESSAGE, 409, {
-      title: BLOG_TITLE_EXISTS_MESSAGE,
-    }, "TITLE_CONFLICT");
+    throw new BlogRequestError(
+      BLOG_TITLE_CONFLICT_MESSAGE,
+      409,
+      {
+        title: BLOG_TITLE_EXISTS_MESSAGE,
+      },
+      "TITLE_CONFLICT",
+    );
   }
   if (!response.ok) {
     throw new BlogRequestError(
       readApiMessage(raw, "Server error occurred. Could not update blog post."),
-      response.status
+      response.status,
     );
   }
 
   const updated = blogFromResponse(raw);
   if (!updated) {
-    throw new BlogRequestError("The server returned an incomplete blog post.", 500);
+    throw new BlogRequestError(
+      "The server returned an incomplete blog post.",
+      500,
+    );
   }
 
   invalidateBlogsCache();
@@ -456,7 +537,12 @@ export async function patchBlog(id: number, payload: UpdateBlogPayload): Promise
 export async function deleteBlog(id: number): Promise<string> {
   const token = requireToken();
   if (asBlogId(id) === undefined) {
-    throw new BlogRequestError(BLOG_NOT_FOUND_MESSAGE, 404, undefined, "NOT_FOUND");
+    throw new BlogRequestError(
+      BLOG_NOT_FOUND_MESSAGE,
+      404,
+      undefined,
+      "NOT_FOUND",
+    );
   }
 
   let response: Response;
@@ -473,7 +559,7 @@ export async function deleteBlog(id: number): Promise<string> {
       "Unable to reach the server. Check your connection and try again.",
       0,
       undefined,
-      "NETWORK"
+      "NETWORK",
     );
   }
 
@@ -483,12 +569,17 @@ export async function deleteBlog(id: number): Promise<string> {
     throw new BlogRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
   }
   if (response.status === 404) {
-    throw new BlogRequestError(BLOG_NOT_FOUND_MESSAGE, 404, undefined, "NOT_FOUND");
+    throw new BlogRequestError(
+      BLOG_NOT_FOUND_MESSAGE,
+      404,
+      undefined,
+      "NOT_FOUND",
+    );
   }
   if (response.status !== 200) {
     throw new BlogRequestError(
       readApiMessage(raw, "Server error occurred. Could not delete blog post."),
-      response.status
+      response.status,
     );
   }
 

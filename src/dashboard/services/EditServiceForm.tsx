@@ -2,8 +2,17 @@ import { useEffect, useState } from "react";
 import { Loader2, Plus, X } from "lucide-react";
 
 import ActionButton from "../components/ActionButton";
-import { CheckboxRow, Field, SelectInput, TextInput } from "../components/FormField";
-import type { ServiceFormValues, ServiceRecord, ServiceTierValue } from "./types";
+import {
+  CheckboxRow,
+  Field,
+  SelectInput,
+  TextInput,
+} from "../components/FormField";
+import type {
+  ServiceFormValues,
+  ServiceRecord,
+  ServiceTierValue,
+} from "./types";
 import { SERVICE_TIER_OPTIONS } from "./types";
 import { asServiceId, serviceToFormValues } from "./servicesService";
 import { useUpdateService } from "./useUpdateService";
@@ -20,8 +29,11 @@ export default function EditServiceForm({
   onSaved,
 }: EditServiceFormProps) {
   const serviceId = asServiceId(service.id) ?? 0;
-  const { updateService, saving, notFound, fieldErrors } = useUpdateService(serviceId);
-  const [values, setValues] = useState<ServiceFormValues>(() => serviceToFormValues(service));
+  const { updateService, saving, notFound, fieldErrors } =
+    useUpdateService(serviceId);
+  const [values, setValues] = useState<ServiceFormValues>(() =>
+    serviceToFormValues(service),
+  );
 
   useEffect(() => {
     setValues(serviceToFormValues(service));
@@ -29,7 +41,7 @@ export default function EditServiceForm({
 
   const setField = <K extends keyof ServiceFormValues>(
     key: K,
-    value: ServiceFormValues[K]
+    value: ServiceFormValues[K],
   ) => {
     setValues((current) => ({ ...current, [key]: value }));
   };
@@ -38,7 +50,7 @@ export default function EditServiceForm({
     setValues((current) => ({
       ...current,
       features: current.features.map((feature, featureIndex) =>
-        featureIndex === index ? value : feature
+        featureIndex === index ? value : feature,
       ),
     }));
   };
@@ -52,7 +64,9 @@ export default function EditServiceForm({
 
   const removeFeature = (index: number) => {
     setValues((current) => {
-      const next = current.features.filter((_, featureIndex) => featureIndex !== index);
+      const next = current.features.filter(
+        (_, featureIndex) => featureIndex !== index,
+      );
       return { ...current, features: next.length > 0 ? next : [""] };
     });
   };

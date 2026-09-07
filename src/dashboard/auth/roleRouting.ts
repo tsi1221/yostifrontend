@@ -2,12 +2,19 @@ import type { UserRole } from "../types";
 import type { AuthUser } from "../types/auth";
 import { ROLE_SLUG } from "../roles";
 
-export function roleFromRoleName(value: string | undefined | null): UserRole | null {
+export function roleFromRoleName(
+  value: string | undefined | null,
+): UserRole | null {
   if (!value) {
     return null;
   }
 
-  switch (value.trim().toLowerCase().replace(/[\s-]+/g, "_")) {
+  switch (
+    value
+      .trim()
+      .toLowerCase()
+      .replace(/[\s-]+/g, "_")
+  ) {
     case "super_admin":
     case "superadmin":
     case "super_administrator":

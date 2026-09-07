@@ -57,7 +57,10 @@ export interface ServiceFormValues {
 }
 
 export type ServiceFieldErrors = Partial<
-  Record<"title" | "logo" | "tier" | "support247" | "features" | "details", string>
+  Record<
+    "title" | "logo" | "tier" | "support247" | "features" | "details",
+    string
+  >
 >;
 
 export const EMPTY_SERVICE_FORM: ServiceFormValues = {

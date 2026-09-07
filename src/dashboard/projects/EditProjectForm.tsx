@@ -19,9 +19,10 @@ export default function EditProjectForm({
   onSaved,
 }: EditProjectFormProps) {
   const projectId = asProjectId(project.id) ?? 0;
-  const { updateProject, saving, notFound, fieldErrors } = useUpdateProject(projectId);
+  const { updateProject, saving, notFound, fieldErrors } =
+    useUpdateProject(projectId);
   const [values, setValues] = useState<ProjectFormValues>(() =>
-    projectToFormValues(project)
+    projectToFormValues(project),
   );
 
   useEffect(() => {
@@ -30,7 +31,7 @@ export default function EditProjectForm({
 
   const setField = <K extends keyof ProjectFormValues>(
     key: K,
-    value: ProjectFormValues[K]
+    value: ProjectFormValues[K],
   ) => {
     setValues((current) => ({ ...current, [key]: value }));
   };

@@ -2,14 +2,14 @@ import { useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
 import type { RoleFieldErrors, RoleFormValues, RoleRecord } from "./types";
 import {
   ROLE_NAME_TAKEN_MESSAGE,
   RoleRequestError,
   createRole,
   formValuesToPayload,
-  isPreviewAccessToken,
   validateRoleForm,
 } from "./api";
 
@@ -20,7 +20,9 @@ export function useCreateRole() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<RoleFieldErrors>({});
 
-  const submitRole = async (values: RoleFormValues): Promise<RoleRecord | null> => {
+  const submitRole = async (
+    values: RoleFormValues,
+  ): Promise<RoleRecord | null> => {
     const clientErrors = validateRoleForm(values);
     if (Object.keys(clientErrors).length > 0) {
       setFieldErrors(clientErrors);
@@ -44,14 +46,13 @@ export function useCreateRole() {
       }
 
       if (cause instanceof RoleRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          const previewMessage = "Sign in with a live account to create a role.";
-          setAuthError(previewMessage);
-          message.error(previewMessage);
-          return null;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
+        return null;
+      }
+
+      if (cause instanceof RoleRequestError && cause.status === 403) {
+        setAuthError(FORBIDDEN_MESSAGE);
+        message.error(FORBIDDEN_MESSAGE);
         return null;
       }
 
@@ -62,7 +63,9 @@ export function useCreateRole() {
       }
 
       message.error(
-        cause instanceof Error ? cause.message : "Server error occurred. Could not create this role."
+        cause instanceof Error
+          ? cause.message
+          : "Server error occurred. Could not create this role.",
       );
       return null;
     } finally {

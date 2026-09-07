@@ -2,13 +2,17 @@ import { useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
-import type { ServiceFieldErrors, ServiceFormValues, ServiceRecord } from "./types";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
+import type {
+  ServiceFieldErrors,
+  ServiceFormValues,
+  ServiceRecord,
+} from "./types";
 import {
   ServiceRequestError,
   createService,
   formValuesToPayload,
-  isPreviewAccessToken,
   validateServiceForm,
 } from "./servicesService";
 
@@ -20,7 +24,7 @@ export function useCreateService() {
   const [fieldErrors, setFieldErrors] = useState<ServiceFieldErrors>({});
 
   const submitService = async (
-    values: ServiceFormValues
+    values: ServiceFormValues,
   ): Promise<ServiceRecord | null> => {
     const clientErrors = validateServiceForm(values);
     if (Object.keys(clientErrors).length > 0) {
@@ -45,15 +49,13 @@ export function useCreateService() {
       }
 
       if (cause instanceof ServiceRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          const previewMessage =
-            "Sign in with a live account to create a service.";
-          setAuthError(previewMessage);
-          message.error(previewMessage);
-          return null;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
+        return null;
+      }
+
+      if (cause instanceof ServiceRequestError && cause.status === 403) {
+        setAuthError(FORBIDDEN_MESSAGE);
+        message.error(FORBIDDEN_MESSAGE);
         return null;
       }
 
@@ -65,7 +67,7 @@ export function useCreateService() {
       message.error(
         cause instanceof Error
           ? cause.message
-          : "Server error occurred. Could not create service."
+          : "Server error occurred. Could not create service.",
       );
       return null;
     } finally {

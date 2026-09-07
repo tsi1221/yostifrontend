@@ -16,7 +16,9 @@ export default function PaymentsPage() {
         title="Payments & Invoices"
         description="Search, filter, and page through live payment records."
         actions={
-          <ActionButton onClick={() => navigate(`/${ROLE_SLUG[role]}/payments/new`)}>
+          <ActionButton
+            onClick={() => navigate(`/${ROLE_SLUG[role]}/payments/new`)}
+          >
             New payment
           </ActionButton>
         }

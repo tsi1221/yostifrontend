@@ -62,11 +62,7 @@ export interface NavGroup {
   children?: NavItem[];
 }
 
-const item = (
-  slug: string,
-  key: DashboardPageKey,
-  label: string
-): NavItem => ({
+const item = (slug: string, key: DashboardPageKey, label: string): NavItem => ({
   key,
   label,
   path: `/${slug}/${key === "dashboard" ? "dashboard" : key}`,

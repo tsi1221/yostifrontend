@@ -1,17 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { isQuietListFailure, liveListFailureMessage } from "../apiMessage";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
+import { liveListFailureMessage } from "../apiMessage";
 import { LIVE_DATA_RELOAD_EVENT } from "../auth/liveDataReload";
-import { isSuperAdminSession, recoverSuperAdminAccess } from "../auth/superAdminAccess";
-import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { UsersListMeta, UsersListQuery, UsersListResponse } from "./types";
 import { DEFAULT_USERS_QUERY } from "./types";
-import {
-  UsersRequestError,
-  fetchUsersList,
-  isPreviewAccessToken,
-} from "./usersService";
+import { UsersRequestError, fetchUsersList } from "./usersService";
 
 const EMPTY_META: UsersListMeta = {
   total: 0,
@@ -68,7 +64,7 @@ export function useUsersList() {
       phoneWhatsapp,
       roleId,
       search,
-    ]
+    ],
   );
 
   const load = useCallback(async () => {
@@ -84,38 +80,15 @@ export function useUsersList() {
       setResponse(null);
 
       if (cause instanceof UsersRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          setError("Sign in with a live account to load the user directory.");
-          return;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
         return;
       }
 
       if (cause instanceof UsersRequestError && cause.status === 403) {
-        if (isSuperAdminSession()) {
-          const recovered = await recoverSuperAdminAccess();
-          if (recovered) {
-            try {
-              const payload = await fetchUsersList(query);
-              setResponse(payload);
-              return;
-            } catch {
-              // Still cannot read users after granting every role.
-            }
-          }
-          setResponse({ data: [], meta: EMPTY_META });
-          setError(liveListFailureMessage(cause, "users"));
-          return;
-        }
         setResponse({ data: [], meta: EMPTY_META });
+        setForbidden(true);
         setRestricted(true);
-        return;
-      }
-
-      if (isQuietListFailure(cause)) {
-        setResponse({ data: [], meta: EMPTY_META });
+        setError(FORBIDDEN_MESSAGE);
         return;
       }
 
@@ -136,7 +109,10 @@ export function useUsersList() {
     return () => window.removeEventListener(LIVE_DATA_RELOAD_EVENT, refresh);
   }, []);
 
-  const setFilter = <K extends keyof UsersListQuery>(key: K, value: UsersListQuery[K]) => {
+  const setFilter = <K extends keyof UsersListQuery>(
+    key: K,
+    value: UsersListQuery[K],
+  ) => {
     setFilters((current) => ({
       ...current,
       page: key === "page" ? Number(value) : 1,

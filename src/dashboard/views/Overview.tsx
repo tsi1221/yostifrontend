@@ -9,63 +9,17 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 
 import ActionCard from "../components/ActionCard";
-import ChartCard from "../components/ChartCard";
 import PageHeader from "../components/PageHeader";
 import StatCard from "../components/StatCard";
-import StatusBadge from "../components/StatusBadge";
 import { ROLE_LABEL, ROLE_SLUG } from "../roles";
+import { useDashboard } from "../store";
 import {
-  findUserName,
-  useDashboard,
-  useScopedRecords,
-} from "../store";
-import { DASHBOARD_GOLD, DASHBOARD_NAVY } from "../theme";
-import type { DashboardSnapshot } from "../types";
-
-const TOP_EXPORTS = [
-  { name: "Coffee", tokens: ["coffee"] },
-  { name: "Oilseeds", tokens: ["sesame", "oilseed", "gum arabic"] },
-  { name: "Electronics", tokens: ["phone", "inverter", "electronic"] },
-] as const;
-
-function topExportData(snapshot: DashboardSnapshot) {
-  return TOP_EXPORTS.map((group) => {
-    const count = snapshot.country_products.reduce((sum, row) => {
-      const categoryHit = row.export_categories.some((category) =>
-        category.toLowerCase().includes(group.name.toLowerCase())
-      )
-        ? 1
-        : 0;
-      const productHits = row.export_products.filter((product) =>
-        group.tokens.some((token) => product.toLowerCase().includes(token))
-      ).length;
-      return sum + categoryHit + productHits;
-    }, 0);
-    return { name: group.name, count };
-  });
-}
-
-function shipmentPipeline(records: ReturnType<typeof useScopedRecords>) {
-  return [
-    { name: "Booked", count: records.shipments.filter((row) => row.status === "booked").length },
-    { name: "Transit", count: records.shipments.filter((row) => row.status === "in transit").length },
-    { name: "Port", count: records.shipments.filter((row) => row.status === "at port").length },
-    { name: "Customs", count: records.shipments.filter((row) => row.status === "customs").length },
-    { name: "Delivered", count: records.shipments.filter((row) => row.status === "delivered").length },
-  ];
-}
+  formatStat,
+  formatStatHint,
+  useLiveDashboardStats,
+} from "../useLiveDashboardStats";
 
 export default function Overview() {
   const { role } = useDashboard();
@@ -101,65 +55,17 @@ function RoleBanner({
       </p>
       <h1 className="mt-2 text-3xl font-bold">{title}</h1>
       <p className="mt-2 max-w-2xl text-sm text-white/70">
-        {description} Signed in as {user.full_name}
+        {description} Signed in as {user.full_name || user.email}
         {user.company_name ? `, ${user.company_name}` : ""}.
       </p>
     </section>
   );
 }
 
-function PipelineChart({ data }: { data: Array<{ name: string; count: number }> }) {
-  return (
-    <ChartCard title="Shipment pipeline">
-      <ResponsiveContainer width="100%" height={240} minWidth={1} minHeight={1}>
-        <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-          <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 12 }} />
-          <YAxis allowDecimals={false} tick={{ fill: "#64748b", fontSize: 12 }} />
-          <Tooltip />
-          <Bar dataKey="count" radius={[6, 6, 0, 0]}>
-            {data.map((entry, index) => (
-              <Cell
-                key={entry.name}
-                fill={index % 2 === 0 ? DASHBOARD_NAVY : DASHBOARD_GOLD}
-              />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
-    </ChartCard>
-  );
-}
-
-function ActivityFeed() {
-  const { snapshot } = useDashboard();
-  const { activity } = useScopedRecords();
-
-  return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <h2 className="mb-4 text-sm font-semibold text-[#0F3952]">Recent activity</h2>
-      <ul className="space-y-4">
-        {activity.slice(0, 6).map((item) => (
-          <li key={item.log_id} className="border-l-2 border-[#FDC700] pl-3">
-            <p className="text-sm font-semibold text-slate-800">{item.action}</p>
-            <p className="text-xs text-slate-500">
-              {findUserName(snapshot, item.actor_id)} · {item.entity}
-            </p>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
 function BuyerWorkspace() {
   const { role } = useDashboard();
-  const records = useScopedRecords();
+  const stats = useLiveDashboardStats();
   const slug = ROLE_SLUG[role];
-  const pendingPay = records.payments.filter((row) => row.status === "pending").length;
-  const paid = records.payments
-    .filter((row) => row.status === "completed")
-    .reduce((sum, row) => sum + row.amount, 0);
 
   return (
     <div className="space-y-6">
@@ -171,26 +77,26 @@ function BuyerWorkspace() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="My RFQs"
-          value={String(records.sourcing.length)}
-          hint={`${records.sourcing.filter((row) => row.status === "open").length} open`}
+          value={stats.loading ? "…" : formatStat(stats.requests)}
+          hint={formatStatHint(stats.requests, "Live sourcing requests")}
           icon={Package}
         />
         <StatCard
           title="Shipments"
-          value={String(records.shipments.length)}
-          hint="Cargo tracking"
+          value={stats.loading ? "…" : formatStat(stats.shipments)}
+          hint={formatStatHint(stats.shipments, "Cargo tracking")}
           icon={Truck}
         />
         <StatCard
           title="Inspections"
-          value={String(records.inspections.length)}
-          hint={`${records.inspections.filter((row) => row.status === "pending").length} pending`}
+          value={stats.loading ? "…" : formatStat(stats.inspections)}
+          hint={formatStatHint(stats.inspections, "Quality bookings")}
           icon={ClipboardCheck}
         />
         <StatCard
-          title="Collected"
-          value={`$${paid.toLocaleString()}`}
-          hint={`${pendingPay} invoices waiting`}
+          title="Payments"
+          value={stats.loading ? "…" : formatStat(stats.payments)}
+          hint={formatStatHint(stats.payments, "Invoice records")}
           icon={Wallet}
         />
       </div>
@@ -200,7 +106,7 @@ function BuyerWorkspace() {
           to={`/${slug}/sourcing`}
           icon={Package}
           title="Submit Sourcing Request"
-          description="Capture product, quantity, target price, region, and deadline."
+          description="Browse live sourcing requests from the Yosti API."
         />
         <ActionCard
           to={`/${slug}/logistics`}
@@ -224,8 +130,7 @@ function BuyerWorkspace() {
           to={`/${slug}/payments`}
           icon={Wallet}
           title="Payments & Invoices"
-          description="Pay service fees from the Pay Now drawer."
-          hint={pendingPay ? `${pendingPay} due` : "All settled"}
+          description="Review live payment records."
         />
         <ActionCard
           to={`/${slug}/supports`}
@@ -234,65 +139,40 @@ function BuyerWorkspace() {
           description="Open defect, damage, or missing-item tickets."
         />
       </div>
-
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
-        <PipelineChart data={shipmentPipeline(records)} />
-        <ActivityFeed />
-      </div>
     </div>
   );
 }
 
 function SupplierWorkspace() {
-  const { snapshot, role } = useDashboard();
-  const records = useScopedRecords();
+  const { role } = useDashboard();
+  const stats = useLiveDashboardStats();
   const slug = ROLE_SLUG[role];
-  const verification = snapshot.verifications.find(
-    (row) => row.supplier_id === records.supplier?.supplier_id
-  );
 
   return (
     <div className="space-y-6">
       <RoleBanner
         title="Factory workspace"
-        description="Complete onboarding, quote open RFQs, and keep inspection windows."
+        description="Quote open RFQs and keep inspection windows."
       />
-
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
-              Onboarding verification
-            </p>
-            <h2 className="mt-1 text-xl font-semibold text-[#0F3952]">
-              {records.supplier?.name ?? "No factory profile"}
-            </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              {verification?.turnaround_time} · {verification?.concerns}
-            </p>
-          </div>
-          <StatusBadge value={verification?.status ?? "pending"} />
-        </div>
-      </section>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard
           title="Open RFQs"
-          value={String(records.sourcing.filter((row) => row.status !== "completed").length)}
-          hint="Visible to this factory"
+          value={stats.loading ? "…" : formatStat(stats.requests)}
+          hint={formatStatHint(stats.requests, "Live sourcing requests")}
           icon={FileText}
         />
         <StatCard
-          title="My quotes"
-          value={String(records.quotes.length)}
-          hint="Submitted price / MOQ / lead time"
-          icon={Package}
+          title="Inspections"
+          value={stats.loading ? "…" : formatStat(stats.inspections)}
+          hint={formatStatHint(stats.inspections, "Assigned factory windows")}
+          icon={ClipboardCheck}
         />
         <StatCard
-          title="Inspections"
-          value={String(records.inspections.length)}
-          hint="Assigned factory windows"
-          icon={ClipboardCheck}
+          title="Support"
+          value={stats.loading ? "…" : formatStat(stats.supports)}
+          hint={formatStatHint(stats.supports, "Live tickets")}
+          icon={LifeBuoy}
         />
       </div>
 
@@ -307,7 +187,7 @@ function SupplierWorkspace() {
           to={`/${slug}/sourcing`}
           icon={FileText}
           title="Open RFQs"
-          description="Click Submit Quote to send price, MOQ, and lead time."
+          description="Review live sourcing requests."
         />
         <ActionCard
           to={`/${slug}/quality-control`}
@@ -316,17 +196,14 @@ function SupplierWorkspace() {
           description="Calendar of factory check windows."
         />
       </div>
-
-      <ActivityFeed />
     </div>
   );
 }
 
 function LogisticsWorkspace() {
   const { role } = useDashboard();
-  const records = useScopedRecords();
+  const stats = useLiveDashboardStats();
   const slug = ROLE_SLUG[role];
-  const live = records.shipments.filter((row) => row.status !== "delivered").length;
 
   return (
     <div className="space-y-6">
@@ -338,30 +215,26 @@ function LogisticsWorkspace() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="Bookings"
-          value={String(records.shipments.length)}
-          hint={`${live} still in pipeline`}
+          value={stats.loading ? "…" : formatStat(stats.shipments)}
+          hint={formatStatHint(stats.shipments, "Live cargo records")}
           icon={Truck}
         />
         <StatCard
-          title="In transit"
-          value={String(records.shipments.filter((row) => row.status === "in transit").length)}
-          hint="Sea / air / express"
+          title="Requests"
+          value={stats.loading ? "…" : formatStat(stats.requests)}
+          hint={formatStatHint(stats.requests, "Sourcing volume")}
           icon={Package}
         />
         <StatCard
-          title="At port / customs"
-          value={String(
-            records.shipments.filter(
-              (row) => row.status === "at port" || row.status === "customs"
-            ).length
-          )}
-          hint="Needs status update"
+          title="Inspections"
+          value={stats.loading ? "…" : formatStat(stats.inspections)}
+          hint={formatStatHint(stats.inspections, "Quality bookings")}
           icon={ClipboardCheck}
         />
         <StatCard
           title="Support"
-          value={String(records.support.filter((row) => row.status === "open").length)}
-          hint="Open tickets"
+          value={stats.loading ? "…" : formatStat(stats.supports)}
+          hint={formatStatHint(stats.supports, "Open tickets")}
           icon={LifeBuoy}
         />
       </div>
@@ -380,58 +253,45 @@ function LogisticsWorkspace() {
           description="Buyer issues tied to tracking numbers."
         />
       </div>
-
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
-        <PipelineChart data={shipmentPipeline(records)} />
-        <ActivityFeed />
-      </div>
     </div>
   );
 }
 
 function StaffWorkspace() {
-  const { snapshot, role } = useDashboard();
-  const records = useScopedRecords();
+  const { role } = useDashboard();
+  const stats = useLiveDashboardStats();
   const slug = ROLE_SLUG[role];
-  const pendingVerifications = snapshot.verifications.filter(
-    (row) => row.status === "pending"
-  ).length;
-  const unassigned = snapshot.sourcing_requests.filter(
-    (row) => row.status === "open" && row.assigned_supplier_ids.length === 0
-  ).length;
-  const openTickets = records.support.filter((row) => row.status === "open").length;
-  const pendingVisas = records.trips.filter((row) => row.visa_status === "pending").length;
 
   return (
     <div className="space-y-6">
       <RoleBanner
         title="Yosti operations desk"
-        description="Verify factories, dispatch RFQs, review QC reports, visas, and tickets."
+        description="Dispatch RFQs, review QC reports, visas, and tickets."
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          title="Pending factories"
-          value={String(pendingVerifications)}
-          hint="Verification queue"
-          icon={FileCheck}
-        />
-        <StatCard
-          title="Unassigned RFQs"
-          value={String(unassigned)}
-          hint="Need factory dispatch"
+          title="Requests"
+          value={stats.loading ? "…" : formatStat(stats.requests)}
+          hint={formatStatHint(stats.requests, "Live sourcing volume")}
           icon={FileText}
         />
         <StatCard
+          title="Users"
+          value={stats.loading ? "…" : formatStat(stats.users)}
+          hint={formatStatHint(stats.users, "Directory")}
+          icon={Users}
+        />
+        <StatCard
           title="Visa files"
-          value={String(pendingVisas)}
-          hint="Awaiting decision"
+          value={stats.loading ? "…" : formatStat(stats.trips)}
+          hint={formatStatHint(stats.trips, "Business trips")}
           icon={Plane}
         />
         <StatCard
           title="Open tickets"
-          value={String(openTickets)}
-          hint="Client support"
+          value={stats.loading ? "…" : formatStat(stats.supports)}
+          hint={formatStatHint(stats.supports, "Client support")}
           icon={LifeBuoy}
         />
       </div>
@@ -468,70 +328,70 @@ function StaffWorkspace() {
           description="Resolve or close buyer issues."
         />
       </div>
-
-      <ActivityFeed />
     </div>
   );
 }
 
 function BusinessIntelligenceHub() {
-  const { snapshot, user } = useDashboard();
+  const { user } = useDashboard();
+  const stats = useLiveDashboardStats();
   const slug = ROLE_SLUG.SUPER_ADMIN;
-  const destinationData = ["Ethiopia", "China", "Uganda", "South Sudan"].map(
-    (country) => ({
-      name: country,
-      count: snapshot.shipments.filter((row) => row.destination_country === country)
-        .length,
-    })
-  );
-  const exportData = topExportData(snapshot);
-  const paymentData = ["sourcing", "logistics", "inspection", "trip", "visa"].map(
-    (service) => ({
-      name: service,
-      volume: snapshot.payments
-        .filter((row) => row.service_type === service && row.status === "completed")
-        .reduce((sum, row) => sum + row.amount, 0),
-    })
-  );
-  const totalVolume = snapshot.payments
-    .filter((row) => row.status === "completed")
-    .reduce((sum, row) => sum + row.amount, 0);
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Business Intelligence Hub"
-        description={`Master controls for ${user.full_name}. Workspace snapshot of destinations, exports, and payment volume.`}
+        description={`Live totals from the Yosti API for ${user.full_name || user.email}. Values come from each resource list meta.total.`}
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          title="Active accounts"
-          value={String(snapshot.users.filter((row) => row.active).length)}
-          hint={`${snapshot.users.length} total users`}
+          title="Users"
+          value={stats.loading ? "…" : formatStat(stats.users)}
+          hint={formatStatHint(stats.users, "GET /users")}
           icon={Users}
         />
         <StatCard
-          title="Completed volume"
-          value={`$${totalVolume.toLocaleString()}`}
-          hint="Aggregate payments"
+          title="Payments"
+          value={stats.loading ? "…" : formatStat(stats.payments)}
+          hint={formatStatHint(stats.payments, "GET /payments")}
           icon={Wallet}
         />
         <StatCard
-          title="Live shipments"
-          value={String(
-            snapshot.shipments.filter((row) => row.status !== "delivered").length
-          )}
-          hint="Not yet delivered"
+          title="Shipments"
+          value={stats.loading ? "…" : formatStat(stats.shipments)}
+          hint={formatStatHint(stats.shipments, "GET /shipments")}
           icon={Truck}
         />
         <StatCard
-          title="Pending verifications"
-          value={String(
-            snapshot.verifications.filter((row) => row.status === "pending").length
-          )}
-          hint="Factory onboarding"
+          title="Requests"
+          value={stats.loading ? "…" : formatStat(stats.requests)}
+          hint={formatStatHint(stats.requests, "GET /requests")}
+          icon={FileText}
+        />
+        <StatCard
+          title="Services"
+          value={stats.loading ? "…" : formatStat(stats.services)}
+          hint={formatStatHint(stats.services, "GET /services")}
+          icon={Package}
+        />
+        <StatCard
+          title="Support"
+          value={stats.loading ? "…" : formatStat(stats.supports)}
+          hint={formatStatHint(stats.supports, "GET /supports")}
+          icon={LifeBuoy}
+        />
+        <StatCard
+          title="Projects"
+          value={stats.loading ? "…" : formatStat(stats.projects)}
+          hint={formatStatHint(stats.projects, "GET /projects")}
           icon={FileCheck}
+        />
+        <StatCard
+          title="Contacts"
+          value={stats.loading ? "…" : formatStat(stats.contacts)}
+          hint={formatStatHint(stats.contacts, "GET /contacts")}
+          icon={Users}
         />
       </div>
 
@@ -578,13 +438,13 @@ function BusinessIntelligenceHub() {
           to={`/${slug}/users`}
           icon={Users}
           title="User Account Management"
-          description="CRUD, authorization flags, and sub-role assignment."
+          description="Live user directory with search and pagination."
         />
         <ActionCard
           to={`/${slug}/verifications`}
           icon={FileCheck}
           title="Supplier Verification Queue"
-          description="Approve or reject factory onboarding."
+          description="No dedicated verification API is published yet."
         />
         <ActionCard
           to={`/${slug}/sourcing`}
@@ -596,88 +456,21 @@ function BusinessIntelligenceHub() {
           to={`/${slug}/quality-control`}
           icon={ClipboardCheck}
           title="Quality reports"
-          description="Verify inspection outcomes and report URLs."
+          description="Live inspection requests from the API."
         />
         <ActionCard
           to={`/${slug}/trips`}
           icon={Plane}
           title="Visa parameters"
-          description="Update business-trip visa status."
+          description="Live business-trip records."
         />
         <ActionCard
           to={`/${slug}/supports`}
           icon={LifeBuoy}
           title="Support tickets"
-          description="Resolve or close client tickets."
+          description="Live support tickets from /api/supports."
         />
       </div>
-
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <ChartCard title="Shipments by Destination Country">
-          <ResponsiveContainer width="100%" height={240} minWidth={1} minHeight={1}>
-            <BarChart data={destinationData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 11 }} />
-              <YAxis allowDecimals={false} tick={{ fill: "#64748b", fontSize: 12 }} />
-              <Tooltip />
-              <Bar dataKey="count" radius={[6, 6, 0, 0]}>
-                {destinationData.map((entry, index) => (
-                  <Cell
-                    key={entry.name}
-                    fill={index % 2 === 0 ? DASHBOARD_NAVY : DASHBOARD_GOLD}
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
-
-        <ChartCard title="Top Exports">
-          <ResponsiveContainer width="100%" height={240} minWidth={1} minHeight={1}>
-            <BarChart data={exportData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 11 }} />
-              <YAxis allowDecimals={false} tick={{ fill: "#64748b", fontSize: 12 }} />
-              <Tooltip />
-              <Bar dataKey="count" radius={[6, 6, 0, 0]} fill={DASHBOARD_GOLD} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
-
-        <ChartCard title="Payment volumes">
-          <ResponsiveContainer width="100%" height={240} minWidth={1} minHeight={1}>
-            <BarChart data={paymentData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 11 }} />
-              <YAxis allowDecimals={false} tick={{ fill: "#64748b", fontSize: 12 }} />
-              <Tooltip />
-              <Bar dataKey="volume" radius={[6, 6, 0, 0]} fill={DASHBOARD_NAVY} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
-      </div>
-
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-4 text-sm font-semibold text-[#0F3952]">
-          Country product lists
-        </h2>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {snapshot.country_products.map((row) => (
-            <article key={row.iso_code} className="rounded-xl bg-slate-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
-                {row.iso_code}
-              </p>
-              <h3 className="mt-1 font-semibold text-[#0F3952]">{row.country_name}</h3>
-              <p className="mt-2 text-sm text-slate-600">
-                {row.export_categories.join(" · ")}
-              </p>
-              <p className="mt-1 text-xs text-slate-500">
-                {row.export_products.join(", ")}
-              </p>
-            </article>
-          ))}
-        </div>
-      </section>
     </div>
   );
 }

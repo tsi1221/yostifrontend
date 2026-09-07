@@ -2,12 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { clearAuthSession, getAccessToken } from "../auth/session";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
 import type { TicketRecord } from "./types";
 import {
   TicketsRequestError,
   fetchSupportTicket,
-  isPreviewAccessToken,
   parseSupportTicketId,
 } from "./ticketsService";
 
@@ -46,12 +46,12 @@ export function useSupportTicketDetail(id: string | undefined) {
       }
 
       if (cause instanceof TicketsRequestError && cause.status === 401) {
-        if (isPreviewAccessToken(getAccessToken())) {
-          setServerError("Sign in with a live account to load this support ticket.");
-          return;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
+        return;
+      }
+
+      if (cause instanceof TicketsRequestError && cause.status === 403) {
+        setServerError(FORBIDDEN_MESSAGE);
         return;
       }
 

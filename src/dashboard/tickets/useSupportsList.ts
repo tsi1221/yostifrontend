@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { isQuietListFailure, liveListFailureMessage } from "../apiMessage";
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
+import { liveListFailureMessage } from "../apiMessage";
 import { LIVE_DATA_RELOAD_EVENT } from "../auth/liveDataReload";
-import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { SupportsListQuery, SupportsListResponse } from "./types";
 import { DEFAULT_SUPPORTS_QUERY } from "./types";
 import {
@@ -11,7 +12,6 @@ import {
   TICKETS_INVALIDATE_EVENT,
   TicketsRequestError,
   fetchSupportsList,
-  isPreviewAccessToken,
 } from "./ticketsService";
 
 const EMPTY_RESPONSE: SupportsListResponse = {
@@ -37,7 +37,9 @@ function useDebouncedValue<T>(value: T, delay: number) {
 
 export function useSupportsList() {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState<SupportsListQuery>(DEFAULT_SUPPORTS_QUERY);
+  const [filters, setFilters] = useState<SupportsListQuery>(
+    DEFAULT_SUPPORTS_QUERY,
+  );
   const [response, setResponse] = useState<SupportsListResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -66,7 +68,7 @@ export function useSupportsList() {
       filters.urgency,
       orderReference,
       search,
-    ]
+    ],
   );
 
   const load = useCallback(async () => {
@@ -78,19 +80,13 @@ export function useSupportsList() {
       setResponse(payload);
     } catch (cause) {
       if (cause instanceof TicketsRequestError && cause.status === 401) {
-        setResponse(null);
-
-        if (isPreviewAccessToken(getAccessToken())) {
-          setServerError("Sign in with a live account to load support tickets.");
-          return;
-        }
-        clearAuthSession();
-        navigate("/login", { replace: true });
+        expireSession(navigate);
         return;
       }
 
-      if (isQuietListFailure(cause)) {
+      if (cause instanceof TicketsRequestError && cause.status === 403) {
         setResponse(EMPTY_RESPONSE);
+        setServerError(FORBIDDEN_MESSAGE);
         return;
       }
 
@@ -108,7 +104,11 @@ export function useSupportsList() {
   useEffect(() => {
     const refresh = () => setReloadToken((value) => value + 1);
     const events = Array.from(
-      new Set([TICKETS_INVALIDATE_EVENT, SUPPORTS_INVALIDATE_EVENT, LIVE_DATA_RELOAD_EVENT])
+      new Set([
+        TICKETS_INVALIDATE_EVENT,
+        SUPPORTS_INVALIDATE_EVENT,
+        LIVE_DATA_RELOAD_EVENT,
+      ]),
     );
     for (const eventName of events) {
       window.addEventListener(eventName, refresh);
@@ -122,7 +122,7 @@ export function useSupportsList() {
 
   const setFilter = <K extends keyof SupportsListQuery>(
     key: K,
-    value: SupportsListQuery[K]
+    value: SupportsListQuery[K],
   ) => {
     setFilters((current) => ({
       ...current,

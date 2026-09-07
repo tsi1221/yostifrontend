@@ -4,7 +4,12 @@ import { Loader2 } from "lucide-react";
 import ActionButton from "../components/ActionButton";
 import { Field, TextArea, TextInput } from "../components/FormField";
 import PermissionPicker from "./PermissionPicker";
-import type { RoleConfiguratorMode, RoleFieldErrors, RoleFormValues, RolePermission } from "./types";
+import type {
+  RoleConfiguratorMode,
+  RoleFieldErrors,
+  RoleFormValues,
+  RolePermission,
+} from "./types";
 import { usePermissionsCatalog } from "./usePermissionsCatalog";
 
 interface RoleConfiguratorFormProps {
@@ -38,14 +43,21 @@ export default function RoleConfiguratorForm({
   onSubmit,
   onCancel,
 }: RoleConfiguratorFormProps) {
-  const { permissions, loading } = usePermissionsCatalog(extras, values.permissionIds);
+  const {
+    permissions,
+    loading,
+    error: catalogError,
+  } = usePermissionsCatalog(extras, values.permissionIds);
   const [hydrated, setHydrated] = useState(values);
 
   useEffect(() => {
     setHydrated(values);
   }, [values]);
 
-  const setField = <K extends keyof RoleFormValues>(key: K, value: RoleFormValues[K]) => {
+  const setField = <K extends keyof RoleFormValues>(
+    key: K,
+    value: RoleFormValues[K],
+  ) => {
     const next = { ...hydrated, [key]: value };
     setHydrated(next);
     onChange(next);
@@ -53,7 +65,11 @@ export default function RoleConfiguratorForm({
 
   return (
     <form
-      className={mode === "create" ? "space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" : "space-y-4"}
+      className={
+        mode === "create"
+          ? "space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+          : "space-y-4"
+      }
       noValidate
       onSubmit={async (event) => {
         event.preventDefault();
@@ -69,6 +85,12 @@ export default function RoleConfiguratorForm({
       {notFound ? (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {notFound}
+        </div>
+      ) : null}
+
+      {catalogError ? (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          {catalogError}
         </div>
       ) : null}
 
@@ -106,11 +128,17 @@ export default function RoleConfiguratorForm({
         />
       </fieldset>
 
-      <div className={`flex gap-2 ${mode === "create" ? "justify-end" : "pt-2"}`}>
+      <div
+        className={`flex gap-2 ${mode === "create" ? "justify-end" : "pt-2"}`}
+      >
         <ActionButton tone="ghost" disabled={saving} onClick={onCancel}>
           Cancel
         </ActionButton>
-        <ActionButton type="submit" className={mode === "edit" ? "flex-1" : ""} disabled={saving}>
+        <ActionButton
+          type="submit"
+          className={mode === "edit" ? "flex-1" : ""}
+          disabled={saving}
+        >
           {saving ? (
             <span className="inline-flex items-center gap-2">
               <Loader2 size={16} className="animate-spin" />

@@ -17,10 +17,14 @@ interface EditTripFormProps {
   onSaved: (updated: TripRecord) => void;
 }
 
-export default function EditTripForm({ trip, onCancel, onSaved }: EditTripFormProps) {
+export default function EditTripForm({
+  trip,
+  onCancel,
+  onSaved,
+}: EditTripFormProps) {
   const { updateTrip, saving, conflict, fieldErrors } = useUpdateTrip(trip.id);
   const [values, setValues] = useState<UpdateTripFormValues>(() =>
-    tripToFormValues(trip)
+    tripToFormValues(trip),
   );
 
   useEffect(() => {
@@ -29,7 +33,7 @@ export default function EditTripForm({ trip, onCancel, onSaved }: EditTripFormPr
 
   const setField = <K extends keyof UpdateTripFormValues>(
     key: K,
-    value: UpdateTripFormValues[K]
+    value: UpdateTripFormValues[K],
   ) => {
     setValues((current) => ({ ...current, [key]: value }));
   };

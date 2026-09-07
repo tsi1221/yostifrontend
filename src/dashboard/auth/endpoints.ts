@@ -2,7 +2,10 @@ const DEFAULT_API_BASE = "https://yosti.nedhigibe.com/api";
 
 function resolveApiBase() {
   const fromEnv = import.meta.env.VITE_API_URL;
-  const raw = typeof fromEnv === "string" && fromEnv.trim() ? fromEnv.trim() : DEFAULT_API_BASE;
+  const raw =
+    typeof fromEnv === "string" && fromEnv.trim()
+      ? fromEnv.trim()
+      : DEFAULT_API_BASE;
   return raw.replace(/\/+$/, "");
 }
 
@@ -36,13 +39,7 @@ export const TRIPS_URL = `${AUTH_API_BASE}/trips`;
 /** GET paginated payments / POST create / GET :id receipt / PATCH :id { service, method, status } / DELETE :id */
 export const PAYMENTS_URL = `${AUTH_API_BASE}/payments`;
 
-/** POST create support tickets (try first; 201 { id, userId, orderReference, ... }) */
-export const TICKETS_URL = `${AUTH_API_BASE}/tickets`;
-
-/** Fallback when POST /tickets is 404 */
-export const SUPPORT_URL = `${AUTH_API_BASE}/support`;
-
-/** GET paginated support tickets / GET :id detail / PATCH :id update / DELETE :id; also used as a create fallback */
+/** GET paginated support tickets / POST create / GET :id / PATCH :id / DELETE :id */
 export const SUPPORTS_URL = `${AUTH_API_BASE}/supports`;
 
 /** GET paginated catalog services / POST create / PATCH :id update / DELETE :id */

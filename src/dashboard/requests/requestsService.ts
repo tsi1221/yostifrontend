@@ -3,7 +3,6 @@ import { REQUESTS_URL } from "../auth/endpoints";
 import { getAccessToken } from "../auth/session";
 import { buildListQueryVariants, fetchAuthorizedList } from "../http";
 import { extractListRows } from "../listResponse";
-import { isPreviewAccessToken } from "../users/usersService";
 import type {
   RequestFieldErrors,
   RequestUpdatePayload,
@@ -11,8 +10,6 @@ import type {
   RequestsListResponse,
   SourcingRequestRecord,
 } from "./types";
-
-export { isPreviewAccessToken };
 
 export class RequestsRequestError extends Error {
   status: number;
@@ -27,7 +24,9 @@ export class RequestsRequestError extends Error {
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : null;
 }
 
 function pickString(...values: unknown[]) {
@@ -126,7 +125,7 @@ function parseFieldErrors(raw: unknown): RequestFieldErrors {
 
   for (const item of items) {
     const key = FIELD_KEYS.find((field) =>
-      item.toLowerCase().includes(field.toLowerCase())
+      item.toLowerCase().includes(field.toLowerCase()),
     );
     if (key && !fields[key]) {
       fields[key] = item;
@@ -152,11 +151,16 @@ export function normalizeRequest(raw: unknown): SourcingRequestRecord | null {
     return null;
   }
 
-  const id = pickString(record.id, record.requestId, record.request_id, record._id);
+  const id = pickString(
+    record.id,
+    record.requestId,
+    record.request_id,
+    record._id,
+  );
   const productName = pickString(
     record.productName,
     record.product_name,
-    record.name
+    record.name,
   );
   if (!id || !productName) {
     return null;
@@ -168,7 +172,8 @@ export function normalizeRequest(raw: unknown): SourcingRequestRecord | null {
     description: pickString(record.description),
     quantity: pickNumber(record.quantity) ?? 0,
     targetPrice: pickNumber(record.targetPrice, record.target_price) ?? 0,
-    supplierRegion: pickString(record.supplierRegion, record.supplier_region) || "—",
+    supplierRegion:
+      pickString(record.supplierRegion, record.supplier_region) || "—",
     deadline: pickString(record.deadline),
     status: pickString(record.status) || "open",
     createdAt: pickString(record.createdAt, record.created_at),
@@ -178,7 +183,7 @@ export function normalizeRequest(raw: unknown): SourcingRequestRecord | null {
 
 function normalizeRequestsResponse(
   raw: unknown,
-  query: RequestsListQuery
+  query: RequestsListQuery,
 ): RequestsListResponse {
   const record = asRecord(raw);
   const nested = asRecord(record?.data);
@@ -191,7 +196,8 @@ function normalizeRequestsResponse(
   const total = pickNumber(record?.total, nested?.total) ?? data.length;
   const page = pickNumber(record?.page, nested?.page) ?? query.page;
   const limit =
-    pickNumber(record?.limit, record?.pageSize, nested?.limit) ?? query.pageSize;
+    pickNumber(record?.limit, record?.pageSize, nested?.limit) ??
+    query.pageSize;
   const totalPages =
     pickNumber(record?.totalPages, record?.total_pages, nested?.totalPages) ??
     Math.max(1, Math.ceil(total / Math.max(limit, 1)));
@@ -200,7 +206,7 @@ function normalizeRequestsResponse(
 }
 
 export async function fetchRequestsList(
-  query: RequestsListQuery
+  query: RequestsListQuery,
 ): Promise<RequestsListResponse> {
   if (!getAccessToken()) {
     throw new RequestsRequestError("Unauthorized", 401);
@@ -212,13 +218,13 @@ export async function fetchRequestsList(
       search: query.search.trim() || undefined,
       supplierRegion: query.supplierRegion || undefined,
       deadline: deadlineToIso(query.deadline) || undefined,
-    })
+    }),
   );
 
   if (result.status === 400) {
     throw new RequestsRequestError(
       readApiMessage(result.data, "Invalid request filters."),
-      400
+      400,
     );
   }
   if (result.status === 401) {
@@ -226,21 +232,29 @@ export async function fetchRequestsList(
   }
   if (result.status >= 500) {
     throw new RequestsRequestError(
-      readApiMessage(result.data, "The server could not load sourcing requests."),
-      result.status
+      readApiMessage(
+        result.data,
+        "The server could not load sourcing requests.",
+      ),
+      result.status,
     );
   }
   if (!result.ok) {
     throw new RequestsRequestError(
-      readApiMessage(result.data, `Unable to load requests. Server returned ${result.status}.`),
-      result.status
+      readApiMessage(
+        result.data,
+        `Unable to load requests. Server returned ${result.status}.`,
+      ),
+      result.status,
     );
   }
 
   return normalizeRequestsResponse(result.data, query);
 }
 
-export async function fetchRequestById(id: string): Promise<SourcingRequestRecord> {
+export async function fetchRequestById(
+  id: string,
+): Promise<SourcingRequestRecord> {
   const token = getAccessToken();
   if (!token) {
     throw new RequestsRequestError("Unauthorized", 401);
@@ -263,7 +277,7 @@ export async function fetchRequestById(id: string): Promise<SourcingRequestRecor
   } catch {
     throw new RequestsRequestError(
       "Unable to reach the server. Check your connection and try again.",
-      0
+      0,
     );
   }
 
@@ -272,7 +286,7 @@ export async function fetchRequestById(id: string): Promise<SourcingRequestRecor
   if (response.status === 400) {
     throw new RequestsRequestError(
       readApiMessage(raw, "The request ID format is invalid."),
-      400
+      400,
     );
   }
   if (response.status === 401) {
@@ -281,19 +295,22 @@ export async function fetchRequestById(id: string): Promise<SourcingRequestRecor
   if (response.status === 404) {
     throw new RequestsRequestError(
       "Request not found. It may have been deleted or the ID is incorrect.",
-      404
+      404,
     );
   }
   if (response.status >= 500) {
     throw new RequestsRequestError(
       readApiMessage(raw, "The server could not load this request."),
-      response.status
+      response.status,
     );
   }
   if (!response.ok) {
     throw new RequestsRequestError(
-      readApiMessage(raw, `Unable to load this request. Server returned ${response.status}.`),
-      response.status
+      readApiMessage(
+        raw,
+        `Unable to load this request. Server returned ${response.status}.`,
+      ),
+      response.status,
     );
   }
 
@@ -304,7 +321,10 @@ export async function fetchRequestById(id: string): Promise<SourcingRequestRecor
     normalizeRequest(record?.request);
 
   if (!payload) {
-    throw new RequestsRequestError("The server returned an incomplete request.", 500);
+    throw new RequestsRequestError(
+      "The server returned an incomplete request.",
+      500,
+    );
   }
 
   return payload;
@@ -312,7 +332,7 @@ export async function fetchRequestById(id: string): Promise<SourcingRequestRecor
 
 export async function patchRequest(
   id: string,
-  payload: RequestUpdatePayload
+  payload: RequestUpdatePayload,
 ): Promise<SourcingRequestRecord> {
   const token = getAccessToken();
   if (!token) {
@@ -338,7 +358,7 @@ export async function patchRequest(
   } catch {
     throw new RequestsRequestError(
       "Unable to reach the server. Check your connection and try again.",
-      0
+      0,
     );
   }
 
@@ -346,9 +366,12 @@ export async function patchRequest(
 
   if (response.status === 400) {
     throw new RequestsRequestError(
-      readApiMessage(raw, "Unable to save this request. Check the highlighted fields."),
+      readApiMessage(
+        raw,
+        "Unable to save this request. Check the highlighted fields.",
+      ),
       400,
-      parseFieldErrors(raw)
+      parseFieldErrors(raw),
     );
   }
   if (response.status === 401) {
@@ -357,25 +380,28 @@ export async function patchRequest(
   if (response.status === 404) {
     throw new RequestsRequestError(
       "This request no longer exists or was removed.",
-      404
+      404,
     );
   }
   if (response.status === 409) {
     throw new RequestsRequestError(
       "This update conflicts with an existing active request.",
-      409
+      409,
     );
   }
   if (response.status >= 500) {
     throw new RequestsRequestError(
       readApiMessage(raw, "The server could not save this request."),
-      response.status
+      response.status,
     );
   }
   if (!response.ok) {
     throw new RequestsRequestError(
-      readApiMessage(raw, `Unable to save this request. Server returned ${response.status}.`),
-      response.status
+      readApiMessage(
+        raw,
+        `Unable to save this request. Server returned ${response.status}.`,
+      ),
+      response.status,
     );
   }
 
@@ -386,14 +412,19 @@ export async function patchRequest(
     normalizeRequest(record?.request);
 
   if (!updated) {
-    throw new RequestsRequestError("The server returned an incomplete request.", 500);
+    throw new RequestsRequestError(
+      "The server returned an incomplete request.",
+      500,
+    );
   }
 
   invalidateRequestsCache();
   return updated;
 }
 
-export async function deleteRequest(id: string): Promise<SourcingRequestRecord | null> {
+export async function deleteRequest(
+  id: string,
+): Promise<SourcingRequestRecord | null> {
   const token = getAccessToken();
   if (!token) {
     throw new RequestsRequestError("Unauthorized", 401);
@@ -416,7 +447,7 @@ export async function deleteRequest(id: string): Promise<SourcingRequestRecord |
   } catch {
     throw new RequestsRequestError(
       "Unable to reach the server. Check your connection and try again.",
-      0
+      0,
     );
   }
 
@@ -425,7 +456,7 @@ export async function deleteRequest(id: string): Promise<SourcingRequestRecord |
   if (response.status === 400) {
     throw new RequestsRequestError(
       readApiMessage(raw, "The request ID format is invalid."),
-      400
+      400,
     );
   }
   if (response.status === 401) {
@@ -434,19 +465,22 @@ export async function deleteRequest(id: string): Promise<SourcingRequestRecord |
   if (response.status === 404) {
     throw new RequestsRequestError(
       "This request has already been deleted or does not exist.",
-      404
+      404,
     );
   }
   if (response.status >= 500) {
     throw new RequestsRequestError(
       "Server error occurred. Could not delete request.",
-      response.status
+      response.status,
     );
   }
   if (!response.ok) {
     throw new RequestsRequestError(
-      readApiMessage(raw, `Unable to delete this request. Server returned ${response.status}.`),
-      response.status
+      readApiMessage(
+        raw,
+        `Unable to delete this request. Server returned ${response.status}.`,
+      ),
+      response.status,
     );
   }
 

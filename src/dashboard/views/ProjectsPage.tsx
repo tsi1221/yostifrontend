@@ -16,7 +16,9 @@ export default function ProjectsPage() {
         title="Projects"
         description="Search, page, edit, and delete portfolio projects."
         actions={
-          <ActionButton onClick={() => navigate(`/${ROLE_SLUG[role]}/projects/new`)}>
+          <ActionButton
+            onClick={() => navigate(`/${ROLE_SLUG[role]}/projects/new`)}
+          >
             New project
           </ActionButton>
         }

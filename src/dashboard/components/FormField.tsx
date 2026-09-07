@@ -20,7 +20,9 @@ export function Field({ label, error, children }: FieldProps) {
         {label}
       </span>
       {children}
-      {error ? <span className="text-xs font-medium text-red-600">{error}</span> : null}
+      {error ? (
+        <span className="text-xs font-medium text-red-600">{error}</span>
+      ) : null}
     </label>
   );
 }
