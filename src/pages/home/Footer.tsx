@@ -20,7 +20,7 @@ const Footer: React.FC = () => {
       title: t("footer.company"),
       links: [
         { label: t("footer.aboutUs"), href: "/about" },
-        { label: t("footer.ourProjects"), href: "/ourproject" },
+        { label: t("footer.ourProjects"), href: "/projects" },
         { label: t("footer.whyChooseUs"), href: "/about" },
         { label: t("footer.contact"), href: "/contact" },
       ],

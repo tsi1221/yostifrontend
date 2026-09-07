@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { message } from "antd";
 
+import { sanitizeApiMessage } from "../apiMessage";
 import type {
   ContactFieldErrors,
   ContactFormValues,
@@ -47,9 +48,10 @@ export function useSubmitContact() {
       }
 
       message.error(
-        cause instanceof Error
-          ? cause.message
-          : "Server error occurred. Could not send your message.",
+        sanitizeApiMessage(
+          cause instanceof Error ? cause.message : "",
+          "We couldn't send your message. Please try again.",
+        ),
       );
       return null;
     } finally {

@@ -355,7 +355,7 @@ export async function submitContact(
     throw new ContactRequestError(
       readApiMessage(
         raw,
-        "Server error occurred. Could not send your message.",
+        "We couldn't send your message. Please try again.",
       ),
       response.status,
     );

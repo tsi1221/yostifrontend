@@ -50,7 +50,7 @@ const Navbar: React.FC = () => {
     { key: "/about", label: t("nav.about") },
     { key: "/industries", label: t("nav.industries") },
     { key: "/services", label: t("nav.services") },
-    { key: "/ourproject", label: t("nav.projects") },
+    { key: "/projects", label: t("nav.projects") },
     { key: "/staffs", label: t("nav.staff") },
     { key: "/blog/news", label: t("nav.blog") },
     { key: "/contact", label: t("nav.contact") },

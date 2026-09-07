@@ -1,4 +1,4 @@
-// src/pages/Supplier/Profile.tsx
+// src/pages/supplier/Profile.tsx
 import { useState } from "react";
 import { Button, Input, Upload, message, Form, Table, Modal, Tag } from "antd";
 import { UploadOutlined, EditOutlined, SaveOutlined, EyeOutlined } from "@ant-design/icons";

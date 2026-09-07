@@ -46,7 +46,7 @@ export function useBlogDetail(
 
       if (cause instanceof BlogRequestError && cause.status === 401) {
         if (publicFeed) {
-          setServerError("Sign in to load this content.");
+          setServerError("Unable to load this information right now.");
           return;
         }
         expireSession(navigate);

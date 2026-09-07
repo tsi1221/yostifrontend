@@ -80,7 +80,6 @@ export default function PublicProjectsPage() {
       {showFirstEmpty ? (
         <ProjectEmptyState
           description="No portfolio projects have been published yet."
-          onAction={() => navigate("/superadmin/projects/new")}
         />
       ) : null}
 

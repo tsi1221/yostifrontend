@@ -19,22 +19,22 @@ import {
   getRoleDashboardPath,
 } from "./dashboard/auth";
 
-import Navbar from "./pages/Home/Navbar";
-import Footer from "./pages/Home/Footer";
+import Navbar from "./pages/home/Navbar";
+import Footer from "./pages/home/Footer";
 
-import HeroSection from "./pages/Home/HeroSection";
-import AboutSection from "./pages/Home/AboutSection";
-import ServicesSection from "./pages/Home/ServicesSection";
-import ContactSection from "./pages/Home/ContactSection";
-import Blog from "./pages/Home/Blog";
-import WhyChoose from "./pages/Home/Whychoose";
-import OurProject from "./pages/Home/Ourproject";
-import Statics from "./pages/Home/Statics";
-import TestimonialsPage from "./pages/Home/TestimonialsSection";
-import ProductsSection from "./pages/Home/ExportProductsSection";
-import Staff from "./pages/Home/Staff";
+import HeroSection from "./pages/home/HeroSection";
+import AboutSection from "./pages/home/AboutSection";
+import ServicesSection from "./pages/home/ServicesSection";
+import ContactSection from "./pages/home/ContactSection";
+import Blog from "./pages/home/Blog";
+import WhyChoose from "./pages/home/Whychoose";
+import OurProject from "./pages/home/Ourproject";
+import Statics from "./pages/home/Statics";
+import TestimonialsPage from "./pages/home/TestimonialsSection";
+import ProductsSection from "./pages/home/ExportProductsSection";
+import Staff from "./pages/home/Staff";
 
-import ProductPage from "./pages/Home/product";
+import ProductPage from "./pages/home/product";
 import PublicBlogDetail from "./dashboard/blogs/PublicBlogDetail";
 import PublicBlogsPage from "./dashboard/blogs/PublicBlogsPage";
 import PublicProjectDetail from "./dashboard/projects/PublicProjectDetail";

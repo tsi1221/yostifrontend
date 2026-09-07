@@ -79,7 +79,6 @@ export default function PublicBlogsPage() {
       {showFirstEmpty ? (
         <BlogEmptyState
           description="No articles have been published yet."
-          onAction={() => navigate("/superadmin/blogs/new")}
         />
       ) : null}
 

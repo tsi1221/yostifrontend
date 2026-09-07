@@ -123,7 +123,7 @@ api.interceptors.response.use(
   (error: AxiosError) => {
     const status = error.response?.status;
     const url = String(error.config?.url ?? error.config?.baseURL ?? "");
-    if (status === 401 && !isAuthRoute(url)) {
+    if (status === 401 && !isAuthRoute(url) && getAccessToken()) {
       expireSession();
     }
     return Promise.reject(error);

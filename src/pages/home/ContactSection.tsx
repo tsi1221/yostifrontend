@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Form, Input, Button, Select, message } from "antd";
 import { EnvironmentOutlined, PhoneOutlined, MailOutlined } from "@ant-design/icons";
 import { motion } from "framer-motion";
@@ -12,15 +12,24 @@ import {
 } from "react-icons/fa";
 import { SiWechat } from "react-icons/si";
 
+import { sanitizeApiMessage } from "../../dashboard/apiMessage";
+import {
+  CONTACT_SUBMITTED_MESSAGE,
+  ContactRequestError,
+  formValuesToPayload,
+  submitContact,
+  validateContactForm,
+} from "../../dashboard/contacts/api";
+import {
+  CONTACT_TOPIC_VALUES,
+  type ContactFormValues,
+} from "../../dashboard/contacts/types";
+
 import headerImg from "../../../public/assets/5823ec57d1038d4c4f62805e3151d728.jpeg";
 
 const { Option } = Select;
 
 const ACCENT_COLOR = "#FACC15";
-
-// ================= Telegram Config =================
-const TELEGRAM_BOT_TOKEN = "8181691703:AAHAxK-HW3GXwJ-WC8tTdv-xBwgj-BLPuIk";
-const TELEGRAM_CHAT_ID = "5143972027";
 
 
 
@@ -86,50 +95,53 @@ const ContactCard: React.FC<ContactCardProps> = ({ icon, title, text }) => (
 
 // ================= MAIN COMPONENT =================
 const ContactSection: React.FC = () => {
-  const [form] = Form.useForm();
+  const [form] = Form.useForm<ContactFormValues>();
+  const [saving, setSaving] = useState(false);
+  const [sent, setSent] = useState(false);
 
-  interface FormValues {
-    name: string;
-    phone: string;
-    email: string;
-    topic: string;
-    message: string;
-  }
+  const handleSubmit = async (values: ContactFormValues) => {
+    if (saving) {
+      return;
+    }
 
-  const handleSubmit = async (values: FormValues) => {
-    const messageText = `
-New Contact Form Submission:
-Name: ${values.name}
-Phone: ${values.phone}
-Email: ${values.email}
-Topic: ${values.topic}
-Message: ${values.message}
-    `;
-
-    try {
-      const res = await fetch(
-        `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: TELEGRAM_CHAT_ID,
-            text: messageText,
-          }),
-        }
+    const clientErrors = validateContactForm(values);
+    if (Object.keys(clientErrors).length > 0) {
+      form.setFields(
+        (Object.entries(clientErrors) as Array<
+          [keyof ContactFormValues, string]
+        >).map(([name, error]) => ({
+          name,
+          errors: error ? [error] : [],
+        })),
       );
+      return;
+    }
 
-      const data = await res.json();
-
-      if (data.ok) {
-        message.success("Your message has been sent successfully!");
-        form.resetFields();
-      } else {
-        message.error("Failed to send message. Please try again.");
+    setSaving(true);
+    try {
+      const created = await submitContact(formValuesToPayload(values));
+      message.success(created.message || CONTACT_SUBMITTED_MESSAGE);
+      form.resetFields();
+      setSent(true);
+    } catch (cause) {
+      if (cause instanceof ContactRequestError && cause.fields) {
+        form.setFields(
+          (Object.entries(cause.fields) as Array<
+            [keyof ContactFormValues, string]
+          >).map(([name, error]) => ({
+            name,
+            errors: error ? [error] : [],
+          })),
+        );
       }
-    } catch (err) {
-      console.error(err);
-      message.error("Failed to send message. Please try again.");
+      message.error(
+        sanitizeApiMessage(
+          cause instanceof Error ? cause.message : "",
+          "We couldn't send your message. Please try again.",
+        ),
+      );
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -189,37 +201,77 @@ Message: ${values.message}
       <div className="container mx-auto px-4 md:px-8 py-12 flex flex-col lg:flex-row gap-10">
         {/* Form */}
         <div className="flex-1 bg-white p-6 md:p-8 rounded-xl shadow-xl">
+          {sent ? (
+            <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-6 text-center">
+              <h2 className="text-xl font-semibold text-[#0F3952]">
+                {CONTACT_SUBMITTED_MESSAGE}
+              </h2>
+              <p className="mt-2 text-sm text-slate-600">
+                Our team will follow up on WhatsApp or email shortly.
+              </p>
+              <Button
+                className="mt-4"
+                onClick={() => {
+                  setSent(false);
+                  form.resetFields();
+                }}
+              >
+                Send another message
+              </Button>
+            </div>
+          ) : (
+            <>
           <h2 className="text-2xl font-bold text-[#0F3952] mb-6">
             General Contact Form
           </h2>
 
           <Form form={form} layout="vertical" onFinish={handleSubmit}>
-            <Form.Item name="name" label="Full Name" rules={[{ required: true }]}>
+            <Form.Item
+              name="fullname"
+              label="Full Name"
+              rules={[{ required: true, message: "Full name is required." }]}
+            >
               <Input size="large" />
             </Form.Item>
 
-            <Form.Item name="phone" label="Phone / WhatsApp" rules={[{ required: true }]}>
+            <Form.Item
+              name="phoneWhatsapp"
+              label="Phone / WhatsApp"
+              rules={[{ required: true, message: "WhatsApp number is required." }]}
+            >
               <Input size="large" />
             </Form.Item>
 
             <Form.Item
               name="email"
               label="Email Address"
-              rules={[{ required: true, type: "email" }]}
+              rules={[
+                { required: true, message: "Email is required." },
+                { type: "email", message: "Enter a valid email address." },
+              ]}
             >
               <Input size="large" />
             </Form.Item>
 
-            <Form.Item name="topic" label="Message Topic" rules={[{ required: true }]}>
+            <Form.Item
+              name="topic"
+              label="Message Topic"
+              rules={[{ required: true, message: "Topic is required." }]}
+            >
               <Select size="large">
-                <Option value="inquiry">Inquiry</Option>
-                <Option value="partnership">Partnership</Option>
-                <Option value="complaint">Complaint</Option>
-                <Option value="other">Other</Option>
+                {CONTACT_TOPIC_VALUES.map((topic) => (
+                  <Option key={topic} value={topic}>
+                    {topic}
+                  </Option>
+                ))}
               </Select>
             </Form.Item>
 
-            <Form.Item name="message" label="Message" rules={[{ required: true }]}>
+            <Form.Item
+              name="details"
+              label="Message"
+              rules={[{ required: true, message: "Details are required." }]}
+            >
               <Input.TextArea rows={6} />
             </Form.Item>
 
@@ -227,11 +279,15 @@ Message: ${values.message}
               type="primary"
               htmlType="submit"
               size="large"
+              loading={saving}
+              disabled={saving}
               className="w-full !bg-[#0F3952]"
             >
               Send Message
             </Button>
           </Form>
+            </>
+          )}
         </div>
 
         {/* Info + Social */}
