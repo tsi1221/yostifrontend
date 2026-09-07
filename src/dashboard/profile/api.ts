@@ -144,19 +144,9 @@ export function profileFormFromUser(user: AuthUser | null): ProfileFormValues {
 
 export async function fetchCurrentProfile(): Promise<AuthUser | null> {
   const stored = getStoredAuthUser();
-  const { status, data } = await authorizedJson(USERS_ME_URL, {
-    method: "GET",
-  });
 
-  if (status === 200 || status === 201) {
-    return unwrapUser(data);
-  }
-
-  if (status === 401) {
-    throw new ProfileRequestError("Unauthorized", 401);
-  }
-
-  // Live API treats /users/me as /users/:id ("me" fails ParseIntPipe with 400).
+  // Live API treats GET /users/me as GET /users/:id, so "me" fails validation.
+  // Always load the signed-in record by numeric id when we have one.
   if (stored?.id) {
     const fallback = await authorizedJson(`${USERS_URL}/${stored.id}`, {
       method: "GET",
@@ -167,6 +157,19 @@ export async function fetchCurrentProfile(): Promise<AuthUser | null> {
     if (fallback.status === 401) {
       throw new ProfileRequestError("Unauthorized", 401);
     }
+    return stored;
+  }
+
+  const { status, data } = await authorizedJson(USERS_ME_URL, {
+    method: "GET",
+  });
+
+  if (status === 200 || status === 201) {
+    return unwrapUser(data);
+  }
+
+  if (status === 401) {
+    throw new ProfileRequestError("Unauthorized", 401);
   }
 
   return stored;
