@@ -321,7 +321,7 @@ export async function createService(
     });
   } catch {
     throw new ServiceRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
     );
   }
@@ -354,7 +354,7 @@ export async function createService(
     throw new ServiceRequestError(
       readApiMessage(
         raw,
-        `Unable to create this service. Server returned ${response.status}.`,
+        "We couldn't create this service. Please try again.",
       ),
       response.status,
     );
@@ -363,7 +363,7 @@ export async function createService(
   const created = serviceFromResponse(raw);
   if (!created) {
     throw new ServiceRequestError(
-      "The server returned an incomplete service.",
+      "We couldn't read this service. Please try again.",
       500,
     );
   }
@@ -450,7 +450,7 @@ export async function fetchServicesList(
   }
   if (result.status >= 500) {
     throw new ServiceRequestError(
-      readApiMessage(result.data, "The server could not load services."),
+      readApiMessage(result.data, "We couldn't load services."),
       result.status,
     );
   }
@@ -458,7 +458,7 @@ export async function fetchServicesList(
     throw new ServiceRequestError(
       readApiMessage(
         result.data,
-        `Unable to load services. Server returned ${result.status}.`,
+        "We couldn't load this information. Please try again.",
       ),
       result.status,
     );
@@ -493,7 +493,7 @@ export async function patchService(
     });
   } catch {
     throw new ServiceRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
     );
   }
@@ -531,7 +531,7 @@ export async function patchService(
     throw new ServiceRequestError(
       readApiMessage(
         raw,
-        `Unable to update this service. Server returned ${response.status}.`,
+        "We couldn't save this service. Please try again.",
       ),
       response.status,
     );
@@ -540,7 +540,7 @@ export async function patchService(
   const updated = serviceFromResponse(raw);
   if (!updated) {
     throw new ServiceRequestError(
-      "The server returned an incomplete service.",
+      "We couldn't read this service. Please try again.",
       500,
     );
   }
@@ -576,7 +576,7 @@ export async function deleteService(id: number): Promise<string> {
     });
   } catch {
     throw new ServiceRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
     );
   }
@@ -605,7 +605,7 @@ export async function deleteService(id: number): Promise<string> {
     throw new ServiceRequestError(
       readApiMessage(
         raw,
-        `Unable to delete this service. Server returned ${response.status}.`,
+        "We couldn't delete this service. Please try again.",
       ),
       response.status,
     );

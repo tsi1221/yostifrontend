@@ -348,7 +348,7 @@ export async function fetchSupportsList(
   }
   if (result.status >= 500) {
     throw new TicketsRequestError(
-      readApiMessage(result.data, "The server could not load support tickets."),
+      readApiMessage(result.data, "We couldn't load support tickets."),
       result.status,
     );
   }
@@ -356,7 +356,7 @@ export async function fetchSupportsList(
     throw new TicketsRequestError(
       readApiMessage(
         result.data,
-        `Unable to load support tickets. Server returned ${result.status}.`,
+        "We couldn't load this information. Please try again.",
       ),
       result.status,
     );
@@ -386,7 +386,7 @@ export async function createTicket(
     });
   } catch {
     throw new TicketsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
     );
   }
@@ -422,7 +422,7 @@ export async function createTicket(
     throw new TicketsRequestError(
       readApiMessage(
         raw,
-        `Unable to create support ticket. Server returned ${response.status}.`,
+        "We couldn't create this support ticket. Please try again.",
       ),
       response.status,
     );
@@ -436,7 +436,7 @@ export async function createTicket(
 
   if (!created) {
     throw new TicketsRequestError(
-      "The server returned an incomplete support ticket.",
+      "We couldn't read this support ticket. Please try again.",
       500,
     );
   }
@@ -611,7 +611,7 @@ export async function patchSupport(
     });
   } catch {
     throw new TicketsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
     );
   }
@@ -657,7 +657,7 @@ export async function patchSupport(
       return synthesized;
     }
     throw new TicketsRequestError(
-      "The server returned an incomplete support ticket.",
+      "We couldn't read this support ticket. Please try again.",
       500,
     );
   }
@@ -665,7 +665,7 @@ export async function patchSupport(
     throw new TicketsRequestError(
       readApiMessage(
         raw,
-        `Unable to update this support ticket. Server returned ${response.status}.`,
+        "We couldn't save this support ticket. Please try again.",
       ),
       response.status,
     );
@@ -674,7 +674,7 @@ export async function patchSupport(
   const updated = ticketFromResponse(raw);
   if (!updated) {
     throw new TicketsRequestError(
-      "The server returned an incomplete support ticket.",
+      "We couldn't read this support ticket. Please try again.",
       500,
     );
   }
@@ -717,7 +717,7 @@ export async function deleteSupportTicket(id: number): Promise<string> {
     });
   } catch {
     throw new TicketsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
     );
   }
@@ -749,7 +749,7 @@ export async function deleteSupportTicket(id: number): Promise<string> {
     throw new TicketsRequestError(
       readApiMessage(
         raw,
-        `Unable to delete this support ticket. Server returned ${response.status}.`,
+        "We couldn't delete this support ticket. Please try again.",
       ),
       response.status,
     );
@@ -829,7 +829,7 @@ export async function fetchSupportTicket(id: number): Promise<TicketRecord> {
     });
   } catch {
     throw new TicketsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
     );
   }
@@ -850,7 +850,7 @@ export async function fetchSupportTicket(id: number): Promise<TicketRecord> {
   }
   if (response.status >= 500) {
     throw new TicketsRequestError(
-      readApiMessage(raw, "The server could not load this support ticket."),
+      readApiMessage(raw, "We couldn't load this support ticket."),
       response.status,
     );
   }
@@ -858,7 +858,7 @@ export async function fetchSupportTicket(id: number): Promise<TicketRecord> {
     throw new TicketsRequestError(
       readApiMessage(
         raw,
-        `Unable to load this support ticket. Server returned ${response.status}.`,
+        "We couldn't load this support ticket. Please try again.",
       ),
       response.status,
     );
@@ -873,7 +873,7 @@ export async function fetchSupportTicket(id: number): Promise<TicketRecord> {
 
   if (!payload) {
     throw new TicketsRequestError(
-      "The server returned an incomplete support ticket.",
+      "We couldn't read this support ticket. Please try again.",
       500,
     );
   }

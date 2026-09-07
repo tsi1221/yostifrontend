@@ -317,13 +317,15 @@ function normalizeShipmentsResponse(
 ): ShipmentsListResponse {
   const record = asRecord(raw);
   const nested = asRecord(record?.data);
+  const meta = asRecord(record?.meta) ?? asRecord(nested?.meta);
   const rows = extractListRows(raw);
 
   const data = rows
     .map((row) => normalizeShipment(row))
     .filter((row): row is ShipmentRecord => Boolean(row));
 
-  const total = pickNumber(record?.total, nested?.total) ?? data.length;
+  const total =
+    pickNumber(meta?.total, record?.total, nested?.total) ?? data.length;
   const page = pickNumber(record?.page, nested?.page) ?? query.page;
   const pageSize =
     pickNumber(record?.pageSize, record?.limit, nested?.pageSize) ??
@@ -362,7 +364,7 @@ export async function fetchShipmentsList(
   }
   if (result.status >= 500) {
     throw new ShipmentsRequestError(
-      readApiMessage(result.data, "The server could not load shipments."),
+      readApiMessage(result.data, "We couldn't load shipments."),
       result.status,
     );
   }
@@ -370,7 +372,7 @@ export async function fetchShipmentsList(
     throw new ShipmentsRequestError(
       readApiMessage(
         result.data,
-        `Unable to load shipments. Server returned ${result.status}.`,
+        "We couldn't load this information. Please try again.",
       ),
       result.status,
     );
@@ -400,7 +402,7 @@ export async function createShipment(
     });
   } catch {
     throw new ShipmentsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
     );
   }
@@ -436,7 +438,7 @@ export async function createShipment(
     throw new ShipmentsRequestError(
       readApiMessage(
         raw,
-        `Unable to create shipment. Server returned ${response.status}.`,
+        "We couldn't create this shipment. Please try again.",
       ),
       response.status,
     );
@@ -449,7 +451,7 @@ export async function createShipment(
 
   if (!created) {
     throw new ShipmentsRequestError(
-      "The server returned an incomplete shipment.",
+      "We couldn't read this shipment. Please try again.",
       500,
     );
   }
@@ -484,7 +486,7 @@ export async function patchShipment(
     });
   } catch {
     throw new ShipmentsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
     );
   }
@@ -520,7 +522,7 @@ export async function patchShipment(
     throw new ShipmentsRequestError(
       readApiMessage(
         raw,
-        `Unable to update shipment. Server returned ${response.status}.`,
+        "We couldn't save this shipment. Please try again.",
       ),
       response.status,
     );
@@ -533,7 +535,7 @@ export async function patchShipment(
 
   if (!updated) {
     throw new ShipmentsRequestError(
-      "The server returned an incomplete shipment.",
+      "We couldn't read this shipment. Please try again.",
       500,
     );
   }
@@ -566,7 +568,7 @@ export async function deleteShipment(id: number): Promise<void> {
     });
   } catch {
     throw new ShipmentsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
     );
   }
@@ -603,7 +605,7 @@ export async function deleteShipment(id: number): Promise<void> {
     throw new ShipmentsRequestError(
       readApiMessage(
         raw,
-        `Unable to delete shipment. Server returned ${response.status}.`,
+        "We couldn't delete this shipment. Please try again.",
       ),
       response.status,
     );

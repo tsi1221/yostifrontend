@@ -184,7 +184,7 @@ export async function fetchPermissionsList(
   }
   if (!result.ok) {
     throw new PermissionRequestError(
-      readApiMessage(result.data, "The server could not load permissions."),
+      readApiMessage(result.data, "We couldn't load permissions."),
       result.status,
       result.status === 0 ? "NETWORK" : undefined,
     );

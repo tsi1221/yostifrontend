@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
 import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
@@ -71,7 +70,8 @@ export function useRequestsList() {
       setResponse(payload);
     } catch (cause) {
       if (cause instanceof RequestsRequestError && cause.status === 400) {
-        message.error(cause.message);
+        setResponse(EMPTY_RESPONSE);
+        setServerError(liveListFailureMessage(cause, "requests"));
         return;
       }
 

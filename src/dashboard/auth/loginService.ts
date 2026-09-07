@@ -223,7 +223,7 @@ export async function loginWithPassword(
       if (payload) {
         return payload;
       }
-      throw new Error("The server did not return a usable access token.");
+      throw new Error("We couldn't complete sign-in. Please try again.");
     }
 
     throw new Error(

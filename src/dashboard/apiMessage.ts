@@ -15,6 +15,7 @@ export function isTechnicalApiMessage(message: string) {
     /\/api\/[^\s]+/i.test(value) ||
     /\b(GET|POST|PUT|PATCH|DELETE)\s+\//i.test(value) ||
     /\b(jwt|endpoint|backend|database|stack trace)\b/i.test(value) ||
+    /server returned/i.test(value) ||
     /\b(40[0-9]|500)\s*(forbidden|unauthorized|error)?\b/i.test(value) ||
     /^(not found|unauthorized|forbidden)$/i.test(value) ||
     /\b(read|write|delete|manage|approve|refund):[a-z_]+\b/i.test(value)
@@ -58,6 +59,8 @@ export function liveListFailureMessage(cause: unknown, _resource?: string) {
 
 export const LOAD_ERROR_MESSAGE =
   "We couldn't load this information. Please try again.";
+export const NETWORK_ERROR_MESSAGE =
+  "We couldn't connect. Check your connection and try again.";
 export const NO_ACCESS_SECTION_MESSAGE =
   "You don't have access to this section.";
 export const NO_ACCESS_INFORMATION_MESSAGE =

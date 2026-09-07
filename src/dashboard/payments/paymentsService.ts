@@ -198,7 +198,7 @@ export async function fetchPaymentsList(
   }
   if (result.status >= 500) {
     throw new PaymentsRequestError(
-      readApiMessage(result.data, "The server could not load payments."),
+      readApiMessage(result.data, "We couldn't load payments."),
       result.status,
     );
   }
@@ -206,7 +206,7 @@ export async function fetchPaymentsList(
     throw new PaymentsRequestError(
       readApiMessage(
         result.data,
-        `Unable to load payments. Server returned ${result.status}.`,
+        "We couldn't load this information. Please try again.",
       ),
       result.status,
     );
@@ -299,7 +299,7 @@ export async function createPayment(
     });
   } catch {
     throw new PaymentsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
     );
   }
@@ -332,7 +332,7 @@ export async function createPayment(
     throw new PaymentsRequestError(
       readApiMessage(
         raw,
-        `Unable to initiate payment. Server returned ${response.status}.`,
+        "We couldn't start this payment. Please try again.",
       ),
       response.status,
     );
@@ -345,7 +345,7 @@ export async function createPayment(
 
   if (!created) {
     throw new PaymentsRequestError(
-      "The server returned an incomplete payment.",
+      "We couldn't read this payment. Please try again.",
       500,
     );
   }
@@ -431,7 +431,7 @@ export async function fetchPayment(id: number): Promise<PaymentRecord> {
     });
   } catch {
     throw new PaymentsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
     );
   }
@@ -455,7 +455,7 @@ export async function fetchPayment(id: number): Promise<PaymentRecord> {
   }
   if (response.status >= 500) {
     throw new PaymentsRequestError(
-      readApiMessage(raw, "The server could not load this transaction record."),
+      readApiMessage(raw, "We couldn't load this transaction record."),
       response.status,
     );
   }
@@ -463,7 +463,7 @@ export async function fetchPayment(id: number): Promise<PaymentRecord> {
     throw new PaymentsRequestError(
       readApiMessage(
         raw,
-        `Unable to load this transaction record. Server returned ${response.status}.`,
+        "We couldn't load this payment. Please try again.",
       ),
       response.status,
     );
@@ -477,7 +477,7 @@ export async function fetchPayment(id: number): Promise<PaymentRecord> {
 
   if (!payload) {
     throw new PaymentsRequestError(
-      "The server returned an incomplete transaction record.",
+      "We couldn't read this transaction record. Please try again.",
       500,
     );
   }
@@ -567,7 +567,7 @@ export async function patchPayment(
     });
   } catch {
     throw new PaymentsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
     );
   }
@@ -603,7 +603,7 @@ export async function patchPayment(
     throw new PaymentsRequestError(
       readApiMessage(
         raw,
-        `Unable to update payment. Server returned ${response.status}.`,
+        "We couldn't save this payment. Please try again.",
       ),
       response.status,
     );
@@ -616,7 +616,7 @@ export async function patchPayment(
 
   if (!updated) {
     throw new PaymentsRequestError(
-      "The server returned an incomplete payment.",
+      "We couldn't read this payment. Please try again.",
       500,
     );
   }
@@ -648,7 +648,7 @@ export async function deletePayment(id: number): Promise<string> {
     });
   } catch {
     throw new PaymentsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
     );
   }
@@ -680,7 +680,7 @@ export async function deletePayment(id: number): Promise<string> {
     throw new PaymentsRequestError(
       readApiMessage(
         raw,
-        `Unable to delete this payment record. Server returned ${response.status}.`,
+        "We couldn't delete this payment. Please try again.",
       ),
       response.status,
     );

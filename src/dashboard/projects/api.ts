@@ -328,7 +328,7 @@ export async function fetchProjectsList(
   }
   if (!result.ok) {
     throw new ProjectRequestError(
-      readApiMessage(result.data, "The server could not load projects."),
+      readApiMessage(result.data, "We couldn't load projects."),
       result.status,
       undefined,
       result.status === 0 ? "NETWORK" : undefined,
@@ -356,7 +356,7 @@ export async function fetchProject(id: number): Promise<ProjectRecord> {
     });
   } catch {
     throw new ProjectRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
       undefined,
       "NETWORK",
@@ -383,7 +383,7 @@ export async function fetchProject(id: number): Promise<ProjectRecord> {
   }
   if (!response.ok) {
     throw new ProjectRequestError(
-      readApiMessage(raw, "The server could not load this project."),
+      readApiMessage(raw, "We couldn't load this project."),
       response.status,
     );
   }
@@ -391,7 +391,7 @@ export async function fetchProject(id: number): Promise<ProjectRecord> {
   const project = projectFromResponse(raw);
   if (!project) {
     throw new ProjectRequestError(
-      "The server returned an incomplete project.",
+      "We couldn't read this project. Please try again.",
       500,
     );
   }
@@ -416,7 +416,7 @@ export async function createProject(
     });
   } catch {
     throw new ProjectRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
       undefined,
       "NETWORK",
@@ -462,7 +462,7 @@ export async function createProject(
   const created = projectFromResponse(raw);
   if (!created) {
     throw new ProjectRequestError(
-      "The server returned an incomplete project.",
+      "We couldn't read this project. Please try again.",
       500,
     );
   }
@@ -501,7 +501,7 @@ export async function patchProject(
     });
   } catch {
     throw new ProjectRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
       undefined,
       "NETWORK",
@@ -555,7 +555,7 @@ export async function patchProject(
   const updated = projectFromResponse(raw);
   if (!updated) {
     throw new ProjectRequestError(
-      "The server returned an incomplete project.",
+      "We couldn't read this project. Please try again.",
       500,
     );
   }
@@ -586,7 +586,7 @@ export async function deleteProject(id: number): Promise<string> {
     });
   } catch {
     throw new ProjectRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
       undefined,
       "NETWORK",

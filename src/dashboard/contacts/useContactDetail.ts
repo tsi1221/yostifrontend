@@ -58,7 +58,7 @@ export function useContactDetail(id: string | undefined) {
       const text =
         cause instanceof Error
           ? cause.message
-          : "The server could not load this contact submission.";
+          : "We couldn't load this contact submission.";
       message.error(text);
       setServerError(text);
     } finally {

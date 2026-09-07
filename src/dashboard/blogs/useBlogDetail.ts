@@ -61,7 +61,7 @@ export function useBlogDetail(
       const text =
         cause instanceof Error
           ? cause.message
-          : "The server could not load this blog post.";
+          : "We couldn't load this blog post.";
       message.error(text);
       setServerError(text);
     } finally {

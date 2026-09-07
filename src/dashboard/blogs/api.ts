@@ -300,7 +300,7 @@ export async function fetchBlogsList(
   }
   if (result.status >= 500) {
     throw new BlogRequestError(
-      readApiMessage(result.data, "The server could not load blog posts."),
+      readApiMessage(result.data, "We couldn't load blog posts."),
       result.status,
     );
   }
@@ -308,7 +308,7 @@ export async function fetchBlogsList(
     throw new BlogRequestError(
       readApiMessage(
         result.data,
-        `Unable to load blog posts. Server returned ${result.status}.`,
+        "We couldn't load this information. Please try again.",
       ),
       result.status,
       undefined,
@@ -337,7 +337,7 @@ export async function fetchBlog(id: number): Promise<BlogPost> {
     });
   } catch {
     throw new BlogRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
       undefined,
       "NETWORK",
@@ -359,7 +359,7 @@ export async function fetchBlog(id: number): Promise<BlogPost> {
   }
   if (!response.ok) {
     throw new BlogRequestError(
-      readApiMessage(raw, "The server could not load this blog post."),
+      readApiMessage(raw, "We couldn't load this blog post."),
       response.status,
     );
   }
@@ -367,7 +367,7 @@ export async function fetchBlog(id: number): Promise<BlogPost> {
   const blog = blogFromResponse(raw);
   if (!blog) {
     throw new BlogRequestError(
-      "The server returned an incomplete blog post.",
+      "We couldn't read this blog post. Please try again.",
       500,
     );
   }
@@ -392,7 +392,7 @@ export async function createBlog(
     });
   } catch {
     throw new BlogRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
       undefined,
       "NETWORK",
@@ -435,7 +435,7 @@ export async function createBlog(
   const created = blogFromResponse(raw);
   if (!created) {
     throw new BlogRequestError(
-      "The server returned an incomplete blog post.",
+      "We couldn't read this blog post. Please try again.",
       500,
     );
   }
@@ -474,7 +474,7 @@ export async function patchBlog(
     });
   } catch {
     throw new BlogRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
       undefined,
       "NETWORK",
@@ -525,7 +525,7 @@ export async function patchBlog(
   const updated = blogFromResponse(raw);
   if (!updated) {
     throw new BlogRequestError(
-      "The server returned an incomplete blog post.",
+      "We couldn't read this blog post. Please try again.",
       500,
     );
   }
@@ -556,7 +556,7 @@ export async function deleteBlog(id: number): Promise<string> {
     });
   } catch {
     throw new BlogRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
       undefined,
       "NETWORK",

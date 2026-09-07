@@ -331,7 +331,7 @@ export async function submitContact(
     });
   } catch {
     throw new ContactRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
       undefined,
       "NETWORK",
@@ -407,7 +407,7 @@ export async function fetchContactsList(
     throw new ContactRequestError(
       readApiMessage(
         result.data,
-        "The server could not load contact submissions.",
+        "We couldn't load contact submissions.",
       ),
       result.status,
       undefined,
@@ -437,7 +437,7 @@ export async function fetchContact(id: number): Promise<ContactRecord> {
     });
   } catch {
     throw new ContactRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
       undefined,
       "NETWORK",
@@ -464,7 +464,7 @@ export async function fetchContact(id: number): Promise<ContactRecord> {
   }
   if (!response.ok) {
     throw new ContactRequestError(
-      readApiMessage(raw, "The server could not load this contact submission."),
+      readApiMessage(raw, "We couldn't load this contact submission."),
       response.status,
     );
   }
@@ -472,7 +472,7 @@ export async function fetchContact(id: number): Promise<ContactRecord> {
   const contact = contactFromResponse(raw);
   if (!contact) {
     throw new ContactRequestError(
-      "The server returned an incomplete contact submission.",
+      "We couldn't read this contact submission. Please try again.",
       500,
     );
   }
@@ -506,7 +506,7 @@ export async function patchContact(
     });
   } catch {
     throw new ContactRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
       undefined,
       "NETWORK",
@@ -552,7 +552,7 @@ export async function patchContact(
   const updated = contactFromResponse(raw);
   if (!updated) {
     throw new ContactRequestError(
-      "The server returned an incomplete contact submission.",
+      "We couldn't read this contact submission. Please try again.",
       500,
     );
   }
@@ -583,7 +583,7 @@ export async function deleteContact(id: number): Promise<string> {
     });
   } catch {
     throw new ContactRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
       undefined,
       "NETWORK",

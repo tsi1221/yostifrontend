@@ -63,7 +63,7 @@ export function usePaymentDetail(id: string | undefined) {
       const text =
         cause instanceof Error
           ? cause.message
-          : "The server could not load this transaction record.";
+          : "We couldn't load this transaction record.";
       message.error(text);
       setServerError(text);
     } finally {

@@ -58,7 +58,7 @@ function messageForStatus(status?: number) {
     case 422:
       return "Please correct the highlighted fields.";
     case 500:
-      return "The server encountered an error. Please try again.";
+      return "Something went wrong. Please try again.";
     default:
       return "";
   }

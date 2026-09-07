@@ -58,7 +58,7 @@ export function useRoleDetail(id: string | undefined) {
       const text =
         cause instanceof Error
           ? cause.message
-          : "The server could not load this role.";
+          : "We couldn't load this role.";
       message.error(text);
       setServerError(text);
     } finally {

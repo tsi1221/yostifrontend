@@ -406,7 +406,7 @@ export async function fetchRolesList(
   }
   if (result.status >= 500) {
     throw new RoleRequestError(
-      readApiMessage(result.data, "The server could not load roles."),
+      readApiMessage(result.data, "We couldn't load roles."),
       result.status,
     );
   }
@@ -414,7 +414,7 @@ export async function fetchRolesList(
     throw new RoleRequestError(
       readApiMessage(
         result.data,
-        `Unable to load roles. Server returned ${result.status}.`,
+        "We couldn't load this information. Please try again.",
       ),
       result.status,
       undefined,
@@ -443,7 +443,7 @@ export async function fetchRole(id: number): Promise<RoleRecord> {
     });
   } catch {
     throw new RoleRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
       undefined,
       "NETWORK",
@@ -465,14 +465,14 @@ export async function fetchRole(id: number): Promise<RoleRecord> {
   }
   if (!response.ok) {
     throw new RoleRequestError(
-      readApiMessage(raw, "The server could not load this role."),
+      readApiMessage(raw, "We couldn't load this role."),
       response.status,
     );
   }
 
   const role = roleFromResponse(raw);
   if (!role) {
-    throw new RoleRequestError("The server returned an incomplete role.", 500);
+    throw new RoleRequestError("We couldn't read this role. Please try again.", 500);
   }
   return role;
 }
@@ -504,7 +504,7 @@ export async function fetchPermissionsCatalog(): Promise<{
     throw new RoleRequestError(
       cause instanceof Error
         ? cause.message
-        : "The server could not load permissions.",
+        : "We couldn't load permissions.",
       cause instanceof PermissionRequestError ? cause.status : 500,
     );
   }
@@ -528,7 +528,7 @@ export async function createRole(
     });
   } catch {
     throw new RoleRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
       undefined,
       "NETWORK",
@@ -570,7 +570,7 @@ export async function createRole(
 
   const created = roleFromResponse(raw);
   if (!created) {
-    throw new RoleRequestError("The server returned an incomplete role.", 500);
+    throw new RoleRequestError("We couldn't read this role. Please try again.", 500);
   }
 
   invalidateRolesCache();
@@ -607,7 +607,7 @@ export async function patchRole(
     });
   } catch {
     throw new RoleRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
       undefined,
       "NETWORK",
@@ -657,7 +657,7 @@ export async function patchRole(
 
   const updated = roleFromResponse(raw);
   if (!updated) {
-    throw new RoleRequestError("The server returned an incomplete role.", 500);
+    throw new RoleRequestError("We couldn't read this role. Please try again.", 500);
   }
 
   invalidateRolesCache();

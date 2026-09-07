@@ -272,7 +272,7 @@ export function uploadFile(
     xhr.onerror = () => {
       reject(
         new FileRequestError(
-          "Unable to reach the server. Check your connection and try again.",
+          "We couldn't connect. Check your connection and try again.",
           0,
           undefined,
           "NETWORK",
@@ -327,7 +327,7 @@ export function uploadFile(
       if (!record) {
         reject(
           new FileRequestError(
-            "The server returned an incomplete file record.",
+            "We couldn't read this file record. Please try again.",
             500,
           ),
         );
@@ -370,7 +370,7 @@ export async function deleteFileByFilename(
     });
   } catch {
     throw new FileRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
       undefined,
       "NETWORK",

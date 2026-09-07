@@ -61,7 +61,7 @@ export function useProjectDetail(
       const text =
         cause instanceof Error
           ? cause.message
-          : "The server could not load this project.";
+          : "We couldn't load this project.";
       message.error(text);
       setServerError(text);
     } finally {

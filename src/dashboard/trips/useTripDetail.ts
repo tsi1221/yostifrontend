@@ -59,7 +59,7 @@ export function useTripDetail(id: string | undefined) {
       const text =
         cause instanceof Error
           ? cause.message
-          : "The server could not load this trip itinerary.";
+          : "We couldn't load this trip itinerary.";
       message.error(text);
       setServerError(text);
     } finally {

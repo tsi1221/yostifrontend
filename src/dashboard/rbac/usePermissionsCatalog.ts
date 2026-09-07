@@ -37,7 +37,7 @@ export function usePermissionsCatalog(
       setError(
         cause instanceof Error
           ? cause.message
-          : "The server could not load permissions.",
+          : "We couldn't load permissions.",
       );
     } finally {
       setLoading(false);

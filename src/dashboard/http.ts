@@ -86,7 +86,7 @@ export async function fetchAuthorizedJson(
       status: 0,
       data: {
         message:
-          "Unable to reach the server. Check your connection and try again.",
+          "We couldn't connect. Check your connection and try again.",
       },
     };
   }
@@ -102,7 +102,7 @@ export async function fetchAuthorizedList(
     status: 0,
     data: {
       message:
-        "Unable to reach the server. Check your connection and try again.",
+        "We couldn't connect. Check your connection and try again.",
     },
   };
 

@@ -80,7 +80,7 @@ export async function registerAccount(
     throw new AuthRequestError(
       readApiError(
         error,
-        "Unable to connect to the server. Check your connection and try again.",
+        "We couldn't connect. Check your connection and try again.",
       ),
       getApiStatus(error),
     );

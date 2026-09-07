@@ -393,7 +393,7 @@ export async function fetchInspectionsList(
   }
   if (result.status >= 500) {
     throw new InspectionsRequestError(
-      readApiMessage(result.data, "The server could not load inspections."),
+      readApiMessage(result.data, "We couldn't load inspections."),
       result.status,
     );
   }
@@ -401,7 +401,7 @@ export async function fetchInspectionsList(
     throw new InspectionsRequestError(
       readApiMessage(
         result.data,
-        `Unable to load inspections. Server returned ${result.status}.`,
+        "We couldn't load this information. Please try again.",
       ),
       result.status,
     );
@@ -496,7 +496,7 @@ export async function fetchInspection(id: number): Promise<InspectionRecord> {
     });
   } catch {
     throw new InspectionsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
     );
   }
@@ -520,7 +520,7 @@ export async function fetchInspection(id: number): Promise<InspectionRecord> {
   }
   if (response.status >= 500) {
     throw new InspectionsRequestError(
-      readApiMessage(raw, "The server could not load this inspection request."),
+      readApiMessage(raw, "We couldn't load this inspection request."),
       response.status,
     );
   }
@@ -528,7 +528,7 @@ export async function fetchInspection(id: number): Promise<InspectionRecord> {
     throw new InspectionsRequestError(
       readApiMessage(
         raw,
-        `Unable to load this inspection request. Server returned ${response.status}.`,
+        "We couldn't load this inspection. Please try again.",
       ),
       response.status,
     );
@@ -542,7 +542,7 @@ export async function fetchInspection(id: number): Promise<InspectionRecord> {
 
   if (!payload) {
     throw new InspectionsRequestError(
-      "The server returned an incomplete inspection request.",
+      "We couldn't read this inspection request. Please try again.",
       500,
     );
   }
@@ -571,7 +571,7 @@ export async function createInspection(
     });
   } catch {
     throw new InspectionsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
     );
   }
@@ -604,7 +604,7 @@ export async function createInspection(
     throw new InspectionsRequestError(
       readApiMessage(
         raw,
-        `Unable to create inspection. Server returned ${response.status}.`,
+        "We couldn't create this inspection. Please try again.",
       ),
       response.status,
     );
@@ -617,7 +617,7 @@ export async function createInspection(
 
   if (!created) {
     throw new InspectionsRequestError(
-      "The server returned an incomplete inspection.",
+      "We couldn't read this inspection. Please try again.",
       500,
     );
   }
@@ -652,7 +652,7 @@ export async function patchInspection(
     });
   } catch {
     throw new InspectionsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
     );
   }
@@ -691,7 +691,7 @@ export async function patchInspection(
     throw new InspectionsRequestError(
       readApiMessage(
         raw,
-        `Unable to update inspection. Server returned ${response.status}.`,
+        "We couldn't save this inspection. Please try again.",
       ),
       response.status,
     );
@@ -704,7 +704,7 @@ export async function patchInspection(
 
   if (!updated) {
     throw new InspectionsRequestError(
-      "The server returned an incomplete inspection.",
+      "We couldn't read this inspection. Please try again.",
       500,
     );
   }
@@ -739,7 +739,7 @@ export async function deleteInspection(id: number): Promise<string> {
     });
   } catch {
     throw new InspectionsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
     );
   }
@@ -774,7 +774,7 @@ export async function deleteInspection(id: number): Promise<string> {
     throw new InspectionsRequestError(
       readApiMessage(
         raw,
-        `Unable to delete this inspection request. Server returned ${response.status}.`,
+        "We couldn't delete this inspection. Please try again.",
       ),
       response.status,
     );

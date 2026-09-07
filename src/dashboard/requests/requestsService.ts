@@ -2,7 +2,7 @@ import { sanitizeApiMessage } from "../apiMessage";
 import { REQUESTS_URL } from "../auth/endpoints";
 import { getAccessToken } from "../auth/session";
 import { buildListQueryVariants, fetchAuthorizedList } from "../http";
-import { extractListRows } from "../listResponse";
+import { extractListRows, pickEntityId } from "../listResponse";
 import type {
   RequestFieldErrors,
   RequestUpdatePayload,
@@ -43,6 +43,22 @@ function pickNumber(...values: unknown[]) {
     const number = typeof value === "number" ? value : Number(value);
     if (Number.isFinite(number)) {
       return number;
+    }
+  }
+  return undefined;
+}
+
+function pickMoney(...values: unknown[]) {
+  for (const value of values) {
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+    if (typeof value === "string" && value.trim()) {
+      const cleaned = value.replace(/[^0-9.-]/g, "");
+      const number = Number(cleaned);
+      if (cleaned && Number.isFinite(number)) {
+        return number;
+      }
     }
   }
   return undefined;
@@ -151,18 +167,25 @@ export function normalizeRequest(raw: unknown): SourcingRequestRecord | null {
     return null;
   }
 
-  const id = pickString(
+  const idValue = pickEntityId(
     record.id,
     record.requestId,
     record.request_id,
     record._id,
   );
-  const productName = pickString(
-    record.productName,
-    record.product_name,
-    record.name,
-  );
-  if (!id || !productName) {
+  const id =
+    idValue !== undefined
+      ? String(idValue)
+      : pickString(record.id, record.requestId, record.request_id, record._id);
+  const productName =
+    pickString(
+      record.productName,
+      record.product_name,
+      record.product,
+      record.title,
+      record.name,
+    ) || "Untitled request";
+  if (!id) {
     return null;
   }
 
@@ -171,7 +194,7 @@ export function normalizeRequest(raw: unknown): SourcingRequestRecord | null {
     productName,
     description: pickString(record.description),
     quantity: pickNumber(record.quantity) ?? 0,
-    targetPrice: pickNumber(record.targetPrice, record.target_price) ?? 0,
+    targetPrice: pickMoney(record.targetPrice, record.target_price) ?? 0,
     supplierRegion:
       pickString(record.supplierRegion, record.supplier_region) || "—",
     deadline: pickString(record.deadline),
@@ -187,13 +210,15 @@ function normalizeRequestsResponse(
 ): RequestsListResponse {
   const record = asRecord(raw);
   const nested = asRecord(record?.data);
+  const meta = asRecord(record?.meta) ?? asRecord(nested?.meta);
   const rows = extractListRows(raw);
 
   const data = rows
     .map((row) => normalizeRequest(row))
     .filter((row): row is SourcingRequestRecord => Boolean(row));
 
-  const total = pickNumber(record?.total, nested?.total) ?? data.length;
+  const total =
+    pickNumber(meta?.total, record?.total, nested?.total) ?? data.length;
   const page = pickNumber(record?.page, nested?.page) ?? query.page;
   const limit =
     pickNumber(record?.limit, record?.pageSize, nested?.limit) ??
@@ -234,7 +259,7 @@ export async function fetchRequestsList(
     throw new RequestsRequestError(
       readApiMessage(
         result.data,
-        "The server could not load sourcing requests.",
+        "We couldn't load sourcing requests.",
       ),
       result.status,
     );
@@ -243,7 +268,7 @@ export async function fetchRequestsList(
     throw new RequestsRequestError(
       readApiMessage(
         result.data,
-        `Unable to load requests. Server returned ${result.status}.`,
+        "We couldn't load this information. Please try again.",
       ),
       result.status,
     );
@@ -276,7 +301,7 @@ export async function fetchRequestById(
     });
   } catch {
     throw new RequestsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
     );
   }
@@ -300,7 +325,7 @@ export async function fetchRequestById(
   }
   if (response.status >= 500) {
     throw new RequestsRequestError(
-      readApiMessage(raw, "The server could not load this request."),
+      readApiMessage(raw, "We couldn't load this request."),
       response.status,
     );
   }
@@ -308,7 +333,7 @@ export async function fetchRequestById(
     throw new RequestsRequestError(
       readApiMessage(
         raw,
-        `Unable to load this request. Server returned ${response.status}.`,
+        "We couldn't load this request. Please try again.",
       ),
       response.status,
     );
@@ -322,7 +347,7 @@ export async function fetchRequestById(
 
   if (!payload) {
     throw new RequestsRequestError(
-      "The server returned an incomplete request.",
+      "We couldn't read this request. Please try again.",
       500,
     );
   }
@@ -357,7 +382,7 @@ export async function patchRequest(
     });
   } catch {
     throw new RequestsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
     );
   }
@@ -391,7 +416,7 @@ export async function patchRequest(
   }
   if (response.status >= 500) {
     throw new RequestsRequestError(
-      readApiMessage(raw, "The server could not save this request."),
+      readApiMessage(raw, "We couldn't save this request."),
       response.status,
     );
   }
@@ -399,7 +424,7 @@ export async function patchRequest(
     throw new RequestsRequestError(
       readApiMessage(
         raw,
-        `Unable to save this request. Server returned ${response.status}.`,
+        "We couldn't save this request. Please try again.",
       ),
       response.status,
     );
@@ -413,7 +438,7 @@ export async function patchRequest(
 
   if (!updated) {
     throw new RequestsRequestError(
-      "The server returned an incomplete request.",
+      "We couldn't read this request. Please try again.",
       500,
     );
   }
@@ -446,7 +471,7 @@ export async function deleteRequest(
     });
   } catch {
     throw new RequestsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
     );
   }
@@ -478,7 +503,7 @@ export async function deleteRequest(
     throw new RequestsRequestError(
       readApiMessage(
         raw,
-        `Unable to delete this request. Server returned ${response.status}.`,
+        "We couldn't delete this request. Please try again.",
       ),
       response.status,
     );

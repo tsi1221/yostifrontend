@@ -104,7 +104,7 @@ async function authorizedJson(
     });
   } catch {
     throw new ProfileRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
     );
   }

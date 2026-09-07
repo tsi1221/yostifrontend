@@ -56,7 +56,7 @@ export function useRequestDetail(id: string | undefined) {
       setServerError(
         cause instanceof Error
           ? cause.message
-          : "The server could not load this request.",
+          : "We couldn't load this request.",
       );
     } finally {
       setLoading(false);

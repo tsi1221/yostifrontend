@@ -380,7 +380,7 @@ export async function fetchTripsList(
   }
   if (result.status >= 500) {
     throw new TripsRequestError(
-      readApiMessage(result.data, "The server could not load trips."),
+      readApiMessage(result.data, "We couldn't load trips."),
       result.status,
     );
   }
@@ -388,7 +388,7 @@ export async function fetchTripsList(
     throw new TripsRequestError(
       readApiMessage(
         result.data,
-        `Unable to load trips. Server returned ${result.status}.`,
+        "We couldn't load this information. Please try again.",
       ),
       result.status,
     );
@@ -459,7 +459,7 @@ export async function fetchTrip(id: number): Promise<TripRecord> {
     });
   } catch {
     throw new TripsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
     );
   }
@@ -483,7 +483,7 @@ export async function fetchTrip(id: number): Promise<TripRecord> {
   }
   if (response.status >= 500) {
     throw new TripsRequestError(
-      readApiMessage(raw, "The server could not load this trip itinerary."),
+      readApiMessage(raw, "We couldn't load this trip itinerary."),
       response.status,
     );
   }
@@ -491,7 +491,7 @@ export async function fetchTrip(id: number): Promise<TripRecord> {
     throw new TripsRequestError(
       readApiMessage(
         raw,
-        `Unable to load this trip itinerary. Server returned ${response.status}.`,
+        "We couldn't load this trip. Please try again.",
       ),
       response.status,
     );
@@ -505,7 +505,7 @@ export async function fetchTrip(id: number): Promise<TripRecord> {
 
   if (!payload) {
     throw new TripsRequestError(
-      "The server returned an incomplete trip itinerary.",
+      "We couldn't read this trip itinerary. Please try again.",
       500,
     );
   }
@@ -534,7 +534,7 @@ export async function createTrip(
     });
   } catch {
     throw new TripsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
     );
   }
@@ -570,7 +570,7 @@ export async function createTrip(
     throw new TripsRequestError(
       readApiMessage(
         raw,
-        `Unable to create trip. Server returned ${response.status}.`,
+        "We couldn't create this trip. Please try again.",
       ),
       response.status,
     );
@@ -582,7 +582,7 @@ export async function createTrip(
     normalizeTrip(asRecord(raw)?.trip);
 
   if (!created) {
-    throw new TripsRequestError("The server returned an incomplete trip.", 500);
+    throw new TripsRequestError("We couldn't read this trip. Please try again.", 500);
   }
 
   invalidateTripsCache();
@@ -615,7 +615,7 @@ export async function patchTrip(
     });
   } catch {
     throw new TripsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
     );
   }
@@ -657,7 +657,7 @@ export async function patchTrip(
     throw new TripsRequestError(
       readApiMessage(
         raw,
-        `Unable to update trip. Server returned ${response.status}.`,
+        "We couldn't save this trip. Please try again.",
       ),
       response.status,
     );
@@ -669,7 +669,7 @@ export async function patchTrip(
     normalizeTrip(asRecord(raw)?.trip);
 
   if (!updated) {
-    throw new TripsRequestError("The server returned an incomplete trip.", 500);
+    throw new TripsRequestError("We couldn't read this trip. Please try again.", 500);
   }
 
   invalidateTripsCache();
@@ -699,7 +699,7 @@ export async function deleteTrip(id: number): Promise<string> {
     });
   } catch {
     throw new TripsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
+      "We couldn't connect. Check your connection and try again.",
       0,
     );
   }
@@ -731,7 +731,7 @@ export async function deleteTrip(id: number): Promise<string> {
     throw new TripsRequestError(
       readApiMessage(
         raw,
-        `Unable to delete this trip itinerary. Server returned ${response.status}.`,
+        "We couldn't delete this trip. Please try again.",
       ),
       response.status,
     );

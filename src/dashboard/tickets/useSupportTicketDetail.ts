@@ -63,7 +63,7 @@ export function useSupportTicketDetail(id: string | undefined) {
       const text =
         cause instanceof Error
           ? cause.message
-          : "The server could not load this support ticket.";
+          : "We couldn't load this support ticket.";
       message.error(text);
       setServerError(text);
     } finally {
