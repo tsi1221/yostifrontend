@@ -14,10 +14,9 @@ import SuperAdminRouting from "./Superadmin/Content/Routing/SuperAdminRouting";
 import DashboardApp from "./dashboard/DashboardApp";
 import {
   RequireAuth,
+  AuthProvider,
+  useAuth,
   getRoleDashboardPath,
-  getStoredAuthUser,
-  hasValidAccessToken,
-  roleFromAuthUser,
 } from "./dashboard/auth";
 
 import Navbar from "./pages/Home/Navbar";
@@ -43,77 +42,6 @@ import PublicProjectsPage from "./dashboard/projects/PublicProjectsPage";
 import PublicContactForm from "./dashboard/contacts/PublicContactForm";
 
 import type { UserRole } from "./shared/layout/Sidebar";
-
-import {
-  useEffect,
-  useState,
-} from "react";
-
-/* =========================================================
-   VALID ROLES
-========================================================= */
-
-const VALID_ROLES: UserRole[] = [
-  "SUPER_ADMIN",
-  "STAFF",
-  "BUYER",
-  "SUPPLIER",
-  "LOGISTICS_PARTNER",
-];
-
-/* =========================================================
-   NORMALIZE ROLE
-========================================================= */
-
-const normalizeRole = (
-  value: string | null
-): UserRole | null => {
-  if (!value) {
-    return null;
-  }
-
-  const normalized =
-    value.trim().toUpperCase();
-
-  if (
-    VALID_ROLES.includes(
-      normalized as UserRole
-    )
-  ) {
-    return normalized as UserRole;
-  }
-
-  switch (
-    value.trim().toLowerCase()
-  ) {
-    case "super-admin":
-    case "super_admin":
-    case "superadmin":
-      return "SUPER_ADMIN";
-
-    case "staff":
-    case "admin":
-      return "STAFF";
-
-    case "buyer":
-      return "BUYER";
-
-    case "supplier":
-      return "SUPPLIER";
-
-    case "logistics":
-    case "logistics-partner":
-    case "logistics_partner":
-      return "LOGISTICS_PARTNER";
-
-    default:
-      return null;
-  }
-};
-
-/* =========================================================
-   ROLE HOME
-========================================================= */
 
 const getRoleHome = (role: UserRole | null) =>
   role ? getRoleDashboardPath(role) : "/";
@@ -142,40 +70,8 @@ function PublicLayout({
    APP
 ========================================================= */
 
-const readStoredRole = (): UserRole | null => {
-  if (!hasValidAccessToken()) {
-    return null;
-  }
-
-  const authUser = getStoredAuthUser();
-  if (authUser) {
-    return roleFromAuthUser(authUser);
-  }
-
-  return normalizeRole(
-    localStorage.getItem("role") ?? sessionStorage.getItem("role")
-  );
-};
-
-const readStoredEmail = (): string | null =>
-  localStorage.getItem("email") ??
-  sessionStorage.getItem("email");
-
-export default function App() {
-  const [role, setRole] =
-    useState<UserRole | null>(readStoredRole);
-
-  const [, setEmail] =
-    useState<string | null>(readStoredEmail);
-
-  /* =======================================================
-     LOAD AUTH
-  ======================================================= */
-
-  useEffect(() => {
-    setRole(readStoredRole());
-    setEmail(readStoredEmail());
-  }, []);
+function AppRoutes() {
+  const { role } = useAuth();
 
   return (
     <Routes>
@@ -370,12 +266,7 @@ export default function App() {
 
       <Route
         path="/login"
-        element={
-          <Login
-            setRole={setRole}
-            setEmail={setEmail}
-          />
-        }
+        element={<Login />}
       />
 
       <Route
@@ -468,5 +359,13 @@ export default function App() {
         }
       />
     </Routes>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
   );
 }

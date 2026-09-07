@@ -107,7 +107,7 @@ export default function Register() {
             disabled={loading}
             initialValues={{
               role: "Buyer",
-              roleId: 1,
+              roleId: 3,
               companyName: "",
             }}
           >

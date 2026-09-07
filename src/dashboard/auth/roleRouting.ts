@@ -1,6 +1,7 @@
 import type { UserRole } from "../types";
 import type { AuthUser } from "../types/auth";
 import { ROLE_SLUG } from "../roles";
+import { dashboardRoleFromBackendId } from "./backendRoles";
 
 export function roleFromRoleName(
   value: string | undefined | null,
@@ -18,8 +19,8 @@ export function roleFromRoleName(
     case "super_admin":
     case "superadmin":
     case "super_administrator":
-    case "admin":
       return "SUPER_ADMIN";
+    case "admin":
     case "staff":
     case "yosti_staff":
       return "STAFF";
@@ -31,6 +32,7 @@ export function roleFromRoleName(
     case "factory":
     case "exporter":
       return "SUPPLIER";
+    case "logistic":
     case "logistics":
     case "logistics_partner":
     case "cargo":
@@ -40,27 +42,9 @@ export function roleFromRoleName(
   }
 }
 
-/**
- * Prefer the API role name. Fall back to roleId.
- * Public register IDs: 1 Buyer, 2 Supplier, 3 Logistics Partner.
- * Super Admin is role name admin/super_admin or roleId 5 — never inferred
- * from the URL or a local grant.
- */
+/** Live API: 1 Super Admin, 2 Admin, 3 Buyer, 4 Supplier, 5 Logistic. */
 export function roleFromRoleId(roleId: number): UserRole {
-  switch (roleId) {
-    case 1:
-      return "BUYER";
-    case 2:
-      return "SUPPLIER";
-    case 3:
-      return "LOGISTICS_PARTNER";
-    case 4:
-      return "STAFF";
-    case 5:
-      return "SUPER_ADMIN";
-    default:
-      return "BUYER";
-  }
+  return dashboardRoleFromBackendId(roleId) ?? "BUYER";
 }
 
 export function roleFromAuthUser(user: AuthUser): UserRole {

@@ -50,9 +50,9 @@ export const DEFAULT_USERS_QUERY: UsersListQuery = {
 };
 
 export const USER_ROLE_FILTERS: { label: string; roleId: number }[] = [
-  { label: "Buyer", roleId: 1 },
-  { label: "Supplier", roleId: 2 },
-  { label: "Logistics Partner", roleId: 3 },
-  { label: "Staff", roleId: 4 },
-  { label: "Super Admin", roleId: 5 },
+  { label: "Super Admin", roleId: 1 },
+  { label: "Admin", roleId: 2 },
+  { label: "Buyer", roleId: 3 },
+  { label: "Supplier", roleId: 4 },
+  { label: "Logistic", roleId: 5 },
 ];

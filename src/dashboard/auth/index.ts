@@ -60,4 +60,5 @@ export {
   FORBIDDEN_MESSAGE,
   SESSION_EXPIRED_MESSAGE,
 } from "./sessionExpiry";
+export { AuthProvider, useAuth } from "./AuthProvider";
 export { default as RequireAuth } from "./RequireAuth";

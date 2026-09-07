@@ -10,9 +10,9 @@ export const REGISTER_ROLE_OPTIONS: {
   role: RegisterRole;
   roleId: number;
 }[] = [
-  { label: "Buyer", role: "Buyer", roleId: 1 },
-  { label: "Supplier", role: "Supplier", roleId: 2 },
-  { label: "Logistics Partner", role: "Logistics Partner", roleId: 3 },
+  { label: "Buyer", role: "Buyer", roleId: 3 },
+  { label: "Supplier", role: "Supplier", roleId: 4 },
+  { label: "Logistics Partner", role: "Logistic", roleId: 5 },
 ];
 
 export class AuthRequestError extends Error {
@@ -44,7 +44,7 @@ function readApiMessage(data: unknown, fallback: string) {
 
 export function roleIdForRole(role: RegisterRole) {
   return (
-    REGISTER_ROLE_OPTIONS.find((option) => option.role === role)?.roleId ?? 1
+    REGISTER_ROLE_OPTIONS.find((option) => option.role === role)?.roleId ?? 3
   );
 }
 

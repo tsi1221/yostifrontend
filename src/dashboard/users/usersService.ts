@@ -1,4 +1,5 @@
 import { USERS_URL } from "../auth/endpoints";
+import { backendRoleNameFromId } from "../auth/backendRoles";
 import { getAccessToken } from "../auth/session";
 import {
   buildListQueryVariants,
@@ -48,14 +49,6 @@ function pickNumber(...values: unknown[]) {
   return undefined;
 }
 
-const ROLE_QUERY_NAME: Record<number, string> = {
-  1: "BUYER",
-  2: "SUPPLIER",
-  3: "LOGISTICS_PARTNER",
-  4: "STAFF",
-  5: "SUPER_ADMIN",
-};
-
 export function buildUsersQueryString(query: UsersListQuery) {
   return buildListQueryVariants(
     query.page,
@@ -76,7 +69,7 @@ function usersQueryExtras(query: UsersListQuery) {
   if (query.roleId !== "") {
     extras.roleId = query.roleId;
     extras.role_id = query.roleId;
-    extras.role = ROLE_QUERY_NAME[query.roleId];
+    extras.role = backendRoleNameFromId(query.roleId);
   }
 
   return extras;

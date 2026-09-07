@@ -20,7 +20,7 @@ export interface AuthLoginRequest {
   password: string;
 }
 
-export type RegisterRole = "Buyer" | "Supplier" | "Logistics Partner";
+export type RegisterRole = "Buyer" | "Supplier" | "Logistic";
 
 export interface AuthRegisterRequest {
   fullname: string;

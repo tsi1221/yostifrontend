@@ -5,25 +5,18 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   expireSession,
   getAuthUserDashboardPath,
-  getStoredAuthUser,
-  hasValidAccessToken,
   loginWithPassword,
   persistAuthSession,
   refreshStoredAuthProfile,
-  roleFromAuthUser,
+  useAuth,
 } from "../../../dashboard/auth";
-import type { UserRole } from "../../layout/Sidebar";
 
 import LoginForm, { type LoginFormValues } from "./LoginForm";
 
-interface LoginProps {
-  setRole: (role: UserRole | null) => void;
-  setEmail: (email: string | null) => void;
-}
-
-export default function Login({ setRole, setEmail }: LoginProps) {
+export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(false);
   const registeredEmail =
     typeof location.state === "object" &&
@@ -34,17 +27,11 @@ export default function Login({ setRole, setEmail }: LoginProps) {
       : undefined;
 
   useEffect(() => {
-    if (!hasValidAccessToken()) {
+    if (!isAuthenticated || !user) {
       return;
     }
-    const user = getStoredAuthUser();
-    if (!user) {
-      return;
-    }
-    setRole(roleFromAuthUser(user));
-    setEmail(user.email);
     navigate(getAuthUserDashboardPath(user), { replace: true });
-  }, [navigate, setEmail, setRole]);
+  }, [isAuthenticated, navigate, user]);
 
   const handleLogin = async (values: LoginFormValues) => {
     setLoading(true);
@@ -63,10 +50,6 @@ export default function Login({ setRole, setEmail }: LoginProps) {
         expireSession(navigate);
         return;
       }
-
-      const role = roleFromAuthUser(sessionUser);
-      setRole(role);
-      setEmail(sessionUser.email);
 
       message.success(`Welcome back, ${sessionUser.fullname}!`);
       navigate(getAuthUserDashboardPath(sessionUser), { replace: true });

@@ -27,6 +27,27 @@ function readStoredToken(storage: Storage) {
   return null;
 }
 
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  const [, payload] = token.split(".");
+  if (!payload) {
+    return null;
+  }
+
+  try {
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64.padEnd(
+      base64.length + ((4 - (base64.length % 4)) % 4),
+      "=",
+    );
+    const parsed: unknown = JSON.parse(atob(padded));
+    return parsed && typeof parsed === "object"
+      ? (parsed as Record<string, unknown>)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 export function getAccessToken(): string | null {
   if (typeof window === "undefined") {
     return null;
@@ -36,7 +57,17 @@ export function getAccessToken(): string | null {
 
 export function hasValidAccessToken(): boolean {
   const token = getAccessToken();
-  return Boolean(token && token.split(".").length === 3);
+  if (!token || token.split(".").length !== 3) {
+    return false;
+  }
+
+  const payload = decodeJwtPayload(token);
+  const exp = payload?.exp;
+  if (typeof exp === "number" && Number.isFinite(exp) && exp * 1000 <= Date.now()) {
+    return false;
+  }
+
+  return true;
 }
 
 export function mergeAuthUser(
@@ -184,6 +215,7 @@ export function persistAuthSession(payload: AuthLoginResponse) {
   }
   sessionStorage.removeItem(ACCESS_TOKEN_KEY);
   sessionStorage.removeItem(AUTH_USER_KEY);
+  notifyAuthProfileUpdated();
 }
 
 export function clearAuthSession() {
@@ -200,4 +232,5 @@ export function clearAuthSession() {
   sessionStorage.removeItem("token");
   sessionStorage.removeItem("role");
   sessionStorage.removeItem("email");
+  notifyAuthProfileUpdated();
 }
