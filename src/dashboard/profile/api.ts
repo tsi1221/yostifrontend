@@ -152,7 +152,12 @@ export async function fetchCurrentProfile(): Promise<AuthUser | null> {
     return unwrapUser(data);
   }
 
-  if (status === 404 && stored?.id) {
+  if (status === 401) {
+    throw new ProfileRequestError("Unauthorized", 401);
+  }
+
+  // Live API treats /users/me as /users/:id ("me" fails ParseIntPipe with 400).
+  if (stored?.id) {
     const fallback = await authorizedJson(`${USERS_URL}/${stored.id}`, {
       method: "GET",
     });
@@ -162,11 +167,6 @@ export async function fetchCurrentProfile(): Promise<AuthUser | null> {
     if (fallback.status === 401) {
       throw new ProfileRequestError("Unauthorized", 401);
     }
-    return stored;
-  }
-
-  if (status === 401) {
-    throw new ProfileRequestError("Unauthorized", 401);
   }
 
   return stored;
