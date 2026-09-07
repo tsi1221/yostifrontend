@@ -4,9 +4,11 @@ import { roleFromAuthUser } from "./roleRouting";
 export const ACCESS_TOKEN_KEY = "access_token";
 export const AUTH_USER_KEY = "user";
 export const AUTH_PROFILE_UPDATED_EVENT = "yosti:auth-profile-updated";
+export const GRANT_SESSION_KEY = "yosti:role-permissions-granted";
 
 const PENDING_REGISTER_PROFILE_KEY = "yosti_pending_register_profile";
 const LEGACY_KEYS = ["token", "role", "email"] as const;
+const TOKEN_KEYS = ["access_token", "accessToken", "token"] as const;
 
 export interface PendingRegisterProfile {
   email: string;
@@ -16,8 +18,21 @@ export interface PendingRegisterProfile {
   phoneWhatsapp: string;
 }
 
+function readStoredToken(storage: Storage) {
+  for (const key of TOKEN_KEYS) {
+    const value = storage.getItem(key);
+    if (value && value.trim()) {
+      return value.replace(/^Bearer\s+/i, "").trim();
+    }
+  }
+  return null;
+}
+
 export function getAccessToken(): string | null {
-  return localStorage.getItem(ACCESS_TOKEN_KEY);
+  if (typeof window === "undefined") {
+    return null;
+  }
+  return readStoredToken(localStorage) ?? readStoredToken(sessionStorage);
 }
 
 export function isPreviewAccessToken(token: string | null = getAccessToken()) {
@@ -58,22 +73,29 @@ export function getStoredAuthUser(): AuthUser | null {
   }
 
   try {
-    const parsed = JSON.parse(raw) as Partial<AuthUser>;
-    const id = Number(parsed.id);
-    const roleId = Number(parsed.roleId);
-    if (
-      !Number.isFinite(id) ||
-      typeof parsed.fullname !== "string" ||
-      typeof parsed.email !== "string" ||
-      !Number.isFinite(roleId)
-    ) {
+    const parsed = JSON.parse(raw) as Partial<AuthUser> & {
+      name?: unknown;
+      userId?: unknown;
+      _id?: unknown;
+      role_id?: unknown;
+    };
+    const id = Number(parsed.id ?? parsed.userId ?? parsed._id);
+    const roleId = Number(parsed.roleId ?? parsed.role_id ?? 0);
+    const fullname =
+      typeof parsed.fullname === "string" && parsed.fullname.trim()
+        ? parsed.fullname
+        : typeof parsed.name === "string"
+          ? parsed.name
+          : "";
+    const email = typeof parsed.email === "string" ? parsed.email : "";
+    if (!Number.isFinite(id) || !email) {
       return null;
     }
     return {
       id,
-      fullname: parsed.fullname,
-      email: parsed.email,
-      roleId,
+      fullname: fullname || email,
+      email,
+      roleId: Number.isFinite(roleId) ? roleId : 0,
       role: typeof parsed.role === "string" ? parsed.role : undefined,
       companyName:
         typeof parsed.companyName === "string" ? parsed.companyName : undefined,
@@ -155,6 +177,7 @@ export function persistAuthSession(payload: AuthLoginResponse) {
   const user = mergeAuthUser(payload.user, pending);
 
   localStorage.setItem(ACCESS_TOKEN_KEY, payload.access_token);
+  localStorage.setItem("accessToken", payload.access_token);
   localStorage.setItem("token", payload.access_token);
   persistAuthUser(user, false);
   localStorage.setItem("email", user.email);
@@ -170,13 +193,16 @@ export function persistAuthSession(payload: AuthLoginResponse) {
 export function clearAuthSession() {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(AUTH_USER_KEY);
+  localStorage.removeItem("accessToken");
   localStorage.removeItem("token");
   localStorage.removeItem("role");
   localStorage.removeItem("email");
   localStorage.removeItem(PENDING_REGISTER_PROFILE_KEY);
   sessionStorage.removeItem(ACCESS_TOKEN_KEY);
   sessionStorage.removeItem(AUTH_USER_KEY);
+  sessionStorage.removeItem("accessToken");
   sessionStorage.removeItem("token");
   sessionStorage.removeItem("role");
   sessionStorage.removeItem("email");
+  sessionStorage.removeItem(GRANT_SESSION_KEY);
 }

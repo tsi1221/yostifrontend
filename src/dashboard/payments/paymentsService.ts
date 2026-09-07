@@ -1,6 +1,7 @@
 import { PAYMENTS_URL } from "../auth/endpoints";
-import { extractListRows } from "../listResponse";
 import { getAccessToken } from "../auth/session";
+import { buildListQueryVariants, fetchAuthorizedList } from "../http";
+import { extractListRows, pickEntityId } from "../listResponse";
 import { isPreviewAccessToken } from "../users/usersService";
 import type {
   CreatePaymentPayload,
@@ -101,7 +102,7 @@ export function normalizePayment(raw: unknown): PaymentRecord | null {
     return null;
   }
 
-  const id = pickNumber(record.id, record.paymentId, record.payment_id);
+  const id = pickEntityId(record.id, record.paymentId, record.payment_id, record._id);
   if (id === undefined) {
     return null;
   }
@@ -150,49 +151,40 @@ function normalizePaymentsResponse(
 export async function fetchPaymentsList(
   query: PaymentsListQuery
 ): Promise<PaymentsListResponse> {
-  const token = getAccessToken();
-  if (!token) {
+  if (!getAccessToken()) {
     throw new PaymentsRequestError("Unauthorized", 401);
   }
 
-  let response: Response;
-  try {
-    response = await fetch(`${PAYMENTS_URL}?${buildPaymentsQueryString(query)}`, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  } catch {
-    throw new PaymentsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
-      0
-    );
-  }
+  const result = await fetchAuthorizedList(
+    PAYMENTS_URL,
+    buildListQueryVariants(query.page, query.pageSize, {
+      search: query.search.trim() || undefined,
+      service: query.service || undefined,
+      method: query.method || undefined,
+      status: query.status || undefined,
+    })
+  );
 
-  const raw: unknown = await response.json().catch(() => null);
-
-  if (response.status === 400) {
-    throw new PaymentsRequestError(readApiMessage(raw, "Invalid payment filters."), 400);
+  if (result.status === 400) {
+    throw new PaymentsRequestError(readApiMessage(result.data, "Invalid payment filters."), 400);
   }
-  if (response.status === 401) {
+  if (result.status === 401) {
     throw new PaymentsRequestError("Unauthorized", 401);
   }
-  if (response.status >= 500) {
+  if (result.status >= 500) {
     throw new PaymentsRequestError(
-      readApiMessage(raw, "The server could not load payments."),
-      response.status
+      readApiMessage(result.data, "The server could not load payments."),
+      result.status
     );
   }
-  if (!response.ok) {
+  if (!result.ok) {
     throw new PaymentsRequestError(
-      readApiMessage(raw, `Unable to load payments. Server returned ${response.status}.`),
-      response.status
+      readApiMessage(result.data, `Unable to load payments. Server returned ${result.status}.`),
+      result.status
     );
   }
 
-  return normalizePaymentsResponse(raw, query);
+  return normalizePaymentsResponse(result.data, query);
 }
 
 const PAYMENT_FIELD_KEYS: Array<

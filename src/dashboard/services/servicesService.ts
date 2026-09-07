@@ -1,6 +1,7 @@
 import { SERVICES_URL } from "../auth/endpoints";
 import { getAccessToken } from "../auth/session";
-import { extractListRows } from "../listResponse";
+import { buildListQueryVariants, fetchAuthorizedList } from "../http";
+import { extractListRows, pickEntityId } from "../listResponse";
 import { isPreviewAccessToken } from "../users/usersService";
 import type {
   CreateServicePayload,
@@ -199,7 +200,7 @@ export function normalizeService(raw: unknown): ServiceRecord | null {
     return null;
   }
 
-  const id = pickNumber(record.id, record.serviceId, record.service_id);
+  const id = pickEntityId(record.id, record.serviceId, record.service_id, record._id);
   if (id === undefined) {
     return null;
   }
@@ -392,52 +393,41 @@ function normalizeServicesResponse(
 export async function fetchServicesList(
   query: ServicesListQuery
 ): Promise<ServicesListResponse> {
-  const token = getAccessToken();
-  if (!token) {
+  if (!getAccessToken()) {
     throw new ServiceRequestError("Unauthorized", 401);
   }
 
-  let response: Response;
-  try {
-    response = await fetch(`${SERVICES_URL}?${buildServicesQueryString(query)}`, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  } catch {
-    throw new ServiceRequestError(
-      "Unable to reach the server. Check your connection and try again.",
-      0
-    );
-  }
+  const result = await fetchAuthorizedList(
+    SERVICES_URL,
+    buildListQueryVariants(query.page, query.pageSize, {
+      search: query.search.trim() || undefined,
+      title: query.title.trim() || undefined,
+    })
+  );
 
-  const raw: unknown = await response.json().catch(() => null);
-
-  if (response.status === 400) {
+  if (result.status === 400) {
     throw new ServiceRequestError(
-      readApiMessage(raw, "Invalid service filters."),
+      readApiMessage(result.data, "Invalid service filters."),
       400
     );
   }
-  if (response.status === 401) {
+  if (result.status === 401) {
     throw new ServiceRequestError("Unauthorized", 401);
   }
-  if (response.status >= 500) {
+  if (result.status >= 500) {
     throw new ServiceRequestError(
-      readApiMessage(raw, "The server could not load services."),
-      response.status
+      readApiMessage(result.data, "The server could not load services."),
+      result.status
     );
   }
-  if (!response.ok) {
+  if (!result.ok) {
     throw new ServiceRequestError(
-      readApiMessage(raw, `Unable to load services. Server returned ${response.status}.`),
-      response.status
+      readApiMessage(result.data, `Unable to load services. Server returned ${result.status}.`),
+      result.status
     );
   }
 
-  return normalizeServicesResponse(raw, query);
+  return normalizeServicesResponse(result.data, query);
 }
 
 export async function patchService(

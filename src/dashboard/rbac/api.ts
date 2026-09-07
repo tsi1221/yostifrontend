@@ -1,5 +1,6 @@
 import { ROLES_URL } from "../auth/endpoints";
-import { extractListRows } from "../listResponse";
+import { buildListQueryVariants, fetchAuthorizedList } from "../http";
+import { extractListRows, pickEntityId } from "../listResponse";
 import { getAccessToken } from "../auth/session";
 import {
   PermissionRequestError,
@@ -184,7 +185,7 @@ export function normalizePermission(raw: unknown): RolePermission | null {
     return null;
   }
 
-  const id = pickNumber(record.id, record.permissionId, record.permission_id);
+  const id = pickEntityId(record.id, record.permissionId, record.permission_id, record._id);
   if (id === undefined) {
     return null;
   }
@@ -229,7 +230,7 @@ export function normalizeRole(raw: unknown): RoleRecord | null {
     return null;
   }
 
-  const id = pickNumber(record.id, record.roleId, record.role_id);
+  const id = pickEntityId(record.id, record.roleId, record.role_id, record._id);
   if (id === undefined) {
     return null;
   }
@@ -373,43 +374,36 @@ async function parseJson(response: Response) {
 }
 
 export async function fetchRolesList(query: RolesListQuery): Promise<RolesListResponse> {
-  let response: Response;
-  try {
-    response = await fetch(`${ROLES_URL}?${buildRolesQueryString(query)}`, {
-      method: "GET",
-      headers: authHeaders(true),
-    });
-  } catch {
-    throw new RoleRequestError(
-      "Unable to reach the server. Check your connection and try again.",
-      0,
-      undefined,
-      "NETWORK"
-    );
-  }
+  const result = await fetchAuthorizedList(
+    ROLES_URL,
+    buildListQueryVariants(query.page, query.pageSize, {
+      search: query.search.trim() || undefined,
+      name: query.name.trim() || undefined,
+    })
+  );
 
-  const raw: unknown = await parseJson(response);
-
-  if (response.status === 400) {
-    throw new RoleRequestError(readApiMessage(raw, "Invalid role filters."), 400, undefined, "VALIDATION");
+  if (result.status === 400) {
+    throw new RoleRequestError(readApiMessage(result.data, "Invalid role filters."), 400, undefined, "VALIDATION");
   }
-  if (response.status === 401) {
+  if (result.status === 401) {
     throw new RoleRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
   }
-  if (response.status >= 500) {
+  if (result.status >= 500) {
     throw new RoleRequestError(
-      readApiMessage(raw, "The server could not load roles."),
-      response.status
+      readApiMessage(result.data, "The server could not load roles."),
+      result.status
     );
   }
-  if (!response.ok) {
+  if (!result.ok) {
     throw new RoleRequestError(
-      readApiMessage(raw, `Unable to load roles. Server returned ${response.status}.`),
-      response.status
+      readApiMessage(result.data, `Unable to load roles. Server returned ${result.status}.`),
+      result.status,
+      undefined,
+      result.status === 0 ? "NETWORK" : undefined
     );
   }
 
-  return normalizeRolesResponse(raw, query);
+  return normalizeRolesResponse(result.data, query);
 }
 
 export async function fetchRole(id: number): Promise<RoleRecord> {

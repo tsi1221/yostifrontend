@@ -1,7 +1,8 @@
 import { sanitizeApiMessage } from "../apiMessage";
-import { extractListRows } from "../listResponse";
 import { INSPECTIONS_URL } from "../auth/endpoints";
 import { getAccessToken } from "../auth/session";
+import { buildListQueryVariants, fetchAuthorizedList } from "../http";
+import { extractListRows, pickEntityId } from "../listResponse";
 import { isPreviewAccessToken } from "../users/usersService";
 import type {
   CreateInspectionPayload,
@@ -356,52 +357,44 @@ function normalizeInspectionsResponse(
 export async function fetchInspectionsList(
   query: InspectionsListQuery
 ): Promise<InspectionsListResponse> {
-  const token = getAccessToken();
-  if (!token) {
+  if (!getAccessToken()) {
     throw new InspectionsRequestError("Unauthorized", 401);
   }
 
-  let response: Response;
-  try {
-    response = await fetch(`${INSPECTIONS_URL}?${buildInspectionsQueryString(query)}`, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  } catch {
-    throw new InspectionsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
-      0
-    );
-  }
+  const result = await fetchAuthorizedList(
+    INSPECTIONS_URL,
+    buildListQueryVariants(query.page, query.pageSize, {
+      search: query.search.trim() || undefined,
+      type: query.type || undefined,
+      productType: query.productType.trim() || undefined,
+      photoVideoRequired: query.photoVideoRequired || undefined,
+      date: filterDateToIso(query.date) || undefined,
+    })
+  );
 
-  const raw: unknown = await response.json().catch(() => null);
-
-  if (response.status === 400) {
+  if (result.status === 400) {
     throw new InspectionsRequestError(
-      readApiMessage(raw, "Invalid inspection filters."),
+      readApiMessage(result.data, "Invalid inspection filters."),
       400
     );
   }
-  if (response.status === 401) {
+  if (result.status === 401) {
     throw new InspectionsRequestError("Unauthorized", 401);
   }
-  if (response.status >= 500) {
+  if (result.status >= 500) {
     throw new InspectionsRequestError(
-      readApiMessage(raw, "The server could not load inspections."),
-      response.status
+      readApiMessage(result.data, "The server could not load inspections."),
+      result.status
     );
   }
-  if (!response.ok) {
+  if (!result.ok) {
     throw new InspectionsRequestError(
-      readApiMessage(raw, `Unable to load inspections. Server returned ${response.status}.`),
-      response.status
+      readApiMessage(result.data, `Unable to load inspections. Server returned ${result.status}.`),
+      result.status
     );
   }
 
-  return normalizeInspectionsResponse(raw, query);
+  return normalizeInspectionsResponse(result.data, query);
 }
 
 export function normalizeInspection(raw: unknown): InspectionRecord | null {
@@ -410,7 +403,7 @@ export function normalizeInspection(raw: unknown): InspectionRecord | null {
     return null;
   }
 
-  const id = pickNumber(record.id, record.inspectionId, record.inspection_id);
+  const id = pickEntityId(record.id, record.inspectionId, record.inspection_id, record._id);
   if (id === undefined) {
     return null;
   }

@@ -1,5 +1,6 @@
 import { USERS_ME_URL, USERS_URL } from "../auth/endpoints";
 import { normalizeAuthUser } from "../auth/loginService";
+import { roleFromAuthUser } from "../auth/roleRouting";
 import {
   getAccessToken,
   getStoredAuthUser,
@@ -7,6 +8,7 @@ import {
   mergeAuthUser,
   persistAuthUser,
 } from "../auth/session";
+import type { UserRole } from "../types";
 import { sanitizeApiMessage } from "../apiMessage";
 import type { AuthUser } from "../types/auth";
 import type {
@@ -162,6 +164,27 @@ export async function fetchCurrentProfile(): Promise<AuthUser | null> {
   return stored;
 }
 
+const ROLE_RANK: Record<UserRole, number> = {
+  BUYER: 1,
+  SUPPLIER: 2,
+  LOGISTICS_PARTNER: 3,
+  STAFF: 4,
+  SUPER_ADMIN: 5,
+};
+
+function keepPrivilegedRole(stored: AuthUser, remote: AuthUser): AuthUser {
+  const storedRole = roleFromAuthUser(stored);
+  const remoteRole = roleFromAuthUser(remote);
+  if ((ROLE_RANK[storedRole] ?? 0) > (ROLE_RANK[remoteRole] ?? 0)) {
+    return {
+      ...remote,
+      role: stored.role || remote.role,
+      roleId: stored.roleId || remote.roleId,
+    };
+  }
+  return remote;
+}
+
 export async function refreshStoredAuthProfile(): Promise<AuthUser | null> {
   const stored = getStoredAuthUser();
   if (!stored) {
@@ -173,7 +196,7 @@ export async function refreshStoredAuthProfile(): Promise<AuthUser | null> {
     if (!remote) {
       return stored;
     }
-    const next = mergeAuthUser(stored, remote);
+    const next = mergeAuthUser(stored, keepPrivilegedRole(stored, remote));
     persistAuthUser(next);
     return next;
   } catch (cause) {

@@ -1,7 +1,8 @@
 import { sanitizeApiMessage } from "../apiMessage";
-import { extractListRows } from "../listResponse";
 import { REQUESTS_URL } from "../auth/endpoints";
 import { getAccessToken } from "../auth/session";
+import { buildListQueryVariants, fetchAuthorizedList } from "../http";
+import { extractListRows } from "../listResponse";
 import { isPreviewAccessToken } from "../users/usersService";
 import type {
   RequestFieldErrors,
@@ -151,7 +152,7 @@ export function normalizeRequest(raw: unknown): SourcingRequestRecord | null {
     return null;
   }
 
-  const id = pickString(record.id, record.requestId, record.request_id);
+  const id = pickString(record.id, record.requestId, record.request_id, record._id);
   const productName = pickString(
     record.productName,
     record.product_name,
@@ -201,52 +202,42 @@ function normalizeRequestsResponse(
 export async function fetchRequestsList(
   query: RequestsListQuery
 ): Promise<RequestsListResponse> {
-  const token = getAccessToken();
-  if (!token) {
+  if (!getAccessToken()) {
     throw new RequestsRequestError("Unauthorized", 401);
   }
 
-  let response: Response;
-  try {
-    response = await fetch(`${REQUESTS_URL}?${buildRequestsQueryString(query)}`, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  } catch {
-    throw new RequestsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
-      0
-    );
-  }
+  const result = await fetchAuthorizedList(
+    REQUESTS_URL,
+    buildListQueryVariants(query.page, query.pageSize, {
+      search: query.search.trim() || undefined,
+      supplierRegion: query.supplierRegion || undefined,
+      deadline: deadlineToIso(query.deadline) || undefined,
+    })
+  );
 
-  const raw: unknown = await response.json().catch(() => null);
-
-  if (response.status === 400) {
+  if (result.status === 400) {
     throw new RequestsRequestError(
-      readApiMessage(raw, "Invalid request filters."),
+      readApiMessage(result.data, "Invalid request filters."),
       400
     );
   }
-  if (response.status === 401) {
+  if (result.status === 401) {
     throw new RequestsRequestError("Unauthorized", 401);
   }
-  if (response.status >= 500) {
+  if (result.status >= 500) {
     throw new RequestsRequestError(
-      readApiMessage(raw, "The server could not load sourcing requests."),
-      response.status
+      readApiMessage(result.data, "The server could not load sourcing requests."),
+      result.status
     );
   }
-  if (!response.ok) {
+  if (!result.ok) {
     throw new RequestsRequestError(
-      readApiMessage(raw, `Unable to load requests. Server returned ${response.status}.`),
-      response.status
+      readApiMessage(result.data, `Unable to load requests. Server returned ${result.status}.`),
+      result.status
     );
   }
 
-  return normalizeRequestsResponse(raw, query);
+  return normalizeRequestsResponse(result.data, query);
 }
 
 export async function fetchRequestById(id: string): Promise<SourcingRequestRecord> {

@@ -54,6 +54,29 @@ function readApiMessage(data: unknown) {
   return undefined;
 }
 
+function pickRoleFromList(value: unknown) {
+  if (!Array.isArray(value)) {
+    return { role: undefined as string | undefined, roleId: undefined as number | undefined };
+  }
+
+  for (const item of value) {
+    if (typeof item === "string" && item.trim()) {
+      return { role: item.trim(), roleId: undefined };
+    }
+    const record = asRecord(item);
+    if (!record) {
+      continue;
+    }
+    const role = pickString(record.name, record.roleName, record.role_name, record.title, record.role);
+    const roleId = pickNumber(record.id, record.roleId, record.role_id);
+    if (role || roleId !== undefined) {
+      return { role, roleId };
+    }
+  }
+
+  return { role: undefined, roleId: undefined };
+}
+
 export function normalizeAuthUser(raw: unknown): AuthUser | null {
   const record = asRecord(raw);
   if (!record) {
@@ -61,16 +84,18 @@ export function normalizeAuthUser(raw: unknown): AuthUser | null {
   }
 
   const roleRecord = asRecord(record.role);
-  const roles = Array.isArray(record.roles) ? asRecord(record.roles[0]) : null;
-  const rawId = record.id ?? record.userId ?? record.user_id ?? record._id;
+  const fromRoles = pickRoleFromList(record.roles);
+  const fromAuthorities = pickRoleFromList(record.authorities);
+  const rawId = record.id ?? record.userId ?? record.user_id ?? record._id ?? record.sub;
   const id = pickNumber(rawId) ?? (pickString(rawId) ? 0 : undefined);
   const fullname = pickString(
     record.fullname,
     record.full_name,
     record.fullName,
-    record.name
+    record.name,
+    record.username
   );
-  const email = pickString(record.email);
+  const email = pickString(record.email, record.userEmail, record.mail);
   const roleId = pickNumber(
     record.roleId,
     record.role_id,
@@ -79,9 +104,8 @@ export function normalizeAuthUser(raw: unknown): AuthUser | null {
     roleRecord?.id,
     roleRecord?.roleId,
     roleRecord?.role_id,
-    roles?.id,
-    roles?.roleId,
-    roles?.role_id
+    fromRoles.roleId,
+    fromAuthorities.roleId
   );
   const role = pickString(
     typeof record.role === "string" ? record.role : undefined,
@@ -90,12 +114,14 @@ export function normalizeAuthUser(raw: unknown): AuthUser | null {
     roleRecord?.name,
     roleRecord?.roleName,
     roleRecord?.title,
-    roles?.name,
-    roles?.roleName,
-    roles?.title
+    fromRoles.role,
+    fromAuthorities.role
   );
 
-  if (id === undefined || !fullname || !email) {
+  if (id === undefined || !email) {
+    return null;
+  }
+  if (!fullname && !email) {
     return null;
   }
   if (roleId === undefined && !role) {
@@ -104,7 +130,7 @@ export function normalizeAuthUser(raw: unknown): AuthUser | null {
 
   return {
     id,
-    fullname,
+    fullname: fullname || email,
     email,
     roleId: roleId ?? 0,
     role,

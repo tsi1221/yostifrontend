@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { isQuietListFailure } from "../apiMessage";
+import { isQuietListFailure, liveListFailureMessage } from "../apiMessage";
 import { LIVE_DATA_RELOAD_EVENT } from "../auth/liveDataReload";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { ProjectsListQuery, ProjectsListResponse } from "./types";
@@ -76,6 +76,7 @@ export function useProjectsList(options?: { publicFeed?: boolean }) {
       }
 
       setResponse(EMPTY_RESPONSE);
+      setServerError(liveListFailureMessage(cause, "projects"));
     } finally {
       setLoading(false);
     }

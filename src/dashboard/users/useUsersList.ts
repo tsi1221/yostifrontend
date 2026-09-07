@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { isQuietListFailure } from "../apiMessage";
+import { isQuietListFailure, liveListFailureMessage } from "../apiMessage";
 import { LIVE_DATA_RELOAD_EVENT } from "../auth/liveDataReload";
 import { isSuperAdminSession, recoverSuperAdminAccess } from "../auth/superAdminAccess";
 import { clearAuthSession, getAccessToken } from "../auth/session";
@@ -105,6 +105,9 @@ export function useUsersList() {
               // Still cannot read users after granting every role.
             }
           }
+          setResponse({ data: [], meta: EMPTY_META });
+          setError(liveListFailureMessage(cause, "users"));
+          return;
         }
         setResponse({ data: [], meta: EMPTY_META });
         setRestricted(true);
@@ -117,6 +120,7 @@ export function useUsersList() {
       }
 
       setResponse({ data: [], meta: EMPTY_META });
+      setError(liveListFailureMessage(cause, "users"));
     } finally {
       setLoading(false);
     }

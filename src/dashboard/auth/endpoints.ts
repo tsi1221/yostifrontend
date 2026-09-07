@@ -1,5 +1,13 @@
+const DEFAULT_API_BASE = "https://yosti.nedhigibe.com/api";
+
+function resolveApiBase() {
+  const fromEnv = import.meta.env.VITE_API_URL;
+  const raw = typeof fromEnv === "string" && fromEnv.trim() ? fromEnv.trim() : DEFAULT_API_BASE;
+  return raw.replace(/\/+$/, "");
+}
+
 /** Live Yosti auth API base. */
-export const AUTH_API_BASE = "https://yosti.nedhigibe.com/api";
+export const AUTH_API_BASE = resolveApiBase();
 
 /** POST { email, password } */
 export const AUTH_LOGIN_URL = `${AUTH_API_BASE}/auth/login`;

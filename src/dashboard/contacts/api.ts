@@ -1,6 +1,7 @@
 import { CONTACTS_URL } from "../auth/endpoints";
-import { extractListRows } from "../listResponse";
 import { getAccessToken } from "../auth/session";
+import { buildListQueryVariants, fetchAuthorizedList } from "../http";
+import { extractListRows, pickEntityId } from "../listResponse";
 import { isPreviewAccessToken } from "../users/usersService";
 import type {
   ContactFieldErrors,
@@ -192,7 +193,7 @@ export function normalizeContact(raw: unknown): ContactRecord | null {
     return null;
   }
 
-  const id = pickNumber(record.id, record.contactId, record.contact_id);
+  const id = pickEntityId(record.id, record.contactId, record.contact_id, record._id);
   if (id === undefined) {
     return null;
   }
@@ -344,42 +345,37 @@ export async function fetchContactsList(
 ): Promise<ContactsListResponse> {
   requireToken();
 
-  let response: Response;
-  try {
-    response = await fetch(`${CONTACTS_URL}?${buildContactsQueryString(query)}`, {
-      method: "GET",
-      headers: authHeaders(true),
-    });
-  } catch {
-    throw new ContactRequestError(
-      "Unable to reach the server. Check your connection and try again.",
-      0,
-      undefined,
-      "NETWORK"
-    );
-  }
+  const result = await fetchAuthorizedList(
+    CONTACTS_URL,
+    buildListQueryVariants(query.page, query.pageSize, {
+      search: query.search.trim() || undefined,
+      fullname: query.fullname.trim() || undefined,
+      email: query.email.trim() || undefined,
+      topic: query.topic.trim() || undefined,
+    })
+  );
 
-  const raw: unknown = await response.json().catch(() => null);
-
-  if (response.status === 400) {
+  if (result.status === 400) {
     throw new ContactRequestError(
-      readApiMessage(raw, "Invalid contact filters."),
+      readApiMessage(result.data, "Invalid contact filters."),
       400,
       undefined,
       "VALIDATION"
     );
   }
-  if (response.status === 401) {
+  if (result.status === 401) {
     throw new ContactRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
   }
-  if (!response.ok) {
+  if (!result.ok) {
     throw new ContactRequestError(
-      readApiMessage(raw, "The server could not load contact submissions."),
-      response.status
+      readApiMessage(result.data, "The server could not load contact submissions."),
+      result.status,
+      undefined,
+      result.status === 0 ? "NETWORK" : undefined
     );
   }
 
-  return normalizeContactsResponse(raw, query);
+  return normalizeContactsResponse(result.data, query);
 }
 
 export async function fetchContact(id: number): Promise<ContactRecord> {

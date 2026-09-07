@@ -1,6 +1,7 @@
 import { SUPPORT_URL, SUPPORTS_URL, TICKETS_URL } from "../auth/endpoints";
-import { extractListRows } from "../listResponse";
 import { getAccessToken } from "../auth/session";
+import { buildListQueryVariants, fetchAuthorizedList } from "../http";
+import { extractListRows } from "../listResponse";
 import { isPreviewAccessToken } from "../users/usersService";
 import type {
   CreateTicketPayload,
@@ -187,7 +188,8 @@ export function normalizeTicket(raw: unknown): TicketRecord | null {
     record.ticketId,
     record.ticket_id,
     record.supportId,
-    record.support_id
+    record.support_id,
+    record._id
   );
   if (id === undefined) {
     return null;
@@ -300,55 +302,48 @@ function normalizeSupportsResponse(
 export async function fetchSupportsList(
   query: SupportsListQuery
 ): Promise<SupportsListResponse> {
-  const token = getAccessToken();
-  if (!token) {
+  if (!getAccessToken()) {
     throw new TicketsRequestError("Unauthorized", 401);
   }
 
-  let response: Response;
-  try {
-    response = await fetch(`${SUPPORTS_URL}?${buildSupportsQueryString(query)}`, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  } catch {
-    throw new TicketsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
-      0
-    );
-  }
+  const result = await fetchAuthorizedList(
+    SUPPORTS_URL,
+    buildListQueryVariants(query.page, query.pageSize, {
+      search: query.search.trim() || undefined,
+      orderReference: query.orderReference.trim() || undefined,
+      issuesType: query.issuesType || undefined,
+      resolutionToRequest: query.resolutionToRequest || undefined,
+      urgency: query.urgency || undefined,
+      status: query.status || undefined,
+    })
+  );
 
-  const raw: unknown = await response.json().catch(() => null);
-
-  if (response.status === 400) {
+  if (result.status === 400) {
     throw new TicketsRequestError(
-      readApiMessage(raw, "Invalid support ticket filters."),
+      readApiMessage(result.data, "Invalid support ticket filters."),
       400
     );
   }
-  if (response.status === 401) {
+  if (result.status === 401) {
     throw new TicketsRequestError("Unauthorized", 401);
   }
-  if (response.status >= 500) {
+  if (result.status >= 500) {
     throw new TicketsRequestError(
-      readApiMessage(raw, "The server could not load support tickets."),
-      response.status
+      readApiMessage(result.data, "The server could not load support tickets."),
+      result.status
     );
   }
-  if (!response.ok) {
+  if (!result.ok) {
     throw new TicketsRequestError(
       readApiMessage(
-        raw,
-        `Unable to load support tickets. Server returned ${response.status}.`
+        result.data,
+        `Unable to load support tickets. Server returned ${result.status}.`
       ),
-      response.status
+      result.status
     );
   }
 
-  return normalizeSupportsResponse(raw, query);
+  return normalizeSupportsResponse(result.data, query);
 }
 
 function ticketsCreateUrls() {

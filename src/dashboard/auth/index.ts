@@ -33,6 +33,7 @@ export {
   ACCESS_TOKEN_KEY,
   AUTH_PROFILE_UPDATED_EVENT,
   AUTH_USER_KEY,
+  GRANT_SESSION_KEY,
   clearAuthSession,
   consumePendingRegisterProfile,
   getAccessToken,

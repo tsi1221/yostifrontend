@@ -1,6 +1,7 @@
 import { PROJECTS_URL } from "../auth/endpoints";
-import { extractListRows } from "../listResponse";
 import { getAccessToken } from "../auth/session";
+import { buildListQueryVariants, fetchAuthorizedList } from "../http";
+import { extractListRows, pickEntityId } from "../listResponse";
 import { isPreviewAccessToken } from "../users/usersService";
 import type {
   CreateProjectPayload,
@@ -172,7 +173,7 @@ export function normalizeProject(raw: unknown): ProjectRecord | null {
     return null;
   }
 
-  const id = pickNumber(record.id, record.projectId, record.project_id);
+  const id = pickEntityId(record.id, record.projectId, record.project_id, record._id);
   if (id === undefined) {
     return null;
   }
@@ -259,42 +260,36 @@ function normalizeProjectsResponse(
 export async function fetchProjectsList(
   query: ProjectsListQuery
 ): Promise<ProjectsListResponse> {
-  let response: Response;
-  try {
-    response = await fetch(`${PROJECTS_URL}?${buildProjectsQueryString(query)}`, {
-      method: "GET",
-      headers: authHeaders(false),
-    });
-  } catch {
-    throw new ProjectRequestError(
-      "Unable to reach the server. Check your connection and try again.",
-      0,
-      undefined,
-      "NETWORK"
-    );
-  }
+  const result = await fetchAuthorizedList(
+    PROJECTS_URL,
+    buildListQueryVariants(query.page, query.pageSize, {
+      search: query.search.trim() || undefined,
+      title: query.title.trim() || undefined,
+    }),
+    { requireAuth: false }
+  );
 
-  const raw: unknown = await response.json().catch(() => null);
-
-  if (response.status === 400) {
+  if (result.status === 400) {
     throw new ProjectRequestError(
-      readApiMessage(raw, "Invalid project filters."),
+      readApiMessage(result.data, "Invalid project filters."),
       400,
       undefined,
       "VALIDATION"
     );
   }
-  if (response.status === 401) {
+  if (result.status === 401) {
     throw new ProjectRequestError("Unauthorized", 401, undefined, "UNAUTHORIZED");
   }
-  if (!response.ok) {
+  if (!result.ok) {
     throw new ProjectRequestError(
-      readApiMessage(raw, "The server could not load projects."),
-      response.status
+      readApiMessage(result.data, "The server could not load projects."),
+      result.status,
+      undefined,
+      result.status === 0 ? "NETWORK" : undefined
     );
   }
 
-  return normalizeProjectsResponse(raw, query);
+  return normalizeProjectsResponse(result.data, query);
 }
 
 export async function fetchProject(id: number): Promise<ProjectRecord> {

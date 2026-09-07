@@ -36,3 +36,11 @@ export function isQuietListFailure(cause: unknown) {
     isTechnicalApiMessage(message)
   );
 }
+
+export function liveListFailureMessage(cause: unknown, resource: string) {
+  const message = cause instanceof Error ? cause.message.trim() : "";
+  if (message && !isTechnicalApiMessage(message) && !isPermissionDeniedMessage(message)) {
+    return message;
+  }
+  return `Unable to load ${resource}. Check your connection and try again.`;
+}

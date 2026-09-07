@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { isQuietListFailure } from "../apiMessage";
+import { isQuietListFailure, liveListFailureMessage } from "../apiMessage";
 import { LIVE_DATA_RELOAD_EVENT } from "../auth/liveDataReload";
 import { clearAuthSession, getAccessToken } from "../auth/session";
 import type { SupportsListQuery, SupportsListResponse } from "./types";
@@ -95,6 +95,7 @@ export function useSupportsList() {
       }
 
       setResponse(EMPTY_RESPONSE);
+      setServerError(liveListFailureMessage(cause, "support tickets"));
     } finally {
       setLoading(false);
     }

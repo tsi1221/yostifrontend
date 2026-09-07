@@ -8,6 +8,7 @@ import {
   hasValidAccessToken,
   loginWithPassword,
   persistAuthSession,
+  recoverSuperAdminAccess,
   refreshStoredAuthProfile,
   roleFromAuthUser,
 } from "../../../dashboard/auth";
@@ -60,6 +61,9 @@ export default function Login({ setRole, setEmail }: LoginProps) {
       const role = roleFromAuthUser(sessionUser);
       setRole(role);
       setEmail(sessionUser.email);
+      if (role === "SUPER_ADMIN") {
+        void recoverSuperAdminAccess();
+      }
 
       message.success(`Welcome back, ${sessionUser.fullname}!`);
       navigate(getAuthUserDashboardPath(sessionUser), { replace: true });

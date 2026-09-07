@@ -14,7 +14,12 @@ import type { RoleRecord } from "../rbac/types";
 import { isPermissionDeniedMessage } from "../apiMessage";
 import { notifyLiveDataReload } from "./liveDataReload";
 import { roleFromAuthUser, roleFromRoleName } from "./roleRouting";
-import { getAccessToken, getStoredAuthUser, isPreviewAccessToken } from "./session";
+import {
+  GRANT_SESSION_KEY,
+  getAccessToken,
+  getStoredAuthUser,
+  isPreviewAccessToken,
+} from "./session";
 
 export const SUPER_ADMIN_ROLE_ID = 5;
 
@@ -94,10 +99,6 @@ function patchFetch() {
       isSuperAdminSession() &&
       !isPreviewAccessToken(getAccessToken());
 
-    if (liveSuperAdmin) {
-      await recoverSuperAdminAccess();
-    }
-
     let response = await apiFetch(input, init);
 
     if (liveSuperAdmin && response.status === 403) {
@@ -149,7 +150,7 @@ async function fetchAllPermissions() {
     try {
       const payload = await fetchPermissionsList({
         page,
-        pageSize: page === 1 ? 1000 : 200,
+        pageSize: 100,
         search: "",
       });
       for (const permission of payload.data) {
@@ -185,7 +186,7 @@ async function fetchAllPermissions() {
 async function fetchAllRoles(): Promise<RoleRecord[]> {
   const byId = new Map<number, RoleRecord>();
 
-  for (const id of [SUPER_ADMIN_ROLE_ID, 4, 3, 2, 1]) {
+  for (const id of [SUPER_ADMIN_ROLE_ID]) {
     try {
       const role = await fetchRole(id);
       byId.set(role.id, role);
@@ -259,19 +260,7 @@ async function assignAllPermissions(role: RoleRecord, permissionIds: number[], p
       permission_ids: permissionIds,
       permissions: permissionIds,
     },
-    {
-      permissionIds,
-      permission_ids: permissionIds,
-      permissions: permissionObjects,
-    },
-    {
-      permissionIds,
-      permission_ids: permissionIds,
-      permissions: permissionNames,
-    },
     { permissionIds },
-    { permission_ids: permissionIds },
-    { permissions: permissionIds },
     { permissions: permissionObjects },
   ];
 
@@ -279,8 +268,6 @@ async function assignAllPermissions(role: RoleRecord, permissionIds: number[], p
     { method: "PATCH", url: `${ROLES_URL}/${role.id}` },
     { method: "PUT", url: `${ROLES_URL}/${role.id}` },
     { method: "PATCH", url: `${ROLES_URL}/${role.id}/permissions` },
-    { method: "PUT", url: `${ROLES_URL}/${role.id}/permissions` },
-    { method: "POST", url: `${ROLES_URL}/${role.id}/permissions` },
   ];
 
   let lastStatus = 0;
@@ -369,6 +356,7 @@ export async function grantSuperAdminAllPermissions() {
       rolesUpdated: updated,
     };
     notifyLiveDataReload();
+    markGrantCompleted();
     return result;
   } finally {
     grantDepth -= 1;
@@ -377,14 +365,37 @@ export async function grantSuperAdminAllPermissions() {
 
 let recoverPromise: Promise<boolean> | null = null;
 
+function grantAlreadyCompleted() {
+  try {
+    return sessionStorage.getItem(GRANT_SESSION_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markGrantCompleted() {
+  try {
+    sessionStorage.setItem(GRANT_SESSION_KEY, "1");
+  } catch {
+    // Ignore storage failures; the in-memory promise still dedupes this tab.
+  }
+}
+
 export async function recoverSuperAdminAccess() {
   if (!isSuperAdminSession() || isPreviewAccessToken(getAccessToken())) {
     return false;
   }
 
+  if (grantAlreadyCompleted()) {
+    return true;
+  }
+
   if (!recoverPromise) {
     recoverPromise = grantSuperAdminAllPermissions()
-      .then(() => true)
+      .then(() => {
+        markGrantCompleted();
+        return true;
+      })
       .catch(() => {
         recoverPromise = null;
         return false;

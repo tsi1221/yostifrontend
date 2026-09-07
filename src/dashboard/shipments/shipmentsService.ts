@@ -1,7 +1,8 @@
 import { sanitizeApiMessage } from "../apiMessage";
-import { extractListRows } from "../listResponse";
 import { SHIPMENTS_URL } from "../auth/endpoints";
 import { getAccessToken } from "../auth/session";
+import { buildListQueryVariants, fetchAuthorizedList } from "../http";
+import { extractListRows, pickEntityId } from "../listResponse";
 import { isPreviewAccessToken } from "../users/usersService";
 import type {
   CreateShipmentPayload,
@@ -247,7 +248,7 @@ function normalizeShipment(raw: unknown): ShipmentRecord | null {
     return null;
   }
 
-  const id = pickNumber(record.id, record.shipmentId, record.shipment_id);
+  const id = pickEntityId(record.id, record.shipmentId, record.shipment_id, record._id);
   const pickupLocation = pickString(
     record.pickupLocation,
     record.pickup_location
@@ -326,52 +327,42 @@ function normalizeShipmentsResponse(
 export async function fetchShipmentsList(
   query: ShipmentsListQuery
 ): Promise<ShipmentsListResponse> {
-  const token = getAccessToken();
-  if (!token) {
+  if (!getAccessToken()) {
     throw new ShipmentsRequestError("Unauthorized", 401);
   }
 
-  let response: Response;
-  try {
-    response = await fetch(`${SHIPMENTS_URL}?${buildShipmentsQueryString(query)}`, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  } catch {
-    throw new ShipmentsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
-      0
-    );
-  }
+  const result = await fetchAuthorizedList(
+    SHIPMENTS_URL,
+    buildListQueryVariants(query.page, query.pageSize, {
+      search: query.search.trim() || undefined,
+      method: query.method || undefined,
+      destinationCountry: query.destinationCountry.trim() || undefined,
+    })
+  );
 
-  const raw: unknown = await response.json().catch(() => null);
-
-  if (response.status === 400) {
+  if (result.status === 400) {
     throw new ShipmentsRequestError(
-      readApiMessage(raw, "Invalid shipment filters."),
+      readApiMessage(result.data, "Invalid shipment filters."),
       400
     );
   }
-  if (response.status === 401) {
+  if (result.status === 401) {
     throw new ShipmentsRequestError("Unauthorized", 401);
   }
-  if (response.status >= 500) {
+  if (result.status >= 500) {
     throw new ShipmentsRequestError(
-      readApiMessage(raw, "The server could not load shipments."),
-      response.status
+      readApiMessage(result.data, "The server could not load shipments."),
+      result.status
     );
   }
-  if (!response.ok) {
+  if (!result.ok) {
     throw new ShipmentsRequestError(
-      readApiMessage(raw, `Unable to load shipments. Server returned ${response.status}.`),
-      response.status
+      readApiMessage(result.data, `Unable to load shipments. Server returned ${result.status}.`),
+      result.status
     );
   }
 
-  return normalizeShipmentsResponse(raw, query);
+  return normalizeShipmentsResponse(result.data, query);
 }
 
 export async function createShipment(

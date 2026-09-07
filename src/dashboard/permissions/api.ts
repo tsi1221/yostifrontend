@@ -1,6 +1,6 @@
 import { PERMISSIONS_URL } from "../auth/endpoints";
-import { extractListRows } from "../listResponse";
-import { getAccessToken } from "../auth/session";
+import { buildListQueryVariants, fetchAuthorizedList } from "../http";
+import { extractListRows, pickEntityId } from "../listResponse";
 import { isPreviewAccessToken } from "../users/usersService";
 import type {
   Permission,
@@ -80,7 +80,7 @@ export function normalizePermission(raw: unknown): Permission | null {
     return null;
   }
 
-  const id = pickNumber(record.id, record.permissionId, record.permission_id);
+  const id = pickEntityId(record.id, record.permissionId, record.permission_id, record._id);
   if (id === undefined) {
     return null;
   }
@@ -141,51 +141,33 @@ function normalizePermissionsResponse(
   };
 }
 
-function authHeaders(): HeadersInit {
-  const headers: Record<string, string> = { Accept: "application/json" };
-  const token = getAccessToken();
-  if (!token) {
-    throw new PermissionRequestError("Unauthorized", 401, "UNAUTHORIZED");
-  }
-  headers.Authorization = `Bearer ${token}`;
-  return headers;
-}
-
 export async function fetchPermissionsList(
   query: PermissionsListQuery
 ): Promise<PermissionsListResponse> {
-  let response: Response;
-  try {
-    response = await fetch(`${PERMISSIONS_URL}?${buildPermissionsQueryString(query)}`, {
-      method: "GET",
-      headers: authHeaders(),
-    });
-  } catch {
-    throw new PermissionRequestError(
-      "Unable to reach the server. Check your connection and try again.",
-      0,
-      "NETWORK"
-    );
-  }
+  const result = await fetchAuthorizedList(
+    PERMISSIONS_URL,
+    buildListQueryVariants(query.page, query.pageSize, {
+      search: query.search.trim() || undefined,
+    })
+  );
 
-  const raw: unknown = await response.json().catch(() => null);
-
-  if (response.status === 400) {
+  if (result.status === 400) {
     throw new PermissionRequestError(
-      readApiMessage(raw, "Invalid permission filters."),
+      readApiMessage(result.data, "Invalid permission filters."),
       400,
       "VALIDATION"
     );
   }
-  if (response.status === 401) {
+  if (result.status === 401) {
     throw new PermissionRequestError("Unauthorized", 401, "UNAUTHORIZED");
   }
-  if (!response.ok) {
+  if (!result.ok) {
     throw new PermissionRequestError(
-      readApiMessage(raw, "The server could not load permissions."),
-      response.status
+      readApiMessage(result.data, "The server could not load permissions."),
+      result.status,
+      result.status === 0 ? "NETWORK" : undefined
     );
   }
 
-  return normalizePermissionsResponse(raw, query);
+  return normalizePermissionsResponse(result.data, query);
 }

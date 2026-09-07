@@ -1,6 +1,7 @@
 import { TRIPS_URL } from "../auth/endpoints";
-import { extractListRows } from "../listResponse";
 import { getAccessToken } from "../auth/session";
+import { buildListQueryVariants, fetchAuthorizedList } from "../http";
+import { extractListRows, pickEntityId } from "../listResponse";
 import { isPreviewAccessToken } from "../users/usersService";
 import type {
   CreateTripPayload,
@@ -275,7 +276,7 @@ export function normalizeTrip(raw: unknown): TripRecord | null {
     return null;
   }
 
-  const id = pickNumber(record.id, record.tripId, record.trip_id);
+  const id = pickEntityId(record.id, record.tripId, record.trip_id, record._id);
   const arrivalCity = pickString(
     record.arrivalCity,
     record.arrival_city,
@@ -333,49 +334,39 @@ function normalizeTripsResponse(
 }
 
 export async function fetchTripsList(query: TripsListQuery): Promise<TripsListResponse> {
-  const token = getAccessToken();
-  if (!token) {
+  if (!getAccessToken()) {
     throw new TripsRequestError("Unauthorized", 401);
   }
 
-  let response: Response;
-  try {
-    response = await fetch(`${TRIPS_URL}?${buildTripsQueryString(query)}`, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  } catch {
-    throw new TripsRequestError(
-      "Unable to reach the server. Check your connection and try again.",
-      0
-    );
-  }
+  const result = await fetchAuthorizedList(
+    TRIPS_URL,
+    buildListQueryVariants(query.page, query.pageSize, {
+      search: query.search.trim() || undefined,
+      arrivalCity: query.arrivalCity.trim() || undefined,
+      status: query.status || undefined,
+    })
+  );
 
-  const raw: unknown = await response.json().catch(() => null);
-
-  if (response.status === 400) {
-    throw new TripsRequestError(readApiMessage(raw, "Invalid trip filters."), 400);
+  if (result.status === 400) {
+    throw new TripsRequestError(readApiMessage(result.data, "Invalid trip filters."), 400);
   }
-  if (response.status === 401) {
+  if (result.status === 401) {
     throw new TripsRequestError("Unauthorized", 401);
   }
-  if (response.status >= 500) {
+  if (result.status >= 500) {
     throw new TripsRequestError(
-      readApiMessage(raw, "The server could not load trips."),
-      response.status
+      readApiMessage(result.data, "The server could not load trips."),
+      result.status
     );
   }
-  if (!response.ok) {
+  if (!result.ok) {
     throw new TripsRequestError(
-      readApiMessage(raw, `Unable to load trips. Server returned ${response.status}.`),
-      response.status
+      readApiMessage(result.data, `Unable to load trips. Server returned ${result.status}.`),
+      result.status
     );
   }
 
-  return normalizeTripsResponse(raw, query);
+  return normalizeTripsResponse(result.data, query);
 }
 
 export const TRIPS_INVALIDATE_EVENT = "yosti:trips-invalidate";

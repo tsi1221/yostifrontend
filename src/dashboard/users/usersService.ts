@@ -1,6 +1,7 @@
 import { USERS_URL } from "../auth/endpoints";
 import { getAccessToken } from "../auth/session";
-import { extractListRows, pickListNumber } from "../listResponse";
+import { buildListQueryVariants, fetchAuthorizedList, readJsonMessage } from "../http";
+import { extractListRows, pickEntityId } from "../listResponse";
 import type {
   ManagedUser,
   ManagedUserRole,
@@ -45,32 +46,34 @@ export function isPreviewAccessToken(token: string | null) {
   return Boolean(token && token.split(".").at(-1) === "preview");
 }
 
+const ROLE_QUERY_NAME: Record<number, string> = {
+  1: "BUYER",
+  2: "SUPPLIER",
+  3: "LOGISTICS_PARTNER",
+  4: "STAFF",
+  5: "SUPER_ADMIN",
+};
+
 export function buildUsersQueryString(query: UsersListQuery) {
-  const params = new URLSearchParams();
-  params.set("page", String(query.page || 1));
-  params.set("pageSize", String(query.pageSize || 10));
-  params.set("limit", String(query.pageSize || 10));
+  return buildListQueryVariants(query.page, query.pageSize, usersQueryExtras(query))[0];
+}
 
-  const textFilters = [
-    "search",
-    "fullname",
-    "email",
-    "phoneWhatsapp",
-    "companyName",
-  ] as const;
-
-  for (const key of textFilters) {
-    const value = query[key].trim();
-    if (value) {
-      params.set(key, value);
-    }
-  }
+function usersQueryExtras(query: UsersListQuery) {
+  const extras: Record<string, string | number | undefined> = {
+    search: query.search.trim() || undefined,
+    fullname: query.fullname.trim() || undefined,
+    email: query.email.trim() || undefined,
+    phoneWhatsapp: query.phoneWhatsapp.trim() || undefined,
+    companyName: query.companyName.trim() || undefined,
+  };
 
   if (query.roleId !== "") {
-    params.set("roleId", String(query.roleId));
+    extras.roleId = query.roleId;
+    extras.role_id = query.roleId;
+    extras.role = ROLE_QUERY_NAME[query.roleId];
   }
 
-  return params.toString();
+  return extras;
 }
 
 function normalizeRole(raw: unknown, fallbackId = 0): ManagedUserRole {
@@ -96,9 +99,12 @@ function normalizeUser(raw: unknown): ManagedUser | null {
     return null;
   }
 
-  const id =
-    pickNumber(record.id, record.userId, record.user_id) ??
-    pickListNumber(record.id, record.userId, record.user_id);
+  const id = pickEntityId(
+    record.id,
+    record.userId,
+    record.user_id,
+    record._id
+  );
   const email = pickString(record.email, record.userEmail, record.mail);
   if (id === undefined) {
     return null;
@@ -149,38 +155,24 @@ function normalizeUsersResponse(raw: unknown, query: UsersListQuery): UsersListR
 }
 
 export async function fetchUsersList(query: UsersListQuery): Promise<UsersListResponse> {
-  const token = getAccessToken();
-  if (!token) {
+  if (!getAccessToken()) {
     throw new UsersRequestError("Unauthorized", 401);
   }
 
-  let response: Response;
-  try {
-    response = await fetch(`${USERS_URL}?${buildUsersQueryString(query)}`, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  } catch {
-    throw new UsersRequestError(
-      "Unable to reach the server. Check your connection and try again.",
-      0
-    );
-  }
+  const result = await fetchAuthorizedList(
+    USERS_URL,
+    buildListQueryVariants(query.page, query.pageSize, usersQueryExtras(query))
+  );
 
-  const raw: unknown = await response.json().catch(() => null);
-
-  if (response.status === 401) {
+  if (result.status === 401) {
     throw new UsersRequestError("Unauthorized", 401);
   }
-  if (!response.ok) {
+  if (!result.ok) {
     throw new UsersRequestError(
-      `Unable to load users. Server returned ${response.status}.`,
-      response.status
+      readJsonMessage(result.data, `Unable to load users. Server returned ${result.status}.`),
+      result.status
     );
   }
 
-  return normalizeUsersResponse(raw, query);
+  return normalizeUsersResponse(result.data, query);
 }
