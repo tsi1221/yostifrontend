@@ -10,36 +10,36 @@ import {
 import { useNavigate } from "react-router-dom";
 
 // ===================== IMPORT IMAGES =====================
-import AsphaltMixing from "../../../public/assets/aspaltmix plant/Asphalt-Batch-Mix-Plant-Operation-and-Components.jpg";
-import AsphaltPaver from "../../../public/assets/aspaltmix plant/Daswell-mobile-asphalt-mixing-plant.png";
-import AsphaltPaver3 from "../../../public/assets/aspaltmix plant/IMG_4988-2-1024x731.jpg";
+const AsphaltMixing = "/assets/aspaltmix plant/Asphalt-Batch-Mix-Plant-Operation-and-Components.jpg";
+const AsphaltPaver = "/assets/aspaltmix plant/Daswell-mobile-asphalt-mixing-plant.png";
+const AsphaltPaver3 = "/assets/aspaltmix plant/IMG_4988-2-1024x731.jpg";
 
-import aspaltpav from "../../../public/assets/apaltpav/CM20211208-4f233-813e2.jpg";
-import aspaltpav1 from "../../../public/assets/apaltpav/CM20211220-167aa-6fcb5.jpg";
+const aspaltpav = "/assets/apaltpav/CM20211208-4f233-813e2.jpg";
+const aspaltpav1 = "/assets/apaltpav/CM20211220-167aa-6fcb5.jpg";
 
-import ConcreteBatching from "../../../public/assets/concirute/1_belegrade-accumulative-concrete-batch-plants.jpg";
-import CrushingPlant from "../../../public/assets/concirute/Concrete_plant.jpg";
-import CrushingPlant2 from "../../../public/assets/concirute/Types-of-Concrete-Batching-Plant-01-0404030009.jpg";
+const ConcreteBatching = "/assets/concirute/1_belegrade-accumulative-concrete-batch-plants.jpg";
+const CrushingPlant = "/assets/concirute/Concrete_plant.jpg";
+const CrushingPlant2 = "/assets/concirute/Types-of-Concrete-Batching-Plant-01-0404030009.jpg";
 
-import RoadRoller from "../../../public/assets/Road Rollers/360_F_1618550585_oDExgdOO2c8qWqnR1IHfQBbHaxw4X4pa.jpg";
-import MotorGrader from "../../../public/assets/Road Rollers/360_F_207292361_oQEus3J0p3lqaZPfcGg0OIGIoEBBu0VY.jpg";
+const RoadRoller = "/assets/Road Rollers/360_F_1618550585_oDExgdOO2c8qWqnR1IHfQBbHaxw4X4pa.jpg";
+const MotorGrader = "/assets/Road Rollers/360_F_207292361_oQEus3J0p3lqaZPfcGg0OIGIoEBBu0VY.jpg";
 
-import CrushingPlant1 from "../../../public/assets/crushingScreen/metso-nordplant-modular-stationary-plants-881x586-web-1.jpg";
-import CrushingPlant3 from "../../../public/assets/crushingScreen/screeningplants_vibratingscreens.jpg";
+const CrushingPlant1 = "/assets/crushingScreen/metso-nordplant-modular-stationary-plants-881x586-web-1.jpg";
+const CrushingPlant3 = "/assets/crushingScreen/screeningplants_vibratingscreens.jpg";
 
-import MotorGraders from "../../../public/assets/motergar/DJI_20251216104737_0018_D.jpg";
-import MotorGraders1 from "../../../public/assets/motergar/DJI_20251216104743_0019_D.jpg";
-import MotorGraders2 from "../../../public/assets/motergar/DJI_20251216104912_0022_D.jpg";
-import MotorGraders3 from "../../../public/assets/motergar/DJI_20251216104912_0022_D.jpg";
-import MotorGraders4 from "../../../public/assets/motergar/DJI_20251216104934_0024_D.jpg";
+const MotorGraders = "/assets/motergar/DJI_20251216104737_0018_D.jpg";
+const MotorGraders1 = "/assets/motergar/DJI_20251216104743_0019_D.jpg";
+const MotorGraders2 = "/assets/motergar/DJI_20251216104912_0022_D.jpg";
+const MotorGraders3 = "/assets/motergar/DJI_20251216104912_0022_D.jpg";
+const MotorGraders4 = "/assets/motergar/DJI_20251216104934_0024_D.jpg";
 
-import WheelLoader from "../../../public/assets/Wheel/3afa2d76dfe866583530b19abc635cbe.jpg";
-import WheelLoader1 from "../../../public/assets/Wheel/IMG_7072.jpg";
-import WheelLoader2 from "../../../public/assets/Wheel/IMG_7073.jpg";
-import WheelLoader3 from "../../../public/assets/Wheel/IMG_7077.jpg";
-import WheelLoader4 from "../../../public/assets/Wheel/IMG_7078.jpg";
-import WheelLoader5 from "../../../public/assets/Wheel/IMG_7079.jpg";
-import WheelLoader6 from "../../../public/assets/Wheel/IMG_7080.jpg";
+const WheelLoader = "/assets/Wheel/3afa2d76dfe866583530b19abc635cbe.jpg";
+const WheelLoader1 = "/assets/Wheel/IMG_7072.jpg";
+const WheelLoader2 = "/assets/Wheel/IMG_7073.jpg";
+const WheelLoader3 = "/assets/Wheel/IMG_7077.jpg";
+const WheelLoader4 = "/assets/Wheel/IMG_7078.jpg";
+const WheelLoader5 = "/assets/Wheel/IMG_7079.jpg";
+const WheelLoader6 = "/assets/Wheel/IMG_7080.jpg";
 
 import extravator from "../../../public/assets/Extravator/80f0b7c0f6134facbc26f539c189be0d.png";
 import extravator1 from "../../../public/assets/Extravator/600x0_d0es3-44763-Screenshot-2022-11-15-at-11_59_03-AM.jpg";

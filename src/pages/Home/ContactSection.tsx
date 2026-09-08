@@ -12,7 +12,7 @@ import {
 } from "react-icons/fa";
 import { SiWechat } from "react-icons/si";
 
-import headerImg from "../../../public/assets/5823ec57d1038d4c4f62805e3151d728.jpeg";
+const headerImg = "/assets/5823ec57d1038d4c4f62805e3151d728.jpeg";
 
 const { Option } = Select;
 

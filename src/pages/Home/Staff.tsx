@@ -2,10 +2,10 @@
 import { motion, type Variants } from 'framer-motion';
 
 // Import your images from your assets folder
-import staff1 from '../../../public/assets/mulubrhan.png';
-import staff2 from '../../../public/assets/fentanesh.png';
-import staff3 from '../../../public/assets/Diana.png';
-import staff4 from '../../../public/assets/chhina.png';
+const staff1 = "/assets/mulubrhan.png";
+const staff2 = "/assets/fentanesh.png";
+const staff3 = "/assets/Diana.png";
+const staff4 = "/assets/chhina.png";
 
 const staffMembers = [
   { name: "Mulubrhan Ayalew", role: "CEO", image: staff1 },

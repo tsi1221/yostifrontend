@@ -1,13 +1,13 @@
 /* ================= BLOG IMAGES ================= */
-import img1 from "../../../public/assets/ee1f70bc492d423d37bba5d77475fbc9.jpeg";
-import img2 from "../../../public/assets/f1a9b0af4215dfe130889cff047c0502.jpg";
-import img3 from "../../../public/assets/6b07259bb6a721a7ca7ef5ef88164b73.png";
-import img4 from "../../../public/assets/87cb5f0c32788f098e4e22ae7d792af1.jpeg";
-import img5 from "../../../public/assets/5e2174b925733fd35bef3b90b9087a4c.jpeg";
-import img6 from "../../../public/assets/77edf1778ed72567c0a663032debcc39.jpg";
-import img7 from "../../../public/assets/2a6aa339b7e7245fdabe708b9c991e47.jpeg";
-import img8 from "../../../public/assets/b4351aaa39557b5417ee086e162ae7a3.jpeg";
-import img9 from "../../../public/assets/87cb5f0c32788f098e4e22ae7d792af1.jpeg";
+const img1 = "/assets/ee1f70bc492d423d37bba5d77475fbc9.jpeg";
+const img2 = "/assets/f1a9b0af4215dfe130889cff047c0502.jpg";
+const img3 = "/assets/6b07259bb6a721a7ca7ef5ef88164b73.png";
+const img4 = "/assets/87cb5f0c32788f098e4e22ae7d792af1.jpeg";
+const img5 = "/assets/5e2174b925733fd35bef3b90b9087a4c.jpeg";
+const img6 = "/assets/77edf1778ed72567c0a663032debcc39.jpg";
+const img7 = "/assets/2a6aa339b7e7245fdabe708b9c991e47.jpeg";
+const img8 = "/assets/b4351aaa39557b5417ee086e162ae7a3.jpeg";
+const img9 = "/assets/87cb5f0c32788f098e4e22ae7d792af1.jpeg";
 
 /* ================= BLOG DATA ================= */
 export const blogData = [

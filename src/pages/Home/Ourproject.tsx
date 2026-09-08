@@ -4,14 +4,14 @@ import { LeftOutlined, RightOutlined, ArrowRightOutlined } from "@ant-design/ico
 import { Link } from "react-router-dom";
 
 // --- Import your local assets here ---
-import project1 from "../../../public/assets/construction.png";
-import project2 from "../../../public/assets/fac.png";
-import project3 from "../../../public/assets/agrin.png";
-import project4 from "../../../public/assets/package.png";
-import project5 from "../../../public/assets/toy.png";
-import project6 from "../../../public/assets/87cb5f0c32788f098e4e22ae7d792af1.jpeg";
-import project7 from "../../../public/assets/goverment.png";
-import newhero from "../../../public/assets/heroman.png";
+const project1 = "/assets/construction.png";
+const project2 = "/assets/fac.png";
+const project3 = "/assets/agrin.png";
+const project4 = "/assets/package.png";
+const project5 = "/assets/toy.png";
+const project6 = "/assets/87cb5f0c32788f098e4e22ae7d792af1.jpeg";
+const project7 = "/assets/goverment.png";
+const newhero = "/assets/heroman.png";
 
 const projects = [
   { title: "Construction Machinery", category: "Heavy Equipment", img: project1, desc: "Container shipments of construction machinery and spare parts to Ethiopia." },

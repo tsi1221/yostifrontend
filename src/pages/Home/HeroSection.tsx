@@ -11,9 +11,9 @@ import {
    HERO IMAGES
 ========================================================= */
 
-import HeroImage1 from "../../../public/assets/Hero.png";
-import HeroImage2 from "../../../public/assets/87cb5f0c32788f098e4e22ae7d792af1.jpeg";
-import HeroImage3 from "../../../public/assets/image7.png";
+const HeroImage1 = "/assets/Hero.png";
+const HeroImage2 = "/assets/87cb5f0c32788f098e4e22ae7d792af1.jpeg";
+const HeroImage3 = "/assets/image7.png";
 
 /* =========================================================
    HERO SLIDES
