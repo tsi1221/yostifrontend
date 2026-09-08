@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import axios, { AxiosError } from "axios";
 import { message } from "antd";
+import { API_BASE_URL } from "../../lib/api";
 
 export type InvitationStatus = "pending" | "approved" | "rejected";
 
@@ -24,7 +25,7 @@ export interface VisaApiResponse {
   data: VisaInvitation[];
 }
 
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = API_BASE_URL;
 
 export function useVisaBuyer() {
   const [invitations, setInvitations] = useState<VisaInvitation[]>([]);
@@ -37,7 +38,7 @@ export function useVisaBuyer() {
     setLoading(true);
     try {
       const res = await axios.get<VisaApiResponse>(
-        `${BASE_URL}/api/trips/invitations/myinvitations`,
+        `${BASE_URL}/trips/invitations/myinvitations`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -59,7 +60,7 @@ export function useVisaBuyer() {
     async (invitation: Omit<VisaInvitation, "_id" | "user" | "status" | "createdAt" | "updatedAt" | "__v">) => {
       try {
         const res = await axios.post<{ success: boolean; data: VisaInvitation }>(
-          `${BASE_URL}/api/trips/invitations`,
+          `${BASE_URL}/trips/invitations`,
           invitation,
           {
             headers: { Authorization: `Bearer ${token}` },

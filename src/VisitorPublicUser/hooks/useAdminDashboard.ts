@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import api from "../api/api"; 
 import { message } from "antd";
-import type { Supplier, DashboardStats, User as AdminUser } from "../../../../Downloads/Telegram Desktop/new yosti/src/pages/Admin/adminTypesDashboard";
+import type { Supplier, DashboardStats, User as AdminUser } from "../../pages/admin/adminTypesDashboard";
 
 export const useAdminDashboard = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -21,7 +21,7 @@ export const useAdminDashboard = () => {
 
   const fetchUsers = useCallback(async () => {
     try {
-      const res = await api.get("/api/users?limit=100", getAuthHeader());
+      const res = await api.get("/users?limit=100", getAuthHeader());
       // Logic: If res.data is an array use it, else look for res.data.data
       const rawData = Array.isArray(res.data) ? res.data : res.data?.data || [];
       setUsers(rawData);
@@ -32,7 +32,7 @@ export const useAdminDashboard = () => {
 
   const fetchSuppliers = useCallback(async () => {
     try {
-      const res = await api.get("/api/suppliers", getAuthHeader());
+      const res = await api.get("/suppliers", getAuthHeader());
       const rawData = Array.isArray(res.data) ? res.data : res.data?.data || [];
       setSuppliers(rawData);
     } catch (err: any) {
@@ -42,7 +42,7 @@ export const useAdminDashboard = () => {
 
   const fetchStats = useCallback(async () => {
     try {
-      const payRes = await api.get("/api/payments", getAuthHeader());
+      const payRes = await api.get("/payments", getAuthHeader());
       const paymentList = Array.isArray(payRes.data) ? payRes.data : payRes.data?.data || [];
       
       const totalRevenue = paymentList.reduce((acc: number, p: any) => acc + (p.amount || 0), 0);
@@ -60,7 +60,7 @@ export const useAdminDashboard = () => {
 
   const updateUser = async (id: string, payload: any) => {
     try {
-      await api.put(`/api/users/${id}`, payload, getAuthHeader());
+      await api.put(`/users/${id}`, payload, getAuthHeader());
       message.success("User updated");
       fetchUsers();
     } catch (e) { message.error("Update failed"); }
@@ -68,7 +68,7 @@ export const useAdminDashboard = () => {
 
   const deleteUser = async (id: string) => {
     try {
-      await api.delete(`/api/users/${id}`, getAuthHeader());
+      await api.delete(`/users/${id}`, getAuthHeader());
       message.success("User deleted");
       fetchUsers();
     } catch (e) { message.error("Delete failed"); }
@@ -76,7 +76,7 @@ export const useAdminDashboard = () => {
 
   const updateSupplier = async (id: string, payload: any) => {
     try {
-      await api.put(`/api/suppliers/${id}`, payload, getAuthHeader());
+      await api.put(`/suppliers/${id}`, payload, getAuthHeader());
       message.success("Supplier updated");
       fetchSuppliers();
     } catch (e) { message.error("Update failed"); }
@@ -84,7 +84,7 @@ export const useAdminDashboard = () => {
 
   const deleteSupplier = async (id: string) => {
     try {
-      await api.delete(`/api/suppliers/${id}`, getAuthHeader());
+      await api.delete(`/suppliers/${id}`, getAuthHeader());
       message.success("Supplier deleted");
       fetchSuppliers();
     } catch (e) { message.error("Delete failed"); }

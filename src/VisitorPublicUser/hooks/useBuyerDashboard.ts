@@ -4,7 +4,7 @@ import type {
     SourcingRequest,
     Shipment,
     CreateSourcingPayload,
-} from "../../../../Downloads/Telegram Desktop/new yosti/src/pages/buyer/sourcing";
+} from "../../pages/buyer/sourcing";
 
 interface Stats {
   activeRequests: number;
@@ -27,8 +27,8 @@ export const useBuyerDashboard = () => {
     setLoading(true);
     try {
       const [reqRes, shipRes] = await Promise.all([
-        api.get("/api/sourcing/myrequests"),
-        api.get("/api/shipments/myshipments"),
+        api.get("/requests"),
+        api.get("/shipments"),
       ]);
 
       const reqData: SourcingRequest[] = reqRes.data.data;
@@ -57,7 +57,7 @@ export const useBuyerDashboard = () => {
   const createSourcingRequest = async (
     payload: CreateSourcingPayload
   ): Promise<SourcingRequest> => {
-    const res = await api.post("/api/sourcing", payload);
+    const res = await api.post("/requests", payload);
     const created: SourcingRequest = res.data.data;
 
     // Optimistic-safe refresh

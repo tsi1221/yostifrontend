@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/sourcing";
+import { API_BASE_URL } from "../../lib/api";
+const API_URL = `${API_BASE_URL}/requests`;
 
 const axiosInstance = axios.create({
   baseURL: API_URL,

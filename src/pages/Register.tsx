@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Form, Input, Button, Select, message } from "antd";
 import { Link, useNavigate } from "react-router-dom";
-import AuthLayout from "../components/BackgroundLayout";
-import { registerUser, type RegisterData } from "../api/api";
+import AuthLayout from "../VisitorPublicUser/components/BackgroundLayout";
+import { registerUser, type RegisterData } from "../VisitorPublicUser/api/api";
 
 const { Option } = Select;
 

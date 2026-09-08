@@ -11,120 +11,40 @@ import ForgotPassword from "./shared/Auth/ForgotPassword";
 import TwoFA from "./shared/Auth/TwoFA";
 
 import SuperAdminRouting from "./Superadmin/Content/Routing/SuperAdminRouting";
+import DashboardApp from "./dashboard/DashboardApp";
+import {
+  RequireAuth,
+  AuthProvider,
+  useAuth,
+  getRoleDashboardPath,
+} from "./dashboard/auth";
 
-import Navbar from "./Pages/Home/Navbar";
-import Footer from "./Pages/Home/Footer";
+import Navbar from "./pages/home/Navbar";
+import Footer from "./pages/home/Footer";
 
-import HeroSection from "./Pages/Home/HeroSection";
-import AboutSection from "./Pages/Home/AboutSection";
-import ServicesSection from "./Pages/Home/ServicesSection";
-import ContactSection from "./Pages/Home/ContactSection";
-import Blog from "./Pages/Home/Blog";
-import WhyChoose from "./Pages/Home/Whychoose";
-import OurProject from "./Pages/Home/Ourproject";
-import Statics from "./Pages/Home/Statics";
-import TestimonialsPage from "./Pages/Home/TestimonialsSection";
-import ProductsSection from "./Pages/Home/ExportProductsSection";
-import Staff from "./Pages/Home/Staff";
+import HeroSection from "./pages/home/HeroSection";
+import AboutSection from "./pages/home/AboutSection";
+import ServicesSection from "./pages/home/ServicesSection";
+import ContactSection from "./pages/home/ContactSection";
+import Blog from "./pages/home/Blog";
+import WhyChoose from "./pages/home/Whychoose";
+import OurProject from "./pages/home/Ourproject";
+import Statics from "./pages/home/Statics";
+import TestimonialsPage from "./pages/home/TestimonialsSection";
+import ProductsSection from "./pages/home/ExportProductsSection";
+import Staff from "./pages/home/Staff";
 
-import ProductPage from "./Pages/Home/product";
+import ProductPage from "./pages/home/product";
+import PublicBlogDetail from "./dashboard/blogs/PublicBlogDetail";
+import PublicBlogsPage from "./dashboard/blogs/PublicBlogsPage";
+import PublicProjectDetail from "./dashboard/projects/PublicProjectDetail";
+import PublicProjectsPage from "./dashboard/projects/PublicProjectsPage";
+import PublicContactForm from "./dashboard/contacts/PublicContactForm";
 
 import type { UserRole } from "./shared/layout/Sidebar";
 
-import {
-  useEffect,
-  useState,
-} from "react";
-
-/* =========================================================
-   VALID ROLES
-========================================================= */
-
-const VALID_ROLES: UserRole[] = [
-  "SUPER_ADMIN",
-  "STAFF",
-  "BUYER",
-  "SUPPLIER",
-  "LOGISTICS_PARTNER",
-];
-
-/* =========================================================
-   NORMALIZE ROLE
-========================================================= */
-
-const normalizeRole = (
-  value: string | null
-): UserRole | null => {
-  if (!value) {
-    return null;
-  }
-
-  const normalized =
-    value.trim().toUpperCase();
-
-  if (
-    VALID_ROLES.includes(
-      normalized as UserRole
-    )
-  ) {
-    return normalized as UserRole;
-  }
-
-  switch (
-    value.trim().toLowerCase()
-  ) {
-    case "super-admin":
-    case "super_admin":
-    case "superadmin":
-      return "SUPER_ADMIN";
-
-    case "staff":
-    case "admin":
-      return "STAFF";
-
-    case "buyer":
-      return "BUYER";
-
-    case "supplier":
-      return "SUPPLIER";
-
-    case "logistics":
-    case "logistics-partner":
-    case "logistics_partner":
-      return "LOGISTICS_PARTNER";
-
-    default:
-      return null;
-  }
-};
-
-/* =========================================================
-   ROLE HOME
-========================================================= */
-
-const getRoleHome = (
-  role: UserRole | null
-) => {
-  switch (role) {
-    case "SUPER_ADMIN":
-      return "/superadmin/dashboard";
-
-    case "STAFF":
-      return "/staff/dashboard";
-
-    case "BUYER":
-      return "/buyer/dashboard";
-
-    case "SUPPLIER":
-      return "/supplier/dashboard";
-
-    case "LOGISTICS_PARTNER":
-      return "/logistics/dashboard";
-
-    default:
-      return "/";
-  }
-};
+const getRoleHome = (role: UserRole | null) =>
+  role ? getRoleDashboardPath(role) : "/";
 
 /* =========================================================
    PUBLIC LAYOUT
@@ -150,34 +70,8 @@ function PublicLayout({
    APP
 ========================================================= */
 
-export default function App() {
-  const [role, setRole] =
-    useState<UserRole | null>(null);
-
-  const [, setEmail] =
-    useState<string | null>(null);
-
-  /* =======================================================
-     LOAD AUTH
-  ======================================================= */
-
-  useEffect(() => {
-    const storedRole =
-      localStorage.getItem("role") ??
-      sessionStorage.getItem("role");
-
-    const storedEmail =
-      localStorage.getItem("email") ??
-      sessionStorage.getItem("email");
-
-    setRole(
-      normalizeRole(storedRole)
-    );
-
-    setEmail(
-      storedEmail ?? null
-    );
-  }, []);
+function AppRoutes() {
+  const { role } = useAuth();
 
   return (
     <Routes>
@@ -256,6 +150,15 @@ export default function App() {
         }
       />
 
+      <Route
+        path="/contacts"
+        element={
+          <PublicLayout>
+            <PublicContactForm />
+          </PublicLayout>
+        }
+      />
+
       {/* =================================================
           BLOG
       ================================================= */}
@@ -265,6 +168,42 @@ export default function App() {
         element={
           <PublicLayout>
             <Blog />
+          </PublicLayout>
+        }
+      />
+
+      <Route
+        path="/blogs/:blogId"
+        element={
+          <PublicLayout>
+            <PublicBlogDetail />
+          </PublicLayout>
+        }
+      />
+
+      <Route
+        path="/blogs"
+        element={
+          <PublicLayout>
+            <PublicBlogsPage />
+          </PublicLayout>
+        }
+      />
+
+      <Route
+        path="/projects/:projectId"
+        element={
+          <PublicLayout>
+            <PublicProjectDetail />
+          </PublicLayout>
+        }
+      />
+
+      <Route
+        path="/projects"
+        element={
+          <PublicLayout>
+            <PublicProjectsPage />
           </PublicLayout>
         }
       />
@@ -327,12 +266,7 @@ export default function App() {
 
       <Route
         path="/login"
-        element={
-          <Login
-            setRole={setRole}
-            setEmail={setEmail}
-          />
-        }
+        element={<Login />}
       />
 
       <Route
@@ -362,96 +296,47 @@ export default function App() {
       <Route
         path="/superadmin/*"
         element={
-          role === "SUPER_ADMIN" ? (
+          <RequireAuth allow="SUPER_ADMIN">
             <SuperAdminRouting />
-          ) : (
-            <Navigate
-              to="/login"
-              replace
-            />
-          )
+          </RequireAuth>
         }
       />
 
-      {/* =================================================
-          FUTURE STAFF
-      ================================================= */}
-
-      {/*
       <Route
         path="/staff/*"
         element={
-          role === "STAFF" ? (
-            <AdminRouting />
-          ) : (
-            <Navigate
-              to="/login"
-              replace
-            />
-          )
+          <RequireAuth allow={["STAFF", "SUPER_ADMIN"]}>
+            <DashboardApp role="STAFF" />
+          </RequireAuth>
         }
       />
-      */}
 
-      {/* =================================================
-          FUTURE BUYER
-      ================================================= */}
-
-      {/*
       <Route
         path="/buyer/*"
         element={
-          role === "BUYER" ? (
-            <BuyerRouting />
-          ) : (
-            <Navigate
-              to="/login"
-              replace
-            />
-          )
+          <RequireAuth allow={["BUYER", "SUPER_ADMIN"]}>
+            <DashboardApp role="BUYER" />
+          </RequireAuth>
         }
       />
-      */}
 
-      {/* =================================================
-          FUTURE SUPPLIER
-      ================================================= */}
-
-      {/*
       <Route
         path="/supplier/*"
         element={
-          role === "SUPPLIER" ? (
-            <SupplierRouting />
-          ) : (
-            <Navigate
-              to="/login"
-              replace
-            />
-          )
+          <RequireAuth allow={["SUPPLIER", "SUPER_ADMIN"]}>
+            <DashboardApp role="SUPPLIER" />
+          </RequireAuth>
         }
       />
-      */}
 
-      {/* =================================================
-          FUTURE LOGISTICS
-      ================================================= */}
-
-      {/*
       <Route
         path="/logistics/*"
         element={
-          role === "LOGISTICS_PARTNER" ? (
-            <LogisticsRouting />
-          ) : (
-            <Navigate
-              to="/login"
-              replace
-            />
-          )
+          <RequireAuth allow={["LOGISTICS_PARTNER", "SUPER_ADMIN"]}>
+            <DashboardApp role="LOGISTICS_PARTNER" />
+          </RequireAuth>
         }
       />
-      */}
 
       {/* =================================================
           GLOBAL FALLBACK
@@ -474,5 +359,13 @@ export default function App() {
         }
       />
     </Routes>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
   );
 }

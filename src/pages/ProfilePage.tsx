@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Form, Input, Button, Upload } from "antd";
 import { UserOutlined, LockOutlined, LogoutOutlined, CameraOutlined } from "@ant-design/icons";
-import { useProfile } from "../hooks/useProfile";
+import { useProfile } from "../VisitorPublicUser/hooks/useProfile";
 import { useNavigate } from "react-router-dom";
 
 interface ProfilePageProps {

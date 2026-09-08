@@ -10,7 +10,7 @@ import {
   Tag,
 } from "antd";
 import dayjs from "dayjs";
-import { useVisaBuyer } from "../../hooks/useVisaBuyer";
+import { useVisaBuyer } from "../../VisitorPublicUser/hooks/useVisaBuyer";
 
 interface VisaFormValues {
   passportNumber: string;

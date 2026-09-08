@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "../../lib/api";
 
 export interface ShipmentUpdate {
   update_id: string;
@@ -27,7 +28,7 @@ export interface Shipment {
   createdAt: string;
 }
 
-const API = "http://localhost:5000/api/shipments";
+const API = `${API_BASE_URL}/shipments`;
 
 export const useShipmentAdmin = () => {
   const [shipments, setShipments] = useState<Shipment[]>([]);

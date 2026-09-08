@@ -3,7 +3,7 @@ import axios from "axios";
 
 // Create an Axios instance
 const api = axios.create({
-  baseURL: "http://localhost:5000", // Replace with your backend URL
+  baseURL: import.meta.env.VITE_API_URL || "https://yosti.nedhigibe.com/api",
   headers: {
     "Content-Type": "application/json",
   },
@@ -14,7 +14,7 @@ const api = axios.create({
 // ===============================
 export const registerUser = async (data: { name: string; email: string; password: string }) => {
   try {
-    const response = await api.post("/users/register", data);
+    const response = await api.post("/auth/register", data);
     return response.data;
   } catch (error: any) {
     throw error.response?.data || error.message;
@@ -26,7 +26,7 @@ export const registerUser = async (data: { name: string; email: string; password
 // ===============================
 export const loginUser = async (data: { email: string; password: string }) => {
   try {
-    const response = await api.post("/users/login", data);
+    const response = await api.post("/auth/login", data);
     return response.data;
   } catch (error: any) {
     throw error.response?.data || error.message;

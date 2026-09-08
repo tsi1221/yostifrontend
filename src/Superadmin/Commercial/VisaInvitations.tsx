@@ -1,5 +1,3 @@
-import React from 'react'
-
 function VisaInvitations() {
   return (
     <div>VisaInvitations</div>

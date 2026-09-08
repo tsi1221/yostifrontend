@@ -1,0 +1,86 @@
+import { useCallback, useEffect, useState } from "react";
+import { message } from "antd";
+import { useNavigate } from "react-router-dom";
+
+import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
+
+import type { TicketRecord } from "./types";
+import {
+  TicketsRequestError,
+  fetchSupportTicket,
+  parseSupportTicketId,
+} from "./ticketsService";
+
+export function useSupportTicketDetail(id: string | undefined) {
+  const navigate = useNavigate();
+  const [ticket, setTicket] = useState<TicketRecord | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
+
+  const load = useCallback(async () => {
+    const ticketId = parseSupportTicketId(id);
+    if (ticketId === undefined) {
+      setTicket(null);
+      setLoading(false);
+      setNotFound(true);
+      setServerError(null);
+      return;
+    }
+
+    setLoading(true);
+    setNotFound(false);
+    setServerError(null);
+
+    try {
+      const payload = await fetchSupportTicket(ticketId);
+      setTicket(payload);
+    } catch (cause) {
+      setTicket(null);
+
+      if (cause instanceof TicketsRequestError && cause.status === 400) {
+        message.error(cause.message);
+        setServerError(cause.message);
+        return;
+      }
+
+      if (cause instanceof TicketsRequestError && cause.status === 401) {
+        expireSession(navigate);
+        return;
+      }
+
+      if (cause instanceof TicketsRequestError && cause.status === 403) {
+        setServerError(FORBIDDEN_MESSAGE);
+        return;
+      }
+
+      if (cause instanceof TicketsRequestError && cause.status === 404) {
+        setNotFound(true);
+        return;
+      }
+
+      const text =
+        cause instanceof Error
+          ? cause.message
+          : "We couldn't load this support ticket.";
+      message.error(text);
+      setServerError(text);
+    } finally {
+      setLoading(false);
+    }
+  }, [id, navigate]);
+
+  useEffect(() => {
+    void load();
+  }, [load, reloadToken]);
+
+  return {
+    ticket,
+    loading,
+    notFound,
+    serverError,
+    applyTicket: setTicket,
+    retry: () => setReloadToken((value) => value + 1),
+  };
+}

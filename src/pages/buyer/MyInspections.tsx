@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button, Card, Spin, Form, Input, DatePicker, Checkbox, Select } from "antd";
 import dayjs from "dayjs";
-import { useInspection, type InspectionStatus } from "../../hooks/useInspectionsBuyer";
+import { useInspection, type InspectionStatus } from "../../VisitorPublicUser/hooks/useInspectionsBuyer";
 
 const { Option } = Select;
 

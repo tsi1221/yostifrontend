@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import axios, { AxiosError } from "axios";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../../lib/api";
 
 /* ===================== TYPES ===================== */
 
@@ -35,7 +36,7 @@ interface InspectionResponse {
 
 /* ===================== CONFIG ===================== */
 
-const BASE_URL = "http://localhost:5000/api/inspections";
+const BASE_URL = `${API_BASE_URL}/inspection-requests`;
 
 /* ===================== HOOK ===================== */
 

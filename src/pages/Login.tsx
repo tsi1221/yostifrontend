@@ -2,9 +2,9 @@
 import { useEffect, useState } from "react";
 import { Form, Input, Button, message, Checkbox } from "antd";
 import { useNavigate } from "react-router-dom";
-import AuthLayout from "../components/BackgroundLayout";
-import { useAuthStore } from "../store/useAuthStore";
-import type { Role } from "../components/Sidebar";
+import AuthLayout from "../VisitorPublicUser/components/BackgroundLayout";
+import { useAuthStore } from "../VisitorPublicUser/store/useAuthStore";
+import type { Role } from "../VisitorPublicUser/components/Sidebar";
 
 interface LoginProps {
   setRole: (role: Role | null) => void;
