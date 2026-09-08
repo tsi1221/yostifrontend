@@ -46,7 +46,6 @@ export type DashboardPageKey =
   | "contacts"
   | "files"
   | "roles"
-  | "permissions"
   | "profile";
 
 export interface NavItem {
@@ -93,7 +92,6 @@ export const getNavigation = (role: UserRole): NavGroup[] => {
           children: [
             item(slug, "users", "User Account Management"),
             item(slug, "roles", "Roles"),
-            item(slug, "permissions", "Permissions"),
           ],
         },
         {

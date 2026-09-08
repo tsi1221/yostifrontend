@@ -17,5 +17,3 @@ export {
   permissionGroup,
   toPermissionOptions,
 } from "./api";
-export { usePermissionsList } from "./usePermissionsList";
-export { default as PermissionsTable } from "./PermissionsTable";

@@ -2,7 +2,6 @@ import { fetchBlogsList } from "../blogs/api";
 import { fetchContactsList } from "../contacts/api";
 import { fetchInspectionsList } from "../inspections/inspectionsService";
 import { fetchPaymentsList } from "../payments/paymentsService";
-import { fetchPermissionsList } from "../permissions/api";
 import { fetchProjectsList } from "../projects/api";
 import { fetchRolesList } from "../rbac/api";
 import { fetchRequestsList } from "../requests/requestsService";
@@ -25,8 +24,7 @@ export type AccessResource =
   | "blogs"
   | "trips"
   | "inspections"
-  | "roles"
-  | "permissions";
+  | "roles";
 
 export interface ResourceAccess {
   total: number | null;
@@ -45,7 +43,6 @@ const EMPTY_RESOURCE: ResourceAccess = {
 const PAGE_RESOURCE: Partial<Record<DashboardPageKey, AccessResource>> = {
   users: "users",
   roles: "roles",
-  permissions: "permissions",
   sourcing: "requests",
   logistics: "shipments",
   "quality-control": "inspections",
@@ -105,7 +102,6 @@ export function emptyAccessSnapshot(): AccessSnapshot {
     trips: { ...EMPTY_RESOURCE },
     inspections: { ...EMPTY_RESOURCE },
     roles: { ...EMPTY_RESOURCE },
-    permissions: { ...EMPTY_RESOURCE },
   };
 }
 
@@ -189,7 +185,6 @@ export async function probeAccessSnapshot(): Promise<AccessSnapshot> {
       }),
     ),
     probe(() => fetchRolesList({ ...LIST_PAGE, search: "", name: "" })),
-    probe(() => fetchPermissionsList({ ...LIST_PAGE, search: "" })),
   ]);
 
   const pick = (index: number): ResourceAccess => {
@@ -220,7 +215,6 @@ export async function probeAccessSnapshot(): Promise<AccessSnapshot> {
     trips: pick(9),
     inspections: pick(10),
     roles: pick(11),
-    permissions: pick(12),
   };
 }
 
