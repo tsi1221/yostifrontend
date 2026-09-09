@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
-  Bell,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -11,11 +10,15 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { clearAuthSession, getStoredAuthUser, roleFromAuthUser } from "../auth";
+import { clearAuthSession } from "../auth";
 import { useAuth } from "../auth/AuthProvider";
-import { ROLE_LABEL, ROLE_SLUG, filterNavigation, getNavigation } from "../roles";
+import { ROLE_LABEL, dashboardPath, filterNavigation, getNavigation } from "../roles";
 import { useDashboard } from "../store";
 import type { UserRole } from "../types";
+import type { ContactRecord } from "../contacts/types";
+import ContactNotificationMenu from "../contacts/ContactNotificationMenu";
+import { useContactsList } from "../contacts/useContactsList";
+import { useSeenContactNotifications } from "../contacts/useSeenContactNotifications";
 
 interface DashboardShellProps {
   role: UserRole;
@@ -29,8 +32,20 @@ export default function DashboardShell({
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user } = useDashboard();
-  const alerts = 0;
-
+  const { ready, isAuthenticated } = useAuth();
+  const contactNotificationsEnabled =
+    ready && isAuthenticated && (role === "SUPER_ADMIN" || role === "STAFF");
+  const contactsQuery = useContactsList({ enabled: contactNotificationsEnabled });
+  const { seenIds, markSeen } = useSeenContactNotifications(user.id);
+  const unseenContacts = useMemo(
+    () =>
+      contactsQuery.contacts.filter((contact) => {
+        const contactId = Number(contact.id);
+        return Number.isInteger(contactId) && contactId > 0 && !seenIds.has(contactId);
+      }),
+    [contactsQuery.contacts, seenIds],
+  );
+  const unseenContactCount = contactNotificationsEnabled ? unseenContacts.length : 0;
   return (
     <div className="min-h-screen bg-slate-50">
       <Sidebar
@@ -39,6 +54,7 @@ export default function DashboardShell({
         onCollapsedChange={setCollapsed}
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
+        contactCount={unseenContactCount}
       />
 
       <div
@@ -49,7 +65,12 @@ export default function DashboardShell({
           userName={user.full_name}
           userEmail={user.email}
           userCompany={user.company_name}
-          alerts={alerts}
+          contacts={unseenContacts}
+          contactCount={unseenContactCount}
+          contactsLoading={contactsQuery.loading}
+          contactsError={contactsQuery.serverError}
+          retryContacts={contactsQuery.retry}
+          onContactSeen={markSeen}
           onMenu={() => setMobileOpen(true)}
         />
         <main className="flex-1 p-6 md:p-8">{children}</main>
@@ -63,21 +84,27 @@ function TopBar({
   userName,
   userEmail,
   userCompany,
-  alerts,
+  contacts,
+  contactCount,
+  contactsLoading,
+  contactsError,
+  retryContacts,
+  onContactSeen,
   onMenu,
 }: {
   role: UserRole;
   userName: string;
   userEmail: string;
   userCompany: string;
-  alerts: number;
+  contacts: ContactRecord[];
+  contactCount: number;
+  contactsLoading: boolean;
+  contactsError: string | null;
+  retryContacts: () => void;
+  onContactSeen: (contactId: number) => void;
   onMenu: () => void;
 }) {
   const navigate = useNavigate();
-  const location = useLocation();
-  const sessionUser = getStoredAuthUser();
-  const sessionRole = sessionUser ? roleFromAuthUser(sessionUser) : role;
-  const currentSlug = location.pathname.split("/")[1] ?? ROLE_SLUG[role];
 
   const logout = () => {
     clearAuthSession();
@@ -96,28 +123,18 @@ function TopBar({
       </button>
 
       <div className="ml-auto flex items-center gap-3">
-        {sessionRole === "SUPER_ADMIN" ? (
-          <select
-            value={currentSlug}
-            onChange={(event) => navigate(`/${event.target.value}/dashboard`)}
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-[#0F3952]"
-            aria-label="Open role dashboard"
-          >
-            <option value="superadmin">System Admin</option>
-            <option value="staff">Staff</option>
-            <option value="buyer">Buyer</option>
-            <option value="supplier">Supplier</option>
-            <option value="logistics">Logistics</option>
-          </select>
+        {role === "SUPER_ADMIN" || role === "STAFF" ? (
+          <ContactNotificationMenu
+            contacts={contacts}
+            contactCount={contactCount}
+            loading={contactsLoading}
+            serverError={contactsError}
+            retry={retryContacts}
+            onSeen={onContactSeen}
+          />
         ) : null}
-        <span className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600">
-          <Bell size={18} />
-          {alerts > 0 ? (
-            <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-[#FDC700]" />
-          ) : null}
-        </span>
         <NavLink
-          to={`/${ROLE_SLUG[role]}/profile`}
+          to={dashboardPath("profile")}
           className="flex items-center gap-3 rounded-xl px-2 py-1 hover:bg-slate-50"
           aria-label="Open profile"
         >
@@ -156,12 +173,14 @@ function Sidebar({
   onCollapsedChange,
   mobileOpen,
   onMobileClose,
+  contactCount,
 }: {
   role: UserRole;
   collapsed: boolean;
   onCollapsedChange: (value: boolean) => void;
   mobileOpen: boolean;
   onMobileClose: () => void;
+  contactCount: number;
 }) {
   const location = useLocation();
   const { canAccessPage } = useAuth();
@@ -269,7 +288,17 @@ function Sidebar({
                           }`
                         }
                       >
-                        {child.label}
+                        <span className="flex items-center justify-between gap-2">
+                          <span>{child.label}</span>
+                          {child.key === "contacts" && contactCount > 0 ? (
+                            <span
+                              className="min-w-5 rounded-full bg-[#FDC700] px-1.5 py-0.5 text-center text-[10px] font-bold leading-4 text-[#0F3952]"
+                              aria-label={`${contactCount} contact submissions`}
+                            >
+                              {contactCount > 99 ? "99+" : contactCount}
+                            </span>
+                          ) : null}
+                        </span>
                       </NavLink>
                     ))
                   : null}

@@ -5,7 +5,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import ActionButton from "../components/ActionButton";
 import PageHeader from "../components/PageHeader";
 import SideDrawer from "../components/SideDrawer";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import { PROJECT_NOT_FOUND_MESSAGE, asProjectId } from "./api";
 import DeleteProjectDialog from "./DeleteProjectDialog";
@@ -25,8 +25,8 @@ export default function ProjectDetailView() {
   const navigate = useNavigate();
   const { projectId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { role } = useDashboard();
-  const listPath = `/${ROLE_SLUG[role]}/projects`;
+  useDashboard();
+  const listPath = dashboardPath("projects");
   const { project, loading, notFound, serverError, retry } =
     useProjectDetail(projectId);
   const [pendingDelete, setPendingDelete] = useState<number | null>(null);

@@ -56,9 +56,9 @@ export function useContactDetail(id: string | undefined) {
       }
 
       const text =
-        cause instanceof Error
-          ? cause.message
-          : "We couldn't load this contact submission.";
+        cause instanceof ContactRequestError && cause.status === 0
+          ? "We couldn't connect to the contact service. Please check your connection and try again."
+          : "We couldn't load this contact submission. Please try again.";
       message.error(text);
       setServerError(text);
     } finally {

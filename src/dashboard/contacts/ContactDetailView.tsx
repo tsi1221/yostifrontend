@@ -5,7 +5,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import ActionButton from "../components/ActionButton";
 import PageHeader from "../components/PageHeader";
 import SideDrawer from "../components/SideDrawer";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import { CONTACT_NOT_FOUND_MESSAGE, asContactId, whatsappHref } from "./api";
 import DeleteContactDialog from "./DeleteContactDialog";
@@ -25,8 +25,8 @@ export default function ContactDetailView() {
   const navigate = useNavigate();
   const { contactId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { role } = useDashboard();
-  const listPath = `/${ROLE_SLUG[role]}/contacts`;
+  useDashboard();
+  const listPath = dashboardPath("contacts");
   const { contact, loading, notFound, serverError, retry } =
     useContactDetail(contactId);
   const [pendingDelete, setPendingDelete] = useState<number | null>(null);

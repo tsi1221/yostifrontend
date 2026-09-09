@@ -6,7 +6,7 @@ import ActionButton from "../components/ActionButton";
 import { SelectInput, TextInput } from "../components/FormField";
 import SideDrawer from "../components/SideDrawer";
 import StatusBadge from "../components/StatusBadge";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import DeleteSupportTicketDialog from "./DeleteSupportTicketDialog";
 import EditTicketForm from "./EditTicketForm";
@@ -55,7 +55,7 @@ function SkeletonRows() {
 
 export default function SupportsTable() {
   const navigate = useNavigate();
-  const { role } = useDashboard();
+  useDashboard();
   const [editing, setEditing] = useState<TicketRecord | null>(null);
   const [pendingDelete, setPendingDelete] = useState<number | null>(null);
   const {
@@ -71,7 +71,7 @@ export default function SupportsTable() {
   } = useSupportsList();
 
   const detailPath = (id: number | string) =>
-    `/${ROLE_SLUG[role]}/supports/${id}`;
+    `${dashboardPath("supports")}/${id}`;
 
   return (
     <div className="space-y-4">

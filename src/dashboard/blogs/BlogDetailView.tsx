@@ -5,7 +5,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import ActionButton from "../components/ActionButton";
 import PageHeader from "../components/PageHeader";
 import SideDrawer from "../components/SideDrawer";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import { BLOG_NOT_FOUND_MESSAGE, asBlogId } from "./api";
 import DeleteBlogDialog from "./DeleteBlogDialog";
@@ -25,8 +25,8 @@ export default function BlogDetailView() {
   const navigate = useNavigate();
   const { blogId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { role } = useDashboard();
-  const listPath = `/${ROLE_SLUG[role]}/blogs`;
+  useDashboard();
+  const listPath = dashboardPath("blogs");
   const { blog, loading, notFound, serverError, retry } = useBlogDetail(blogId);
   const [pendingDelete, setPendingDelete] = useState<number | null>(null);
   const editing = searchParams.get("edit") === "1";
@@ -113,7 +113,7 @@ export default function BlogDetailView() {
       <SideDrawer
         open={Boolean(blog) && editing}
         title={blog ? `Edit post #${blog.id}` : "Edit post"}
-        description="Update title, logo URL, and article details."
+        description="Update the title, image, and article details."
         onClose={() => setSearchParams({})}
       >
         {blog ? (

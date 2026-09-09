@@ -29,8 +29,9 @@ function useDebouncedValue<T>(value: T, delay: number) {
   return debounced;
 }
 
-export function useContactsList() {
+export function useContactsList(options?: { enabled?: boolean; authReady?: boolean }) {
   const navigate = useNavigate();
+  const enabled = options?.enabled !== false && options?.authReady !== false;
   const [filters, setFilters] = useState<ContactsListQuery>(
     DEFAULT_CONTACTS_QUERY,
   );
@@ -57,6 +58,12 @@ export function useContactsList() {
   );
 
   const load = useCallback(async () => {
+    if (!enabled) {
+      setResponse(null);
+      setLoading(false);
+      setServerError(null);
+      return;
+    }
     setLoading(true);
     setServerError(null);
 
@@ -80,11 +87,11 @@ export function useContactsList() {
     } finally {
       setLoading(false);
     }
-  }, [navigate, query]);
+  }, [enabled, navigate, query]);
 
   useEffect(() => {
     void load();
-  }, [load, reloadToken]);
+  }, [enabled, load, reloadToken]);
 
   useEffect(() => {
     const refresh = () => setReloadToken((value) => value + 1);

@@ -182,6 +182,15 @@ function AppRoutes() {
       />
 
       <Route
+        path="/blog/:blogId"
+        element={
+          <PublicLayout>
+            <PublicBlogDetail />
+          </PublicLayout>
+        }
+      />
+
+      <Route
         path="/blogs"
         element={
           <PublicLayout>
@@ -294,9 +303,34 @@ function AppRoutes() {
       ================================================= */}
 
       <Route
+        path="/dashboard/*"
+        element={
+          <RequireAuth
+            allow={[
+              "SUPER_ADMIN",
+              "STAFF",
+              "BUYER",
+              "SUPPLIER",
+              "LOGISTICS_PARTNER",
+            ]}
+          >
+            <DashboardApp />
+          </RequireAuth>
+        }
+      />
+
+      <Route
         path="/superadmin/*"
         element={
-          <RequireAuth allow="SUPER_ADMIN">
+          <RequireAuth
+            allow={[
+              "SUPER_ADMIN",
+              "STAFF",
+              "BUYER",
+              "SUPPLIER",
+              "LOGISTICS_PARTNER",
+            ]}
+          >
             <SuperAdminRouting />
           </RequireAuth>
         }
@@ -305,8 +339,8 @@ function AppRoutes() {
       <Route
         path="/staff/*"
         element={
-          <RequireAuth allow={["STAFF", "SUPER_ADMIN"]}>
-            <DashboardApp role="STAFF" />
+          <RequireAuth allow={["SUPER_ADMIN", "STAFF", "BUYER", "SUPPLIER", "LOGISTICS_PARTNER"]}>
+            <DashboardApp />
           </RequireAuth>
         }
       />
@@ -314,8 +348,8 @@ function AppRoutes() {
       <Route
         path="/buyer/*"
         element={
-          <RequireAuth allow={["BUYER", "SUPER_ADMIN"]}>
-            <DashboardApp role="BUYER" />
+          <RequireAuth allow={["SUPER_ADMIN", "STAFF", "BUYER", "SUPPLIER", "LOGISTICS_PARTNER"]}>
+            <DashboardApp />
           </RequireAuth>
         }
       />
@@ -323,8 +357,8 @@ function AppRoutes() {
       <Route
         path="/supplier/*"
         element={
-          <RequireAuth allow={["SUPPLIER", "SUPER_ADMIN"]}>
-            <DashboardApp role="SUPPLIER" />
+          <RequireAuth allow={["SUPER_ADMIN", "STAFF", "BUYER", "SUPPLIER", "LOGISTICS_PARTNER"]}>
+            <DashboardApp />
           </RequireAuth>
         }
       />
@@ -332,8 +366,8 @@ function AppRoutes() {
       <Route
         path="/logistics/*"
         element={
-          <RequireAuth allow={["LOGISTICS_PARTNER", "SUPER_ADMIN"]}>
-            <DashboardApp role="LOGISTICS_PARTNER" />
+          <RequireAuth allow={["SUPER_ADMIN", "STAFF", "BUYER", "SUPPLIER", "LOGISTICS_PARTNER"]}>
+            <DashboardApp />
           </RequireAuth>
         }
       />

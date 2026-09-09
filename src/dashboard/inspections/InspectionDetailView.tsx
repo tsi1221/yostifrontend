@@ -5,7 +5,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import ActionButton from "../components/ActionButton";
 import SideDrawer from "../components/SideDrawer";
 import { BADGE_TONE_CLASS, getStatusTone } from "../statusStyles";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import DeleteInspectionDialog from "./DeleteInspectionDialog";
 import EditInspectionForm from "./EditInspectionForm";
@@ -42,8 +42,8 @@ function TypeBadge({ type }: { type: string }) {
 export default function InspectionDetailView() {
   const { inspectionId } = useParams<{ inspectionId: string }>();
   const navigate = useNavigate();
-  const { role } = useDashboard();
-  const listPath = `/${ROLE_SLUG[role]}/quality-control`;
+  useDashboard();
+  const listPath = dashboardPath("quality-control");
   const [searchParams, setSearchParams] = useSearchParams();
   const { inspection, loading, notFound, serverError, applyInspection, retry } =
     useInspectionDetail(inspectionId);

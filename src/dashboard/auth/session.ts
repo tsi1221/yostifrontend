@@ -1,5 +1,4 @@
 import type { AuthLoginResponse, AuthUser } from "../types/auth";
-import { roleFromAuthUser } from "./roleRouting";
 
 export const ACCESS_TOKEN_KEY = "access_token";
 export const AUTH_USER_KEY = "user";
@@ -193,7 +192,6 @@ export function notifyAuthProfileUpdated() {
 export function persistAuthUser(user: AuthUser, notify = true) {
   localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
   localStorage.setItem("email", user.email);
-  localStorage.setItem("role", roleFromAuthUser(user));
   if (notify) {
     notifyAuthProfileUpdated();
   }
@@ -208,7 +206,6 @@ export function persistAuthSession(payload: AuthLoginResponse) {
   localStorage.setItem("token", payload.access_token);
   persistAuthUser(user, false);
   localStorage.setItem("email", user.email);
-  localStorage.setItem("role", roleFromAuthUser(user));
 
   for (const key of LEGACY_KEYS) {
     sessionStorage.removeItem(key);

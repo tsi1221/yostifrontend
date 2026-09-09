@@ -4,7 +4,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
 import SideDrawer from "../components/SideDrawer";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import DeleteTripDialog from "./DeleteTripDialog";
 import EditTripForm from "./EditTripForm";
@@ -89,8 +89,8 @@ function InfoCard({
 export default function TripDetailView() {
   const { tripId } = useParams<{ tripId: string }>();
   const navigate = useNavigate();
-  const { role } = useDashboard();
-  const listPath = `/${ROLE_SLUG[role]}/trips`;
+  useDashboard();
+  const listPath = dashboardPath("trips");
   const [searchParams, setSearchParams] = useSearchParams();
   const { trip, loading, notFound, serverError, applyTrip, retry } =
     useTripDetail(tripId);

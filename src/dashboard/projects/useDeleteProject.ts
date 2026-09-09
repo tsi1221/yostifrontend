@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
 
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import type { ProjectDeletionPhase } from "./types";
 import {
@@ -16,9 +16,9 @@ import {
 
 export function useDeleteProject() {
   const navigate = useNavigate();
-  const { role } = useDashboard();
+  useDashboard();
   const [phase, setPhase] = useState<ProjectDeletionPhase>("idle");
-  const listPath = `/${ROLE_SLUG[role]}/projects`;
+  const listPath = dashboardPath("projects");
 
   const removeProject = async (id: number) => {
     setPhase("deleting");

@@ -4,7 +4,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
 import SideDrawer from "../components/SideDrawer";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import DeleteRequestDialog from "./DeleteRequestDialog";
 import EditRequestForm from "./EditRequestForm";
@@ -32,8 +32,8 @@ function DetailSkeleton() {
 export default function RequestDetailView() {
   const { requestId } = useParams<{ requestId: string }>();
   const navigate = useNavigate();
-  const { role } = useDashboard();
-  const listPath = `/${ROLE_SLUG[role]}/sourcing`;
+  useDashboard();
+  const listPath = dashboardPath("sourcing");
   const [searchParams, setSearchParams] = useSearchParams();
   const { request, loading, notFound, serverError, applyRequest, retry } =
     useRequestDetail(requestId);

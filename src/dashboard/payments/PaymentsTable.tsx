@@ -6,7 +6,7 @@ import ActionButton from "../components/ActionButton";
 import { SelectInput, TextInput } from "../components/FormField";
 import SideDrawer from "../components/SideDrawer";
 import StatusBadge from "../components/StatusBadge";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import DeletePaymentDialog from "./DeletePaymentDialog";
 import EditPaymentForm from "./EditPaymentForm";
@@ -52,7 +52,7 @@ function SkeletonRows() {
 
 export default function PaymentsTable() {
   const navigate = useNavigate();
-  const { role } = useDashboard();
+  useDashboard();
   const [editing, setEditing] = useState<PaymentRecord | null>(null);
   const [pendingDelete, setPendingDelete] = useState<PaymentRecord | null>(
     null,
@@ -69,7 +69,7 @@ export default function PaymentsTable() {
     retry,
   } = usePaymentsList();
 
-  const detailPath = (id: number) => `/${ROLE_SLUG[role]}/payments/${id}`;
+  const detailPath = (id: number) => `${dashboardPath("payments")}/${id}`;
 
   return (
     <div className="space-y-4">

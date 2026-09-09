@@ -59,30 +59,12 @@ interface NavigationGroup {
   children?: SubMenuItem[];
 }
 
-/* =========================================================
-   ROLE SLUG
-========================================================= */
-
-const getRoleSlug = (role: UserRole): string => {
-  switch (role) {
-    case "SUPER_ADMIN":
-      return "superadmin";
-
-    case "STAFF":
-      return "staff";
-
-    case "BUYER":
-      return "buyer";
-
-    case "SUPPLIER":
-      return "supplier";
-
-    case "LOGISTICS_PARTNER":
-      return "logistics";
-
-    default:
-      return "dashboard";
+const getDashboardPrefix = () => {
+  if (typeof window === "undefined") {
+    return "dashboard";
   }
+  const segments = window.location.pathname.split("/").filter(Boolean);
+  return segments[0] && segments[1] ? segments[0] : "dashboard";
 };
 
 /* =========================================================
@@ -92,7 +74,7 @@ const getRoleSlug = (role: UserRole): string => {
 const getNavigationByRole = (
   role: UserRole
 ): NavigationGroup[] => {
-  const roleSlug = getRoleSlug(role);
+  const dashboardPrefix = getDashboardPrefix();
 
   /* =======================================================
      DASHBOARD
@@ -101,7 +83,7 @@ const getNavigationByRole = (
   const dashboard: NavigationGroup = {
     label: "Dashboard",
     icon: LayoutDashboard,
-    path: `/${roleSlug}/dashboard`,
+    path: `/${dashboardPrefix}/dashboard`,
   };
 
   /* =======================================================
@@ -114,15 +96,15 @@ const getNavigationByRole = (
     children: [
       {
         label: "Cargo & Tracking",
-        path: `/${roleSlug}/logistics`,
+        path: `/${dashboardPrefix}/logistics`,
       },
       {
         label: "Quality Control",
-        path: `/${roleSlug}/quality-control`,
+        path: `/${dashboardPrefix}/quality-control`,
       },
       {
         label: "Trips",
-        path: `/${roleSlug}/trips`,
+        path: `/${dashboardPrefix}/trips`,
       },
     ],
   };
@@ -137,15 +119,15 @@ const getNavigationByRole = (
     children: [
       {
         label: "Visa Invitations",
-        path: `/${roleSlug}/visa-invitations`,
+        path: `/${dashboardPrefix}/visa-invitations`,
       },
       {
         label: "Payments",
-        path: `/${roleSlug}/payments`,
+        path: `/${dashboardPrefix}/payments`,
       },
       {
         label: "Services",
-        path: `/${roleSlug}/services`,
+        path: `/${dashboardPrefix}/services`,
       },
     ],
   };
@@ -160,11 +142,11 @@ const getNavigationByRole = (
     children: [
       {
         label: "Blogs",
-        path: `/${roleSlug}/blogs`,
+        path: `/${dashboardPrefix}/blogs`,
       },
       {
         label: "Projects",
-        path: `/${roleSlug}/projects`,
+        path: `/${dashboardPrefix}/projects`,
       },
     ],
   };
@@ -179,15 +161,15 @@ const getNavigationByRole = (
     children: [
       {
         label: "Users Management",
-        path: `/${roleSlug}/users`,
+        path: `/${dashboardPrefix}/users`,
       },
       {
         label: "Contacts",
-        path: `/${roleSlug}/contacts`,
+        path: `/${dashboardPrefix}/contacts`,
       },
       {
         label: "Files",
-        path: `/${roleSlug}/files`,
+        path: `/${dashboardPrefix}/files`,
       },
     ],
   };
@@ -202,7 +184,7 @@ const getNavigationByRole = (
     children: [
       {
         label: "Support Tickets",
-        path: `/${roleSlug}/supports`,
+        path: `/${dashboardPrefix}/supports`,
       },
     ],
   };

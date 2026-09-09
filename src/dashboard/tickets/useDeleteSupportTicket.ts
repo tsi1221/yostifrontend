@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
 
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import type { TicketDeletionPhase } from "./types";
 import {
@@ -16,9 +16,9 @@ import {
 
 export function useDeleteSupportTicket() {
   const navigate = useNavigate();
-  const { role } = useDashboard();
+  useDashboard();
   const [phase, setPhase] = useState<TicketDeletionPhase>("idle");
-  const listPath = `/${ROLE_SLUG[role]}/supports`;
+  const listPath = dashboardPath("supports");
 
   const removeTicket = async (id: number) => {
     setPhase("deleting");

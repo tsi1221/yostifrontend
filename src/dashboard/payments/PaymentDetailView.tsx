@@ -5,7 +5,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
 import SideDrawer from "../components/SideDrawer";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import DeletePaymentDialog from "./DeletePaymentDialog";
 import EditPaymentForm from "./EditPaymentForm";
@@ -111,8 +111,8 @@ function ReceiptCard({
 export default function PaymentDetailView() {
   const { paymentId } = useParams<{ paymentId: string }>();
   const navigate = useNavigate();
-  const { role } = useDashboard();
-  const listPath = `/${ROLE_SLUG[role]}/payments`;
+  useDashboard();
+  const listPath = dashboardPath("payments");
   const [searchParams, setSearchParams] = useSearchParams();
   const { payment, loading, notFound, serverError, applyPayment, retry } =
     usePaymentDetail(paymentId);

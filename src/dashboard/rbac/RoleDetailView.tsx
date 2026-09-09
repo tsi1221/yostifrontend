@@ -3,7 +3,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import ActionButton from "../components/ActionButton";
 import PageHeader from "../components/PageHeader";
 import SideDrawer from "../components/SideDrawer";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import EditRoleForm from "./EditRoleForm";
 import { ROLE_NOT_FOUND_MESSAGE } from "./api";
@@ -22,8 +22,8 @@ export default function RoleDetailView() {
   const navigate = useNavigate();
   const { roleId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { role } = useDashboard();
-  const listPath = `/${ROLE_SLUG[role]}/roles`;
+  useDashboard();
+  const listPath = dashboardPath("roles");
   const {
     role: record,
     loading,

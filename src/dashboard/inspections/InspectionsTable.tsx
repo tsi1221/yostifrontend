@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import ActionButton from "../components/ActionButton";
 import { SelectInput, TextInput } from "../components/FormField";
 import SideDrawer from "../components/SideDrawer";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { BADGE_TONE_CLASS, getStatusTone } from "../statusStyles";
 import { useDashboard } from "../store";
 import DeleteInspectionDialog from "./DeleteInspectionDialog";
@@ -79,7 +79,7 @@ function SkeletonRows() {
 
 export default function InspectionsTable() {
   const navigate = useNavigate();
-  const { role } = useDashboard();
+  useDashboard();
   const [editing, setEditing] = useState<InspectionRecord | null>(null);
   const [pendingDelete, setPendingDelete] = useState<InspectionRecord | null>(
     null,
@@ -97,7 +97,7 @@ export default function InspectionsTable() {
   } = useInspectionsList();
 
   const detailPath = (id: number) =>
-    `/${ROLE_SLUG[role]}/quality-control/${id}`;
+    `${dashboardPath("quality-control")}/${id}`;
 
   return (
     <div className="space-y-4">

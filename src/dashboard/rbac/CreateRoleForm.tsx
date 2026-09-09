@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
 import PageHeader from "../components/PageHeader";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import RoleConfiguratorForm from "./RoleConfiguratorForm";
 import type { RoleFormValues } from "./types";
@@ -12,8 +12,8 @@ import { useCreateRole } from "./useCreateRole";
 
 export default function CreateRoleForm() {
   const navigate = useNavigate();
-  const { role } = useDashboard();
-  const listPath = `/${ROLE_SLUG[role]}/roles`;
+  useDashboard();
+  const listPath = dashboardPath("roles");
   const { submitRole, saving, conflict, authError, fieldErrors } =
     useCreateRole();
   const [values, setValues] = useState<RoleFormValues>(EMPTY_ROLE_FORM);

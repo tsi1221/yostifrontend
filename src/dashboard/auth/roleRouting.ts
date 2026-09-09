@@ -1,6 +1,5 @@
 import type { UserRole } from "../types";
 import type { AuthUser } from "../types/auth";
-import { ROLE_SLUG } from "../roles";
 import { dashboardRoleFromBackendId } from "./backendRoles";
 
 export function roleFromRoleName(
@@ -52,7 +51,8 @@ export function roleFromAuthUser(user: AuthUser): UserRole {
 }
 
 export function getRoleDashboardPath(role: UserRole) {
-  return `/${ROLE_SLUG[role]}/dashboard`;
+  void role;
+  return "/dashboard";
 }
 
 export function getAuthUserDashboardPath(user: AuthUser) {

@@ -2,14 +2,14 @@ import { useNavigate } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
 import PageHeader from "../components/PageHeader";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import ServicesGrid from "../services/ServicesGrid";
 import { useDashboard } from "../store";
 
 export default function ServicesPage() {
-  const { role } = useDashboard();
+  useDashboard();
   const navigate = useNavigate();
-  const createPath = `/${ROLE_SLUG[role]}/services/new`;
+  const createPath = `${dashboardPath("services")}/new`;
 
   return (
     <div>

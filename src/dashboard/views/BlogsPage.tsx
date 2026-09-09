@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom";
 import ActionButton from "../components/ActionButton";
 import PageHeader from "../components/PageHeader";
 import BlogsTable from "../blogs/BlogsTable";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 
 export default function BlogsPage() {
-  const { role } = useDashboard();
+  useDashboard();
   const navigate = useNavigate();
 
   return (
@@ -17,7 +17,7 @@ export default function BlogsPage() {
         description="Search, page, edit, and delete published articles."
         actions={
           <ActionButton
-            onClick={() => navigate(`/${ROLE_SLUG[role]}/blogs/new`)}
+            onClick={() => navigate(`${dashboardPath("blogs")}/new`)}
           >
             New post
           </ActionButton>

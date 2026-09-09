@@ -109,15 +109,6 @@ function parseFieldErrors(raw: unknown): BlogFieldErrors {
   return fields;
 }
 
-export function isHttpUrl(value: string) {
-  try {
-    const url = new URL(value);
-    return url.protocol === "http:" || url.protocol === "https:";
-  } catch {
-    return false;
-  }
-}
-
 export function asBlogId(value: unknown): number | undefined {
   const id = typeof value === "number" ? value : Number(value);
   if (!Number.isInteger(id) || id <= 0) {
@@ -144,9 +135,7 @@ export function validateBlogForm(values: BlogFormValues): BlogFieldErrors {
     errors.title = "Title is required.";
   }
   if (!values.logo.trim()) {
-    errors.logo = "Logo URL is required.";
-  } else if (!isHttpUrl(values.logo.trim())) {
-    errors.logo = "Enter a valid http(s) logo URL.";
+    errors.logo = "Blog image is required.";
   }
   if (!values.details.trim()) {
     errors.details = "Details are required.";

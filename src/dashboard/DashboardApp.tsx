@@ -5,7 +5,7 @@ import { hasValidAccessToken } from "./auth/session";
 import { useAuth } from "./auth/AuthProvider";
 import AccessState, { SessionLoading } from "./components/AccessState";
 import DashboardShell from "./layout/DashboardShell";
-import { ROLE_SLUG, roleCanAccess, type DashboardPageKey } from "./roles";
+import { dashboardPath, roleCanAccess, type DashboardPageKey } from "./roles";
 import { DashboardProvider } from "./store";
 import type { UserRole } from "./types";
 import Overview from "./views/Overview";
@@ -37,7 +37,6 @@ import ProjectDetailView from "./projects/ProjectDetailView";
 import ProjectsPage from "./views/ProjectsPage";
 import ContactDetailView from "./contacts/ContactDetailView";
 import ContactsPage from "./views/ContactsPage";
-import FilesPage from "./views/FilesPage";
 import CreateRoleForm from "./rbac/CreateRoleForm";
 import RoleDetailView from "./rbac/RoleDetailView";
 import RolesPage from "./views/RolesPage";
@@ -45,7 +44,7 @@ import PermissionsPage from "./views/PermissionsPage";
 import ProfilePage from "./views/ProfilePage";
 
 interface DashboardAppProps {
-  role: UserRole;
+  role?: UserRole;
 }
 
 function Guard({
@@ -64,7 +63,7 @@ function Guard({
   }
 
   if (!roleCanAccess(role, page)) {
-    return <Navigate to={`/${ROLE_SLUG[role]}/dashboard`} replace />;
+    return <Navigate to={dashboardPath("dashboard")} replace />;
   }
 
   if (!canAccessPage(page)) {
@@ -74,8 +73,8 @@ function Guard({
   return children;
 }
 
-function DashboardRoutes({ role }: DashboardAppProps) {
-  const home = `/${ROLE_SLUG[role]}/dashboard`;
+function DashboardRoutes({ role }: { role: UserRole }) {
+  const home = dashboardPath("dashboard");
 
   return (
     <DashboardShell role={role}>
@@ -219,7 +218,7 @@ function DashboardRoutes({ role }: DashboardAppProps) {
         />
         <Route
           path="visa-invitations"
-          element={<Navigate to={`/${ROLE_SLUG[role]}/trips`} replace />}
+          element={<Navigate to={dashboardPath("trips")} replace />}
         />
         <Route
           path="payments/new"
@@ -326,14 +325,6 @@ function DashboardRoutes({ role }: DashboardAppProps) {
           }
         />
         <Route
-          path="files"
-          element={
-            <Guard role={role} page="files">
-              <FilesPage />
-            </Guard>
-          }
-        />
-        <Route
           path="supports/new"
           element={
             <Guard role={role} page="supports">
@@ -371,7 +362,14 @@ function DashboardRoutes({ role }: DashboardAppProps) {
   );
 }
 
-export default function DashboardApp({ role }: DashboardAppProps) {
+export default function DashboardApp({ role: routeRole }: DashboardAppProps) {
+  const { role: sessionRole } = useAuth();
+  const role = routeRole ?? sessionRole;
+
+  if (!role) {
+    return <Navigate to="/login" replace />;
+  }
+
   if (!hasValidAccessToken()) {
     return <Navigate to="/login" replace />;
   }

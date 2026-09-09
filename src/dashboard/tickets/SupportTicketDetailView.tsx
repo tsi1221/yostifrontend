@@ -5,7 +5,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
 import SideDrawer from "../components/SideDrawer";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import DeleteSupportTicketDialog from "./DeleteSupportTicketDialog";
 import EditTicketForm from "./EditTicketForm";
@@ -127,8 +127,8 @@ function InfoCard({ label, children }: { label: string; children: ReactNode }) {
 export default function SupportTicketDetailView() {
   const { ticketId } = useParams<{ ticketId: string }>();
   const navigate = useNavigate();
-  const { role } = useDashboard();
-  const listPath = `/${ROLE_SLUG[role]}/supports`;
+  useDashboard();
+  const listPath = dashboardPath("supports");
   const [searchParams, setSearchParams] = useSearchParams();
   const { ticket, loading, notFound, serverError, applyTicket, retry } =
     useSupportTicketDetail(ticketId);

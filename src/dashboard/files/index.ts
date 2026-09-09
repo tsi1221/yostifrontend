@@ -27,5 +27,3 @@ export {
   resolveFileUrl,
   uploadFile,
 } from "./api";
-export { useFileManager } from "./useFileManager";
-export { default as FileUploadManager } from "./FileUploadManager";

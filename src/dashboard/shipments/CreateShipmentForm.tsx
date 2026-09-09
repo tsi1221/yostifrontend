@@ -9,7 +9,7 @@ import {
   TextInput,
 } from "../components/FormField";
 import PageHeader from "../components/PageHeader";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import type { ShipmentFormValues, ShipmentMethod } from "./types";
 import { EMPTY_SHIPMENT_FORM, SHIPMENT_METHODS } from "./types";
@@ -17,8 +17,8 @@ import { useCreateShipment } from "./useCreateShipment";
 
 export default function CreateShipmentForm() {
   const navigate = useNavigate();
-  const { role } = useDashboard();
-  const listPath = `/${ROLE_SLUG[role]}/logistics`;
+  useDashboard();
+  const listPath = dashboardPath("logistics");
   const { submitShipment, saving, conflict, fieldErrors } = useCreateShipment();
   const [values, setValues] = useState<ShipmentFormValues>(EMPTY_SHIPMENT_FORM);
 

@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom";
 import ActionButton from "../components/ActionButton";
 import PageHeader from "../components/PageHeader";
 import PaymentsTable from "../payments/PaymentsTable";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 
 export default function PaymentsPage() {
-  const { role } = useDashboard();
+  useDashboard();
   const navigate = useNavigate();
 
   return (
@@ -17,7 +17,7 @@ export default function PaymentsPage() {
         description="Search, filter, and page through live payment records."
         actions={
           <ActionButton
-            onClick={() => navigate(`/${ROLE_SLUG[role]}/payments/new`)}
+            onClick={() => navigate(`${dashboardPath("payments")}/new`)}
           >
             New payment
           </ActionButton>

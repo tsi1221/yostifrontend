@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import ActionButton from "../components/ActionButton";
 import { Field, TextArea, TextInput } from "../components/FormField";
 import PageHeader from "../components/PageHeader";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import type { ProjectFormValues } from "./types";
 import { EMPTY_PROJECT_FORM } from "./types";
@@ -13,8 +13,8 @@ import { useCreateProject } from "./useCreateProject";
 
 export default function CreateProjectForm() {
   const navigate = useNavigate();
-  const { role } = useDashboard();
-  const listPath = `/${ROLE_SLUG[role]}/projects`;
+  useDashboard();
+  const listPath = dashboardPath("projects");
   const { submitProject, saving, conflict, authError, fieldErrors } =
     useCreateProject();
   const [values, setValues] = useState<ProjectFormValues>(EMPTY_PROJECT_FORM);

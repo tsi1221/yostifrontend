@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import ActionButton from "../components/ActionButton";
 import { SelectInput, TextInput } from "../components/FormField";
 import SideDrawer from "../components/SideDrawer";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import { asBlogId, snippet } from "./api";
 import BlogEmptyState from "./BlogEmptyState";
@@ -43,8 +43,8 @@ function SkeletonRows() {
 
 export default function BlogsTable() {
   const navigate = useNavigate();
-  const { role } = useDashboard();
-  const createPath = `/${ROLE_SLUG[role]}/blogs/new`;
+  useDashboard();
+  const createPath = `${dashboardPath("blogs")}/new`;
   const {
     filters,
     setFilter,
@@ -59,7 +59,7 @@ export default function BlogsTable() {
   const [editing, setEditing] = useState<BlogPost | null>(null);
   const [pendingDelete, setPendingDelete] = useState<number | null>(null);
 
-  const detailPath = (id: number) => `/${ROLE_SLUG[role]}/blogs/${id}`;
+  const detailPath = (id: number) => `${dashboardPath("blogs")}/${id}`;
   const filtersEmpty = !filters.search.trim() && !filters.title.trim();
   const showFirstEmpty =
     !loading && !serverError && meta.total === 0 && filtersEmpty;
@@ -220,7 +220,7 @@ export default function BlogsTable() {
       <SideDrawer
         open={Boolean(editing)}
         title={editing ? `Edit post #${editing.id}` : "Edit post"}
-        description="Update title, logo URL, and article details."
+        description="Update the title, image, and article details."
         onClose={() => setEditing(null)}
       >
         {editing ? (

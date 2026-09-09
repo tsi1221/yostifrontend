@@ -17,7 +17,7 @@ import ActionCard from "../components/ActionCard";
 import PageHeader from "../components/PageHeader";
 import StatCard from "../components/StatCard";
 import type { DashboardPageKey } from "../roles";
-import { ROLE_LABEL, ROLE_SLUG } from "../roles";
+import { ROLE_LABEL, dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import {
   formatStat,
@@ -116,9 +116,7 @@ function VisibleAction({
 }
 
 function BuyerWorkspace() {
-  const { role } = useDashboard();
   const stats = useLiveDashboardStats();
-  const slug = ROLE_SLUG[role];
 
   return (
     <div className="space-y-6">
@@ -161,42 +159,42 @@ function BuyerWorkspace() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         <VisibleAction
           page="sourcing"
-          to={`/${slug}/sourcing`}
+          to={dashboardPath("sourcing")}
           icon={Package}
           title="Submit Sourcing Request"
           description="Create and review sourcing requests."
         />
         <VisibleAction
           page="logistics"
-          to={`/${slug}/logistics`}
+          to={dashboardPath("logistics")}
           icon={Truck}
           title="Cargo Tracking System"
           description="Follow active shipments from booking to delivery."
         />
         <VisibleAction
           page="quality-control"
-          to={`/${slug}/quality-control`}
+          to={dashboardPath("quality-control")}
           icon={ClipboardCheck}
           title="Request Quality Inspection"
           description="Book sample, pre-shipment, or factory-visit checks."
         />
         <VisibleAction
           page="trips"
-          to={`/${slug}/trips`}
+          to={dashboardPath("trips")}
           icon={Plane}
           title="Submit Visa / Business Trip"
           description="Arrival city, passport, hotel, and translator."
         />
         <VisibleAction
           page="payments"
-          to={`/${slug}/payments`}
+          to={dashboardPath("payments")}
           icon={Wallet}
           title="Payments & Invoices"
           description="Review payment records."
         />
         <VisibleAction
           page="supports"
-          to={`/${slug}/supports`}
+          to={dashboardPath("supports")}
           icon={LifeBuoy}
           title="Support requests"
           description="Open defect, damage, or missing-item tickets."
@@ -207,9 +205,7 @@ function BuyerWorkspace() {
 }
 
 function SupplierWorkspace() {
-  const { role } = useDashboard();
   const stats = useLiveDashboardStats();
-  const slug = ROLE_SLUG[role];
 
   return (
     <div className="space-y-6">
@@ -245,21 +241,21 @@ function SupplierWorkspace() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <VisibleAction
           page="verifications"
-          to={`/${slug}/verifications`}
+          to={dashboardPath("verifications")}
           icon={FileCheck}
           title="Onboarding Verification"
           description="Company profile and onboarding status."
         />
         <VisibleAction
           page="sourcing"
-          to={`/${slug}/sourcing`}
+          to={dashboardPath("sourcing")}
           icon={FileText}
           title="Open RFQs"
           description="Review sourcing requests."
         />
         <VisibleAction
           page="quality-control"
-          to={`/${slug}/quality-control`}
+          to={dashboardPath("quality-control")}
           icon={ClipboardCheck}
           title="Assigned Inspections"
           description="Calendar of factory check windows."
@@ -270,9 +266,7 @@ function SupplierWorkspace() {
 }
 
 function LogisticsWorkspace() {
-  const { role } = useDashboard();
   const stats = useLiveDashboardStats();
-  const slug = ROLE_SLUG[role];
 
   return (
     <div className="space-y-6">
@@ -315,14 +309,14 @@ function LogisticsWorkspace() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <VisibleAction
           page="logistics"
-          to={`/${slug}/logistics`}
+          to={dashboardPath("logistics")}
           icon={Truck}
           title="Shipment Bookings"
           description="Update cargo status and attach shipping documents."
         />
         <VisibleAction
           page="supports"
-          to={`/${slug}/supports`}
+          to={dashboardPath("supports")}
           icon={LifeBuoy}
           title="Support"
           description="Buyer issues tied to tracking numbers."
@@ -333,9 +327,7 @@ function LogisticsWorkspace() {
 }
 
 function StaffWorkspace() {
-  const { role } = useDashboard();
   const stats = useLiveDashboardStats();
-  const slug = ROLE_SLUG[role];
 
   return (
     <div className="space-y-6">
@@ -378,35 +370,35 @@ function StaffWorkspace() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         <VisibleAction
           page="verifications"
-          to={`/${slug}/verifications`}
+          to={dashboardPath("verifications")}
           icon={FileCheck}
           title="Supplier Verification Queue"
           description="Review profiles and approve or reject onboarding."
         />
         <VisibleAction
           page="sourcing"
-          to={`/${slug}/sourcing`}
+          to={dashboardPath("sourcing")}
           icon={FileText}
           title="Sourcing Assignment Board"
           description="Dispatch open RFQs to qualified factories."
         />
         <VisibleAction
           page="quality-control"
-          to={`/${slug}/quality-control`}
+          to={dashboardPath("quality-control")}
           icon={ClipboardCheck}
           title="Quality reports"
           description="Verify inspection outcomes."
         />
         <VisibleAction
           page="trips"
-          to={`/${slug}/trips`}
+          to={dashboardPath("trips")}
           icon={Plane}
           title="Visa parameters"
           description="Update business-trip visa status."
         />
         <VisibleAction
           page="supports"
-          to={`/${slug}/supports`}
+          to={dashboardPath("supports")}
           icon={LifeBuoy}
           title="Support tickets"
           description="Resolve or close buyer issues."
@@ -419,7 +411,6 @@ function StaffWorkspace() {
 function BusinessIntelligenceHub() {
   const { user } = useDashboard();
   const stats = useLiveDashboardStats();
-  const slug = ROLE_SLUG.SUPER_ADMIN;
 
   return (
     <div className="space-y-6">
@@ -487,83 +478,45 @@ function BusinessIntelligenceHub() {
         />
       </div>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-4 text-sm font-semibold text-[#0F3952]">
-          All role dashboards
-        </h2>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
-          <ActionCard
-            to="/superadmin/dashboard"
-            icon={Users}
-            title="System Admin"
-            description="Business intelligence and master controls."
-          />
-          <ActionCard
-            to="/staff/dashboard"
-            icon={FileCheck}
-            title="Yosti Staff"
-            description="Verification, sourcing, and operations."
-          />
-          <ActionCard
-            to="/buyer/dashboard"
-            icon={Package}
-            title="Buyer"
-            description="Sourcing, cargo, inspections, and payments."
-          />
-          <ActionCard
-            to="/supplier/dashboard"
-            icon={FileText}
-            title="Supplier"
-            description="Onboarding, RFQs, and inspections."
-          />
-          <ActionCard
-            to="/logistics/dashboard"
-            icon={Truck}
-            title="Logistics"
-            description="Bookings, status updates, and documents."
-          />
-        </div>
-      </section>
-
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         <VisibleAction
           page="users"
-          to={`/${slug}/users`}
+          to={dashboardPath("users")}
           icon={Users}
           title="User Account Management"
           description="Search and page through registered accounts."
         />
         <VisibleAction
           page="payments"
-          to={`/${slug}/payments`}
+          to={dashboardPath("payments")}
           icon={Wallet}
           title="Payments"
           description="Review payment and invoice records."
         />
         <VisibleAction
           page="sourcing"
-          to={`/${slug}/sourcing`}
+          to={dashboardPath("sourcing")}
           icon={FileText}
           title="Requests Management"
           description="Search sourcing requests by region and deadline."
         />
         <VisibleAction
           page="logistics"
-          to={`/${slug}/logistics`}
+          to={dashboardPath("logistics")}
           icon={Truck}
           title="Shipments"
           description="Track cargo bookings and status updates."
         />
         <VisibleAction
           page="quality-control"
-          to={`/${slug}/quality-control`}
+          to={dashboardPath("quality-control")}
           icon={ClipboardCheck}
           title="Quality reports"
           description="Review inspection requests and outcomes."
         />
         <VisibleAction
           page="supports"
-          to={`/${slug}/supports`}
+          to={dashboardPath("supports")}
           icon={LifeBuoy}
           title="Support tickets"
           description="Review and close client support tickets."

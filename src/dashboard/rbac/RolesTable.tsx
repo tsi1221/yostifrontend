@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import ActionButton from "../components/ActionButton";
 import { SelectInput, TextInput } from "../components/FormField";
 import SideDrawer from "../components/SideDrawer";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import EditRoleForm from "./EditRoleForm";
 import RoleEmptyState from "./RoleEmptyState";
@@ -41,8 +41,8 @@ function SkeletonRows() {
 
 export default function RolesTable() {
   const navigate = useNavigate();
-  const { role } = useDashboard();
-  const createPath = `/${ROLE_SLUG[role]}/roles/new`;
+  useDashboard();
+  const createPath = `${dashboardPath("roles")}/new`;
   const {
     filters,
     setFilter,
@@ -56,7 +56,7 @@ export default function RolesTable() {
   } = useRolesList();
   const [editing, setEditing] = useState<RoleRecord | null>(null);
 
-  const detailPath = (id: number) => `/${ROLE_SLUG[role]}/roles/${id}`;
+  const detailPath = (id: number) => `${dashboardPath("roles")}/${id}`;
   const filtersEmpty = !filters.search.trim() && !filters.name.trim();
   const showFirstEmpty =
     !loading && !serverError && meta.total === 0 && filtersEmpty;

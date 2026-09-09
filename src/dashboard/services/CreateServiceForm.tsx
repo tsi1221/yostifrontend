@@ -10,19 +10,23 @@ import {
   TextInput,
 } from "../components/FormField";
 import PageHeader from "../components/PageHeader";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import type { ServiceFormValues, ServiceTierValue } from "./types";
 import { EMPTY_SERVICE_FORM, SERVICE_TIER_OPTIONS } from "./types";
 import { useCreateService } from "./useCreateService";
+import LogoImageUpload from "./LogoImageUpload";
+import type { UploadedFile } from "../files/types";
 
 export default function CreateServiceForm() {
   const navigate = useNavigate();
-  const { role } = useDashboard();
-  const listPath = `/${ROLE_SLUG[role]}/services`;
+  useDashboard();
+  const listPath = dashboardPath("services");
   const { submitService, saving, conflict, authError, fieldErrors } =
     useCreateService();
   const [values, setValues] = useState<ServiceFormValues>(EMPTY_SERVICE_FORM);
+  const [uploadedLogo, setUploadedLogo] = useState<UploadedFile | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   const setField = <K extends keyof ServiceFormValues>(
     key: K,
@@ -76,9 +80,13 @@ export default function CreateServiceForm() {
         noValidate
         onSubmit={async (event) => {
           event.preventDefault();
+          if (uploadingLogo) {
+            return;
+          }
           const created = await submitService(values);
           if (created) {
             setValues(EMPTY_SERVICE_FORM);
+            setUploadedLogo(null);
             navigate(listPath, { replace: true });
           }
         }}
@@ -99,7 +107,7 @@ export default function CreateServiceForm() {
         ) : null}
 
         <fieldset
-          disabled={saving}
+          disabled={saving || uploadingLogo}
           className="grid grid-cols-1 gap-4 md:grid-cols-2"
         >
           <div className="md:col-span-2">
@@ -112,17 +120,17 @@ export default function CreateServiceForm() {
             </Field>
           </div>
           <div className="md:col-span-2">
-            <Field label="Logo" error={fieldErrors.logo}>
-              <TextInput
-                type="url"
-                placeholder="https://cdn.yosti.com/services/client-handling.svg"
-                value={values.logo}
-                onChange={(event) => setField("logo", event.target.value)}
+            <Field label="Logo image">
+              <LogoImageUpload
+                value={uploadedLogo}
+                disabled={saving || uploadingLogo}
+                error={fieldErrors.logo}
+                onUploadingChange={setUploadingLogo}
+                onChange={(file) => {
+                  setUploadedLogo(file);
+                  setField("logo", file?.url ?? "");
+                }}
               />
-              <p className="text-xs text-slate-400">
-                Must be a full http(s) URL. File uploads are not sent to
-                storage.
-              </p>
             </Field>
           </div>
           <Field label="Tier" error={fieldErrors.tier}>
@@ -195,12 +203,12 @@ export default function CreateServiceForm() {
         <div className="flex justify-end gap-2">
           <ActionButton
             tone="ghost"
-            disabled={saving}
+            disabled={saving || uploadingLogo}
             onClick={() => navigate(listPath)}
           >
             Cancel
           </ActionButton>
-          <ActionButton type="submit" disabled={saving}>
+          <ActionButton type="submit" disabled={saving || uploadingLogo}>
             {saving ? (
               <span className="inline-flex items-center gap-2">
                 <Loader2 size={16} className="animate-spin" />

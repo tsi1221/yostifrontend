@@ -9,7 +9,7 @@ import {
   TextInput,
 } from "../components/FormField";
 import PageHeader from "../components/PageHeader";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import type { InspectionFormValues, InspectionTypeValue } from "./types";
 import { EMPTY_INSPECTION_FORM, INSPECTION_TYPE_VALUES } from "./types";
@@ -17,8 +17,8 @@ import { useCreateInspection } from "./useCreateInspection";
 
 export default function CreateInspectionForm() {
   const navigate = useNavigate();
-  const { role } = useDashboard();
-  const listPath = `/${ROLE_SLUG[role]}/quality-control`;
+  useDashboard();
+  const listPath = dashboardPath("quality-control");
   const { submitInspection, saving, fieldErrors } = useCreateInspection();
   const [values, setValues] = useState<InspectionFormValues>(
     EMPTY_INSPECTION_FORM,

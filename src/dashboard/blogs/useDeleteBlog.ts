@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import { expireSession, FORBIDDEN_MESSAGE } from "../auth/sessionExpiry";
 
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import type { BlogDeletionPhase } from "./types";
 import {
@@ -16,9 +16,9 @@ import {
 
 export function useDeleteBlog() {
   const navigate = useNavigate();
-  const { role } = useDashboard();
+  useDashboard();
   const [phase, setPhase] = useState<BlogDeletionPhase>("idle");
-  const listPath = `/${ROLE_SLUG[role]}/blogs`;
+  const listPath = dashboardPath("blogs");
 
   const removeBlog = async (id: number) => {
     setPhase("deleting");

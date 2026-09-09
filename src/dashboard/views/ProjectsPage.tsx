@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom";
 import ActionButton from "../components/ActionButton";
 import PageHeader from "../components/PageHeader";
 import ProjectsTable from "../projects/ProjectsTable";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 
 export default function ProjectsPage() {
-  const { role } = useDashboard();
+  useDashboard();
   const navigate = useNavigate();
 
   return (
@@ -17,7 +17,7 @@ export default function ProjectsPage() {
         description="Search, page, edit, and delete portfolio projects."
         actions={
           <ActionButton
-            onClick={() => navigate(`/${ROLE_SLUG[role]}/projects/new`)}
+            onClick={() => navigate(`${dashboardPath("projects")}/new`)}
           >
             New project
           </ActionButton>

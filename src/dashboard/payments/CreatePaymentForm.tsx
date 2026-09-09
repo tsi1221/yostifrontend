@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
 import PageHeader from "../components/PageHeader";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import type {
   PaymentFormValues,
@@ -82,8 +82,8 @@ function ChoiceCard({
 
 export default function CreatePaymentForm() {
   const navigate = useNavigate();
-  const { role } = useDashboard();
-  const listPath = `/${ROLE_SLUG[role]}/payments`;
+  useDashboard();
+  const listPath = dashboardPath("payments");
   const { submitPayment, saving, conflict, fieldErrors } = useCreatePayment();
   const [values, setValues] = useState<PaymentFormValues>(EMPTY_PAYMENT_FORM);
 

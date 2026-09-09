@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import ActionButton from "../components/ActionButton";
 import { SelectInput, TextInput } from "../components/FormField";
 import SideDrawer from "../components/SideDrawer";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import { asProjectId, snippet } from "./api";
 import DeleteProjectDialog from "./DeleteProjectDialog";
@@ -43,8 +43,8 @@ function SkeletonRows() {
 
 export default function ProjectsTable() {
   const navigate = useNavigate();
-  const { role } = useDashboard();
-  const createPath = `/${ROLE_SLUG[role]}/projects/new`;
+  useDashboard();
+  const createPath = `${dashboardPath("projects")}/new`;
   const {
     filters,
     setFilter,
@@ -59,7 +59,7 @@ export default function ProjectsTable() {
   const [editing, setEditing] = useState<ProjectRecord | null>(null);
   const [pendingDelete, setPendingDelete] = useState<number | null>(null);
 
-  const detailPath = (id: number) => `/${ROLE_SLUG[role]}/projects/${id}`;
+  const detailPath = (id: number) => `${dashboardPath("projects")}/${id}`;
   const filtersEmpty = !filters.search.trim() && !filters.title.trim();
   const showFirstEmpty =
     !loading && !serverError && meta.total === 0 && filtersEmpty;

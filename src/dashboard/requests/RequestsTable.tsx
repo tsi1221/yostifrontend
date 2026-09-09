@@ -6,7 +6,7 @@ import ActionButton from "../components/ActionButton";
 import AccessState from "../components/AccessState";
 import DeleteRequestDialog from "./DeleteRequestDialog";
 import { SelectInput, TextInput } from "../components/FormField";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import { formatDeadline, formatMoney, requestStatusClass } from "./format";
 import type { SourcingRequestRecord } from "./types";
@@ -42,7 +42,7 @@ function SkeletonRows() {
 
 export default function RequestsTable() {
   const navigate = useNavigate();
-  const { role } = useDashboard();
+  useDashboard();
   const [pendingDelete, setPendingDelete] =
     useState<SourcingRequestRecord | null>(null);
   const {
@@ -158,7 +158,7 @@ export default function RequestsTable() {
                     key={row.id}
                     className="cursor-pointer hover:bg-slate-50/80"
                     onClick={() =>
-                      navigate(`/${ROLE_SLUG[role]}/sourcing/${row.id}`)
+                      navigate(`${dashboardPath("sourcing")}/${row.id}`)
                     }
                   >
                     <td className="px-4 py-3 font-medium text-slate-800">
@@ -194,7 +194,7 @@ export default function RequestsTable() {
                           tone="ghost"
                           onClick={(event) => {
                             event.stopPropagation();
-                            navigate(`/${ROLE_SLUG[role]}/sourcing/${row.id}`);
+                            navigate(`${dashboardPath("sourcing")}/${row.id}`);
                           }}
                         >
                           View
@@ -203,7 +203,7 @@ export default function RequestsTable() {
                           onClick={(event) => {
                             event.stopPropagation();
                             navigate(
-                              `/${ROLE_SLUG[role]}/sourcing/${row.id}?edit=1`,
+                              `${dashboardPath("sourcing")}/${row.id}?edit=1`,
                             );
                           }}
                         >

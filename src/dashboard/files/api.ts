@@ -30,25 +30,20 @@ export class FileRequestError extends Error {
 export const FILES_INVALIDATE_EVENT = "yosti:files-invalidate";
 export const FILE_MISSING_MESSAGE = "Choose a file to upload.";
 export const FILE_NOT_FOUND_MESSAGE = "File not found or couldn't be deleted.";
-export const FILE_INVALID_FORMAT_MESSAGE = "Invalid file format.";
+export const FILE_INVALID_FORMAT_MESSAGE =
+  "This file type isn't supported. Please upload a PDF, Word document, JPG, PNG, or WebP image.";
 export const FILE_UPLOAD_SUCCESS_MESSAGE = "File uploaded successfully.";
 
 export const ALLOWED_ACCEPT =
-  "image/jpeg,image/png,image/webp,image/gif,application/pdf,text/plain,.doc,.docx,.xls,.xlsx,.csv";
+  "application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp,.pdf,.doc,.docx,.jpg,.jpeg,.png,.webp";
 
 const ALLOWED_MIME = new Set([
   "image/jpeg",
   "image/png",
   "image/webp",
-  "image/gif",
   "application/pdf",
-  "text/plain",
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "text/csv",
-  "application/csv",
 ]);
 
 const ALLOWED_EXT = new Set([
@@ -56,17 +51,12 @@ const ALLOWED_EXT = new Set([
   ".jpeg",
   ".png",
   ".webp",
-  ".gif",
   ".pdf",
-  ".txt",
   ".doc",
   ".docx",
-  ".xls",
-  ".xlsx",
-  ".csv",
 ]);
 
-const IMAGE_EXT = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif"]);
+const IMAGE_EXT = new Set([".jpg", ".jpeg", ".png", ".webp"]);
 
 const FIELD_KEYS: Array<keyof FileFieldErrors> = [
   "file",
@@ -272,7 +262,7 @@ export function uploadFile(
     xhr.onerror = () => {
       reject(
         new FileRequestError(
-          "We couldn't connect. Check your connection and try again.",
+          "We couldn't connect to the upload service. Please check your connection and try again.",
           0,
           undefined,
           "NETWORK",
@@ -291,14 +281,17 @@ export function uploadFile(
 
       if (xhr.status === 400) {
         const fields = parseFieldErrors(raw);
-        const message = readApiMessage(
-          raw,
-          "Invalid file format or missing required payload.",
-        );
         if (!fields.file && !fields.description) {
-          fields.file = message;
+          fields.file = FILE_INVALID_FORMAT_MESSAGE;
         }
-        reject(new FileRequestError(message, 400, fields, "VALIDATION"));
+        reject(
+          new FileRequestError(
+            FILE_INVALID_FORMAT_MESSAGE,
+            400,
+            fields,
+            "VALIDATION",
+          ),
+        );
         return;
       }
       if (xhr.status === 401) {
@@ -310,10 +303,9 @@ export function uploadFile(
       if (xhr.status !== 200 && xhr.status !== 201) {
         reject(
           new FileRequestError(
-            readApiMessage(
-              raw,
-              "Server error occurred. Could not upload this file.",
-            ),
+            xhr.status >= 500
+              ? "We couldn't connect to the upload service. Please check your connection and try again."
+              : "We couldn't upload your file. Please try again.",
             xhr.status,
           ),
         );

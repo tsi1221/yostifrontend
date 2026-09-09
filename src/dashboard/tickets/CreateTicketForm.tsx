@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import ActionButton from "../components/ActionButton";
 import { Field, SelectInput, TextInput } from "../components/FormField";
 import PageHeader from "../components/PageHeader";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import type { TicketFormValues, TicketUrgencyValue } from "./types";
 import {
@@ -15,6 +15,8 @@ import {
   TICKET_URGENCY_OPTIONS,
 } from "./types";
 import { useCreateTicket } from "./useCreateTicket";
+import WorkflowFileUpload from "../files/WorkflowFileUpload";
+import type { UploadedFile } from "../files/types";
 
 function UrgencyToggle({
   value,
@@ -58,10 +60,12 @@ function UrgencyToggle({
 
 export default function CreateTicketForm() {
   const navigate = useNavigate();
-  const { role } = useDashboard();
-  const listPath = `/${ROLE_SLUG[role]}/supports`;
+  useDashboard();
+  const listPath = dashboardPath("supports");
   const { submitTicket, saving, conflict, fieldErrors } = useCreateTicket();
   const [values, setValues] = useState<TicketFormValues>(EMPTY_TICKET_FORM);
+  const [uploadedAttachment, setUploadedAttachment] = useState<UploadedFile | null>(null);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
 
   const setField = <K extends keyof TicketFormValues>(
     key: K,
@@ -87,9 +91,13 @@ export default function CreateTicketForm() {
         noValidate
         onSubmit={async (event) => {
           event.preventDefault();
+          if (uploadingAttachment) {
+            return;
+          }
           const created = await submitTicket(values);
           if (created) {
             setValues(EMPTY_TICKET_FORM);
+            setUploadedAttachment(null);
             navigate(listPath, { replace: true });
           }
         }}
@@ -159,16 +167,16 @@ export default function CreateTicketForm() {
               ))}
             </SelectInput>
           </Field>
-          <Field label="Attachment URL" error={fieldErrors.attachment}>
-            <TextInput
-              type="url"
-              placeholder="https://storage.example.com/proofs/damage-image.jpg"
-              value={values.attachment}
-              onChange={(event) => setField("attachment", event.target.value)}
+          <Field label="Supporting document or image" error={fieldErrors.attachment}>
+            <WorkflowFileUpload
+              value={uploadedAttachment}
+              disabled={saving || uploadingAttachment}
+              onUploadingChange={setUploadingAttachment}
+              onChange={(file) => {
+                setUploadedAttachment(file);
+                setField("attachment", file?.url ?? "");
+              }}
             />
-            <p className="text-xs text-slate-400">
-              Optional. If provided, it must be a full http(s) URL.
-            </p>
           </Field>
           <div className="md:col-span-2">
             <Field label="Urgency" error={fieldErrors.urgency}>
@@ -183,12 +191,12 @@ export default function CreateTicketForm() {
         <div className="flex justify-end gap-2">
           <ActionButton
             tone="ghost"
-            disabled={saving}
+            disabled={saving || uploadingAttachment}
             onClick={() => navigate(listPath)}
           >
             Cancel
           </ActionButton>
-          <ActionButton type="submit" disabled={saving}>
+          <ActionButton type="submit" disabled={saving || uploadingAttachment}>
             {saving ? (
               <span className="inline-flex items-center gap-2">
                 <Loader2 size={16} className="animate-spin" />

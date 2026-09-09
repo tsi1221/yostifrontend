@@ -6,6 +6,8 @@ import { Field, TextArea, TextInput } from "../components/FormField";
 import type { BlogFormValues, BlogPost } from "./types";
 import { asBlogId, blogToFormValues } from "./api";
 import { useUpdateBlog } from "./useUpdateBlog";
+import type { UploadedFile } from "../files/types";
+import LogoImageUpload from "../services/LogoImageUpload";
 
 interface EditBlogFormProps {
   blog: BlogPost;
@@ -23,9 +25,33 @@ export default function EditBlogForm({
   const [values, setValues] = useState<BlogFormValues>(() =>
     blogToFormValues(blog),
   );
+  const [uploadedLogo, setUploadedLogo] = useState<UploadedFile | null>(() =>
+    blog.logo
+      ? {
+          filename: blog.logo.split("/").pop() || `blog-${blog.id}-logo`,
+          originalname: blog.logo.split("/").pop() || "Blog image",
+          mimetype: "image/*",
+          size: 0,
+          url: blog.logo,
+          description: "Blog image",
+        }
+      : null,
+  );
 
   useEffect(() => {
     setValues(blogToFormValues(blog));
+    setUploadedLogo(
+      blog.logo
+        ? {
+            filename: blog.logo.split("/").pop() || `blog-${blog.id}-logo`,
+            originalname: blog.logo.split("/").pop() || "Blog image",
+            mimetype: "image/*",
+            size: 0,
+            url: blog.logo,
+            description: "Blog image",
+          }
+        : null,
+    );
   }, [blog]);
 
   const setField = <K extends keyof BlogFormValues>(
@@ -61,12 +87,19 @@ export default function EditBlogForm({
             onChange={(event) => setField("title", event.target.value)}
           />
         </Field>
-        <Field label="Logo" error={fieldErrors.logo}>
-          <TextInput
-            type="url"
-            placeholder="https://cdn.yosti.com/blogs/shenzhen-desk.svg"
-            value={values.logo}
-            onChange={(event) => setField("logo", event.target.value)}
+        <Field label="Blog image">
+          <LogoImageUpload
+            value={uploadedLogo}
+            description="Blog image"
+            inputId={`blog-logo-upload-${blogId}`}
+            deletePreviousOnReplace={false}
+            deleteOnRemove={false}
+            disabled={saving}
+            error={fieldErrors.logo}
+            onChange={(file) => {
+              setUploadedLogo(file);
+              setField("logo", file?.url ?? "");
+            }}
           />
         </Field>
         <Field label="Details" error={fieldErrors.details}>

@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import ActionButton from "../components/ActionButton";
 import { SelectInput, TextInput } from "../components/FormField";
 import SideDrawer from "../components/SideDrawer";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import { asContactId, snippet } from "./api";
 import ContactEmptyState from "./ContactEmptyState";
@@ -43,7 +43,7 @@ function SkeletonRows() {
 
 export default function ContactsTable() {
   const navigate = useNavigate();
-  const { role } = useDashboard();
+  useDashboard();
   const {
     filters,
     setFilter,
@@ -58,7 +58,7 @@ export default function ContactsTable() {
   const [editing, setEditing] = useState<ContactRecord | null>(null);
   const [pendingDelete, setPendingDelete] = useState<number | null>(null);
 
-  const detailPath = (id: number) => `/${ROLE_SLUG[role]}/contacts/${id}`;
+  const detailPath = (id: number) => `${dashboardPath("contacts")}/${id}`;
   const filtersEmpty =
     !filters.search.trim() &&
     !filters.fullname.trim() &&

@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import ActionButton from "../components/ActionButton";
 import { Field, SelectInput, TextInput } from "../components/FormField";
 import PageHeader from "../components/PageHeader";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import type { TripFormValues, TripStatusValue } from "./types";
 import { EMPTY_TRIP_FORM, TRIP_STATUS_VALUES } from "./types";
@@ -13,8 +13,8 @@ import { useCreateTrip } from "./useCreateTrip";
 
 export default function CreateTripForm() {
   const navigate = useNavigate();
-  const { role } = useDashboard();
-  const listPath = `/${ROLE_SLUG[role]}/trips`;
+  useDashboard();
+  const listPath = dashboardPath("trips");
   const { submitTrip, saving, conflict, fieldErrors } = useCreateTrip();
   const [values, setValues] = useState<TripFormValues>(EMPTY_TRIP_FORM);
 

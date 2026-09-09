@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 
 import ActionButton from "../components/ActionButton";
 import PageHeader from "../components/PageHeader";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import SupportsTable from "../tickets/SupportsTable";
 
@@ -18,7 +18,7 @@ export default function SupportPage() {
         description="Search, filter, and page through live support tickets."
         actions={
           <ActionButton
-            onClick={() => navigate(`/${ROLE_SLUG[role]}/supports/new`)}
+            onClick={() => navigate(`${dashboardPath("supports")}/new`)}
           >
             New ticket
           </ActionButton>

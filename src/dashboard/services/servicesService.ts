@@ -156,15 +156,6 @@ function parseFieldErrors(raw: unknown): ServiceFieldErrors {
   return fields;
 }
 
-export function isHttpUrl(value: string) {
-  try {
-    const url = new URL(value);
-    return url.protocol === "http:" || url.protocol === "https:";
-  } catch {
-    return false;
-  }
-}
-
 export function collectedFeatures(values: ServiceFormValues) {
   return values.features.map((feature) => feature.trim()).filter(Boolean);
 }
@@ -177,9 +168,7 @@ export function validateServiceForm(
     errors.title = "Title is required.";
   }
   if (!values.logo.trim()) {
-    errors.logo = "Logo URL is required.";
-  } else if (!isHttpUrl(values.logo.trim())) {
-    errors.logo = "Enter a valid http(s) logo URL.";
+    errors.logo = "Logo image is required.";
   }
   if (!SERVICE_TIER_VALUES.includes(values.tier as ServiceTierValue)) {
     errors.tier = "Choose a service tier.";

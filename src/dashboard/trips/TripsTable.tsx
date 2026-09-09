@@ -6,7 +6,7 @@ import ActionButton from "../components/ActionButton";
 import { SelectInput, TextInput } from "../components/FormField";
 import SideDrawer from "../components/SideDrawer";
 import StatusBadge from "../components/StatusBadge";
-import { ROLE_SLUG } from "../roles";
+import { dashboardPath } from "../roles";
 import { useDashboard } from "../store";
 import DeleteTripDialog from "./DeleteTripDialog";
 import EditTripForm from "./EditTripForm";
@@ -44,7 +44,7 @@ function SkeletonRows() {
 
 export default function TripsTable() {
   const navigate = useNavigate();
-  const { role } = useDashboard();
+  useDashboard();
   const [editing, setEditing] = useState<TripRecord | null>(null);
   const [pendingDelete, setPendingDelete] = useState<TripRecord | null>(null);
   const {
@@ -59,7 +59,7 @@ export default function TripsTable() {
     retry,
   } = useTripsList();
 
-  const detailPath = (id: number) => `/${ROLE_SLUG[role]}/trips/${id}`;
+  const detailPath = (id: number) => `${dashboardPath("trips")}/${id}`;
 
   return (
     <div className="space-y-4">

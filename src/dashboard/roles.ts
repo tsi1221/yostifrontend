@@ -14,14 +14,6 @@ import {
 
 import type { UserRole } from "./types";
 
-export const ROLE_SLUG: Record<UserRole, string> = {
-  SUPER_ADMIN: "superadmin",
-  STAFF: "staff",
-  BUYER: "buyer",
-  SUPPLIER: "supplier",
-  LOGISTICS_PARTNER: "logistics",
-};
-
 export const ROLE_LABEL: Record<UserRole, string> = {
   SUPER_ADMIN: "System Admin",
   STAFF: "Yosti Staff",
@@ -44,7 +36,6 @@ export type DashboardPageKey =
   | "blogs"
   | "projects"
   | "contacts"
-  | "files"
   | "roles"
   | "permissions"
   | "profile";
@@ -62,25 +53,59 @@ export interface NavGroup {
   children?: NavItem[];
 }
 
-const item = (slug: string, key: DashboardPageKey, label: string): NavItem => ({
+const item = (basePath: string, key: DashboardPageKey, label: string): NavItem => ({
   key,
   label,
-  path: `/${slug}/${key === "dashboard" ? "dashboard" : key}`,
+  path:
+    key === "dashboard"
+      ? basePath
+      : basePath.replace(/\/dashboard$/, `/${key}`),
 });
 
+const DASHBOARD_PAGE_SEGMENTS = new Set<DashboardPageKey>([
+  "dashboard",
+  "users",
+  "verifications",
+  "sourcing",
+  "logistics",
+  "quality-control",
+  "trips",
+  "payments",
+  "services",
+  "supports",
+  "blogs",
+  "projects",
+  "contacts",
+  "roles",
+  "profile",
+]);
+
+export function dashboardPath(page: DashboardPageKey, pathname?: string) {
+  const currentPath =
+    pathname ?? (typeof window === "undefined" ? "/dashboard" : window.location.pathname);
+  const segments = currentPath.split("/").filter(Boolean);
+  const prefix =
+    segments[0] === "dashboard"
+      ? "dashboard"
+      : segments[1] && DASHBOARD_PAGE_SEGMENTS.has(segments[1] as DashboardPageKey)
+        ? segments[0]
+        : "dashboard";
+  return `/${prefix}/${page}`;
+}
+
 export const getNavigation = (role: UserRole): NavGroup[] => {
-  const slug = ROLE_SLUG[role];
+  const path = (page: DashboardPageKey) => dashboardPath(page);
 
   const dashboard: NavGroup = {
     label: role === "SUPER_ADMIN" ? "Business Intelligence" : "Dashboard",
     icon: LayoutDashboard,
-    path: `/${slug}/dashboard`,
+    path: path("dashboard"),
   };
 
   const profile: NavGroup = {
     label: "Profile",
     icon: UserRound,
-    path: `/${slug}/profile`,
+    path: path("profile"),
   };
 
   switch (role) {
@@ -91,27 +116,31 @@ export const getNavigation = (role: UserRole): NavGroup[] => {
           label: "Accounts",
           icon: Users,
           children: [
+<<<<<<< yosti/dashboard-refactor-ac34
             item(slug, "users", "User Account Management"),
             item(slug, "roles", "Roles"),
             item(slug, "permissions", "Permissions"),
+=======
+            item(path("dashboard"), "users", "User Account Management"),
+            item(path("dashboard"), "roles", "Roles"),
+>>>>>>> local
           ],
         },
         {
           label: "Operations",
           icon: BriefcaseBusiness,
           children: [
-            item(slug, "verifications", "Supplier Verifications"),
-            item(slug, "sourcing", "Requests Management"),
-            item(slug, "logistics", "Shipments"),
-            item(slug, "payments", "Payments"),
-            item(slug, "quality-control", "Quality Reports"),
-            item(slug, "trips", "Visa Parameters"),
-            item(slug, "services", "Services"),
-            item(slug, "supports", "Support Tickets"),
-            item(slug, "blogs", "Blogs"),
-            item(slug, "projects", "Projects"),
-            item(slug, "contacts", "Contacts"),
-            item(slug, "files", "File Library"),
+            item(path("dashboard"), "verifications", "Supplier Verifications"),
+            item(path("dashboard"), "sourcing", "Requests Management"),
+            item(path("dashboard"), "logistics", "Shipments"),
+            item(path("dashboard"), "payments", "Payments"),
+            item(path("dashboard"), "quality-control", "Quality Reports"),
+            item(path("dashboard"), "trips", "Visa Parameters"),
+            item(path("dashboard"), "services", "Services"),
+            item(path("dashboard"), "supports", "Support Tickets"),
+            item(path("dashboard"), "blogs", "Blogs"),
+            item(path("dashboard"), "projects", "Projects"),
+            item(path("dashboard"), "contacts", "Contacts"),
           ],
         },
         profile,
@@ -122,25 +151,24 @@ export const getNavigation = (role: UserRole): NavGroup[] => {
         {
           label: "Factory desk",
           icon: FileCheck,
-          path: `/${slug}/verifications`,
+          path: path("verifications"),
         },
         {
           label: "Sourcing board",
           icon: FileText,
-          path: `/${slug}/sourcing`,
+          path: path("sourcing"),
         },
         {
           label: "Operations",
           icon: BriefcaseBusiness,
           children: [
-            item(slug, "quality-control", "Quality Reports"),
-            item(slug, "trips", "Visa Parameters"),
-            item(slug, "services", "Services"),
-            item(slug, "supports", "Support Tickets"),
-            item(slug, "blogs", "Blogs"),
-            item(slug, "projects", "Projects"),
-            item(slug, "contacts", "Contacts"),
-            item(slug, "files", "File Library"),
+            item(path("dashboard"), "quality-control", "Quality Reports"),
+            item(path("dashboard"), "trips", "Visa Parameters"),
+            item(path("dashboard"), "services", "Services"),
+            item(path("dashboard"), "supports", "Support Tickets"),
+            item(path("dashboard"), "blogs", "Blogs"),
+            item(path("dashboard"), "projects", "Projects"),
+            item(path("dashboard"), "contacts", "Contacts"),
           ],
         },
         profile,
@@ -152,22 +180,22 @@ export const getNavigation = (role: UserRole): NavGroup[] => {
           label: "Trade actions",
           icon: Package,
           children: [
-            item(slug, "sourcing", "Submit Sourcing Request"),
-            item(slug, "logistics", "Cargo Tracking System"),
-            item(slug, "quality-control", "Request Quality Inspection"),
-            item(slug, "trips", "Visa / Business Trip"),
-            item(slug, "services", "Services"),
+            item(path("dashboard"), "sourcing", "Submit Sourcing Request"),
+            item(path("dashboard"), "logistics", "Cargo Tracking System"),
+            item(path("dashboard"), "quality-control", "Request Quality Inspection"),
+            item(path("dashboard"), "trips", "Visa / Business Trip"),
+            item(path("dashboard"), "services", "Services"),
           ],
         },
         {
           label: "Payments & Invoices",
           icon: BriefcaseBusiness,
-          path: `/${slug}/payments`,
+          path: path("payments"),
         },
         {
           label: "Support",
           icon: LifeBuoy,
-          path: `/${slug}/supports`,
+          path: path("supports"),
         },
         profile,
       ];
@@ -177,17 +205,17 @@ export const getNavigation = (role: UserRole): NavGroup[] => {
         {
           label: "Onboarding Verification",
           icon: FileCheck,
-          path: `/${slug}/verifications`,
+          path: path("verifications"),
         },
         {
           label: "Open RFQs",
           icon: FileText,
-          path: `/${slug}/sourcing`,
+          path: path("sourcing"),
         },
         {
           label: "Assigned Inspections",
           icon: ClipboardCheck,
-          path: `/${slug}/quality-control`,
+          path: path("quality-control"),
         },
         profile,
       ];
@@ -197,12 +225,12 @@ export const getNavigation = (role: UserRole): NavGroup[] => {
         {
           label: "Shipment Bookings",
           icon: Truck,
-          path: `/${slug}/logistics`,
+          path: path("logistics"),
         },
         {
           label: "Support",
           icon: LifeBuoy,
-          path: `/${slug}/supports`,
+          path: path("supports"),
         },
         profile,
       ];
